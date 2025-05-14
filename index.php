@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JayWing Academy - Tutor Management System</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MDB Chat</title>
+  
+  <!-- MDB CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.1/mdb.min.css" rel="stylesheet" />
 
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center mt-5">Welcome to JayWing Academy</h1>
-        <p class="text-center">Your one-stop solution for managing tutors and students.</p>
-        
-        <div class="text-center mt-4">
-            <a href="src/tutors.php" class="btn btn-primary">Manage Tutors</a>
-            <a href="src/students.php" class="btn btn-secondary">Manage Students</a>
-        </div>
-    </div>
+    
+
+  <!-- MDB JS -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.1/mdb.min.js"></script>
 </body>
 </html>

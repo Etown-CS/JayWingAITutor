@@ -1,35 +1,39 @@
-DROP TABLE Student_Courses;
-DROP TABLE Courses;
-DROP TABLE Students;
-DROP TABLE Proctors;
+DROP TABLE user_courses;
+DROP TABLE users;
+DROP TABLE courses;
+DROP TABLE course_chunks;
 
--- Proctors Table
-CREATE TABLE IF NOT EXISTS Proctors (
+-- USERS TABLE
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    role SMALLINT NOT NULL CHECK (role IN (0, 1)) -- 0 = student, 1 = professor (assumed)
 );
 
--- Courses Table
-CREATE TABLE IF NOT EXISTS Courses (
+-- COURSES TABLE
+CREATE TABLE courses (
     id SERIAL PRIMARY KEY,
-    proctor_id INTEGER REFERENCES Proctors(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(45) NOT NULL,
     context TEXT,
-    filepath VARCHAR(255)
+    filepath VARCHAR(45)
 );
 
--- Students Table
-CREATE TABLE IF NOT EXISTS Students (
+-- USER_COURSES TABLE (join table)
+CREATE TABLE user_courses (
+    userId INT NOT NULL,
+    courseId INT NOT NULL,
+    learnedContext TEXT,
+    PRIMARY KEY (userId, courseId),
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+-- COURSE_CHUNKS TABLE --> Upgrade to use proper embedding in the future
+CREATE TABLE course_chunks (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
-);
-
--- Student_Courses Table (Associates Students with Courses)
-CREATE TABLE IF NOT EXISTS Student_Courses (
-    student_id INTEGER REFERENCES Students(id) ON DELETE CASCADE,
-    course_id INTEGER REFERENCES Courses(id) ON DELETE CASCADE,
-    learned_context TEXT,
-    PRIMARY KEY (student_id, course_id)
+    courseId INT NOT NULL,
+    chunkText TEXT,
+    embedding FLOAT,
+    FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
 );

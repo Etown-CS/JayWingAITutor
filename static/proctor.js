@@ -215,19 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const coursesDropdown = document.getElementById('courses-dropdown');
     const addCourseBtn = document.getElementById('add-course-btn');
     const modal = document.getElementById('add-course-modal');
-    const saveCourseBtn = document.getElementById('save-course-btn');
-    const closeModalBtn = document.getElementById('close-modal-btn');
     const courseNameInput = document.getElementById('course-name-input');
-
-    // Open the modal
-    addCourseBtn.addEventListener('click', function () {
-        modal.style.display = 'flex';
-    });
-
-    // Close the modal
-    closeModalBtn.addEventListener('click', function () {
-        modal.style.display = 'none';
-    });
 
     // Fetch courses from the server
     fetch('/get-courses')
@@ -247,8 +235,8 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error fetching courses:', error));
 
-    // Save the new course
-    saveCourseBtn.addEventListener('click', function () {
+    // Add/Save the new course
+    addCourseBtn.addEventListener('click', function () {
         const courseName = courseNameInput.value.trim();
 
         if (!courseName) {

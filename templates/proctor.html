@@ -3,8 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proctor Page</title>
-    <link rel="stylesheet" href="static/proctor.css">
+    <title>Messages</title>
+
+    <!-- tailwind css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+
+    <!-- bootstrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- custom css -->
+    <link rel="stylesheet" href="/static/proctor.css">
 </head>
 <body>
 
@@ -14,11 +22,13 @@
 
 <div class="container">
     
-    <div class="dropdown-container">
+    <!-- AJ's CODE -->
+
+    <!-- <div class="dropdown-container">
         <label for="courses-dropdown">Select Course:</label>
-        <select id="courses-dropdown" class="dropdown">
+        <select id="courses-dropdown" class="dropdown"> -->
             <!-- Courses will be dynamically populated here -->
-        </select>
+        <!-- </select>
         <button id="add-course-btn" class="add-course-btn">Add New Course</button>
     </div>
 
@@ -36,23 +46,105 @@
         <label for="student-username">Student Username:</label>
         <input type="text" id="student-username" placeholder="Enter student username" />
         <button id="assign-student-btn">Assign to Course</button>
-    </div>    
+    </div>     -->
     
     <!-- File Upload Section -->
-    <div id="file-upload-div">
+    <!-- <div id="file-upload-div">
         <p>Drag and drop files here or click to select files</p>
         <input type="file" id="file-input" style="display:none;" multiple>
-    </div>
+    </div> -->
 
     <!-- Button to trigger take_prompts.py -->
-    <div>
+    <!-- <div>
         <button id="train-button">Train the model</button>
-    </div>
+    </div> -->
 
     <!-- Preview Section -->
-    <div id="preview-div">
+    <!-- <div id="preview-div"> -->
         <!-- Thumbnails of uploaded files will appear here -->
+    <!-- </div> -->
+
+    <!-- /AJ's CODE -->
+
+
+    <!-- Class Management Section -->
+    <div class="card bg-dark text-white mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Manage Classes</h5>
+        </div>
+        <div class="card-body">
+            <form id="classForm">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="course-name-input" class="form-label">Class Name</label>
+                        <input type="text" class="form-control bg-dark text-white" id="course-name-input" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="course-code" class="form-label">Course Code (TODO: implement in JayWing)</label>
+                        <input type="text" readonly class="form-control bg-dark text-white" id="course-code" maxlength="7">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="class-description" class="form-label">Description (TODO: implement in JayWing)</label>
+                        <textarea readonly class="form-control bg-dark text-white" id="class-description" style="height: 37.6px;"></textarea>
+                    </div>
+                </div>
+                <button type="submit" id="add-course-btn" class="btn btn-primary">Add New Course</button>
+            </form>
+            
+            <div class="table-responsive mt-4">
+                <table class="table table-dark">
+                    <thead>
+                        <tr>
+                            <th>Class Name</th>
+                            <th>Course Code</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <!-- remove for and class??? -->
+            <label for="className" class="form-label">TODO: implement in JayWing</label>
+        </div>
     </div>
+
+    <!-- Add Enrollment Form -->
+            <div class="card bg-dark text-white mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Add New Enrollment</h5>
+                </div>
+                <div class="card-body">
+                    <form id="enrollmentForm">
+                        <div class="row">
+                            <!-- Class dropdown -->
+                            <div class="col-md-4 mb-3">
+                                <label for="courses-dropdown" class="form-label">Select Course:</label>
+                                <select class="form-select bg-dark text-white" id="courses-dropdown">
+                                    <!-- Courses will be dynamically populated here -->
+                                </select>
+                            </div>
+
+                            <!-- User input -->
+                            <div class="col-md-4 mb-3">
+                                <label for="student-username" class="form-label">Student Name</label>
+                                <input type="text" class="form-control bg-dark text-white" id="student-username">
+                            </div>
+                        
+                            <!-- User role -->
+                            <div class="col-md-4 mb-3">
+                                <label for="roleOfClass" class="form-label">Role (TODO: implement in JayWing)</label>
+                                <select class="form-select bg-dark text-white" id="roleOfClass" name="roleOfClass">
+                                    <option value="tutor">Tutor</option>
+                                    <option value="tutee">Tutee</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Enrollment</button>
+                    </form>
+                </div>
+            </div>
+
+    <!-- TODO: Add in file upload section -->
 
 </div>
 

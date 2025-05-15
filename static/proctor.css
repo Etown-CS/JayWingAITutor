@@ -22,6 +22,11 @@ header, footer {
     padding: 20px;
 }
 
+/* Set Description box to smallest size */
+/* .class-description.form-control.bg-dark.text-white {
+    height: 10px;
+} */
+
 /* File Upload Area */
 #file-upload-div {
     background-color: #3DB5E6;

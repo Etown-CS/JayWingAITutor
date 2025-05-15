@@ -1,0 +1,12 @@
+runtime: python310
+entrypoint: gunicorn -b :$PORT app:app
+
+handlers:
+  - url: /static
+    static_dir: static
+
+  - url: /.*
+    script: auto
+    
+resources:
+  memory_gb: 4

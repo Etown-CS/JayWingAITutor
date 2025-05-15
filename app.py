@@ -172,8 +172,12 @@ def assign_student():
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Fetch the student ID
-        student_query = "SELECT id FROM Students WHERE username = %s"
-        course_query = "SELECT id FROM Courses WHERE name = %s AND proctor_id = %s"
+        student_query = "SELECT id FROM users WHERE username = %s AND role = 0"
+        course_query = """SELECT c.id 
+                            FROM courses c 
+                            JOIN user_courses uc ON c.id = uc.courseId 
+                            JOIN users u ON u.id = uc.userId 
+                            WHERE c.name = %s AND u.id = %s AND u.role = 1"""
 
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
@@ -190,22 +194,20 @@ def assign_student():
                 course_id = course_row[0]
 
                 # Fetch the current context for the course
-                context_query = "SELECT context FROM Courses WHERE id = %s"
+                context_query = "SELECT context FROM courses WHERE id = %s"
                 cursor.execute(context_query, (course_id,))
                 context_row = cursor.fetchone()
                 learned_context = context_row[0] if context_row else ""
 
                 # Insert into Student_Courses table
                 insert_query = """
-                INSERT INTO Student_Courses (student_id, course_id, learned_context)
+                INSERT INTO user_courses (userId, courseId, learnedContext) 
                 VALUES (%s, %s, %s)
                 """
                 cursor.execute(insert_query, (student_id, course_id, learned_context))
 
                 # Update learned_context for all course entries
-                update_query = """
-                UPDATE Student_Courses SET learned_context = %s WHERE course_id = %s
-                """
+                update_query = "UPDATE user_courses SET learnedContext = %s WHERE courseId = %s"
                 cursor.execute(update_query, (learned_context, course_id))
 
             conn.commit()  # Ensure changes are committed
@@ -243,7 +245,11 @@ def get_courses():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT id, name FROM Courses WHERE proctor_id = %s", (proctor_id,))
+        cursor.execute("""SELECT c.id, c.name 
+                       FROM courses c 
+                       JOIN user_courses uc ON c.id = uc.courseId 
+                       JOIN users u ON uc.userId = u.id 
+                       WHERE u.id = %s AND u.role = 1""", (proctor_id,))
         courses = cursor.fetchall()
         # Return a list of courses as JSON
         return jsonify(success=True, courses=[{"id": row[0], "name": row[1]} for row in courses])
@@ -262,10 +268,11 @@ def get_student_courses():
             return jsonify({'success': False, 'message': 'Student not logged in.'}), 403
 
         query = """
-        SELECT c.id, c.name
-        FROM Courses c
-        INNER JOIN Student_Courses sc ON c.id = sc.course_id
-        WHERE sc.student_id = %s
+        SELECT c.id, c.name 
+        FROM courses c 
+        INNER JOIN user_courses uc ON c.id = uc.courseId 
+        INNER JOIN users u ON uc.userId = u.id 
+        WHERE u.id = %s AND u.role = 0
         """
         with get_db_connection().cursor() as cursor:
             cursor.execute(query, (student_id,))
@@ -296,13 +303,19 @@ def add_course():
     try:
         # Insert the new course into the Courses table
         cursor.execute(
-            "INSERT INTO Courses (proctor_id, name, filepath) VALUES (%s, %s, %s) RETURNING id",
-            (proctor_id, course_name, f"{folder_prefix}{course_name}/")
+            "INSERT INTO courses (name, context, filepath) VALUES (%s, '', %s) RETURNING id",
+            (course_name, f"{folder_prefix}{course_name}/")
+        )
+        course_id = cursor.fetchone()[0]
+
+        # Associate the professor with the course
+        cursor.execute(
+            "INSERT INTO user_courses (userId, courseId, learnedContext) VALUES (%s, %s, '')",
+            (proctor_id, course_id)
         )
         conn.commit()
 
-        # Get the course ID and filepath
-        course_id = cursor.fetchone()[0]
+        # Create filepath
         course_path = f"{folder_prefix}/{course_name}/"
 
         # Create the course folder in the bucket
@@ -341,9 +354,11 @@ def login():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # TODO: Modify this to work only as a login and create a separate create account function
     try:
         # Check if user exists
-        cursor.execute(f"SELECT id, password FROM {table} WHERE username = %s", (username,))
+        role_value = 0 if role == 'student' else 1
+        cursor.execute("SELECT id, password FROM users WHERE username = %s AND role = %s", (username, role_value))
         user = cursor.fetchone()
 
         if user:
@@ -358,17 +373,21 @@ def login():
             else:
                 return jsonify({"success": False, "message": "Incorrect password"}), 401
         else:
+            # TODO: Modify this
+            # Temporarily send message to create account
+            return jsonify({"success": False, "message": "User does not exist, please create an account"}), 401
             # User doesn't exist, create account
-            cursor.execute(f"INSERT INTO {table} (username, password) VALUES (%s, %s) RETURNING id", (username, password))
-            user_id = cursor.fetchone()[0]  # Fetch the new ID
-            conn.commit()
+            # # If this is reimplemented, it will need updated to match new database
+            # cursor.execute(f"INSERT INTO {table} (username, password) VALUES (%s, %s) RETURNING id", (username, password)) 
+            # user_id = cursor.fetchone()[0]  # Fetch the new ID
+            # conn.commit()
 
-            session["id"] = user_id #first changing the session id and pass, making bucket if one doesnt exist
-            session['username'] = username
-            if role == 'proctor':
-                    session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
-                    ensure_user_folder_exists()            
-            return jsonify({"success": True, "message": "Account created", "route": f"/{role}"})
+            # session["id"] = user_id #first changing the session id and pass, making bucket if one doesnt exist
+            # session['username'] = username
+            # if role == 'proctor':
+            #         session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
+            #         ensure_user_folder_exists()            
+            # return jsonify({"success": True, "message": "Account created", "route": f"/{role}"})
     
     finally:
         # Ensure the cursor and connection are closed

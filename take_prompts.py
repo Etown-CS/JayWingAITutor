@@ -29,10 +29,10 @@ DB_PASS = os.environ.get("DB_PASS")
 # Function to load context from the database
 def load_context(student_id, course_name):
     query = """
-    SELECT sc.learned_context
-    FROM Student_Courses sc
-    JOIN Courses c ON sc.course_id = c.id
-    WHERE sc.student_id = %s AND c.name = %s
+    SELECT uc.learnedContext
+    FROM user_courses uc
+    JOIN courses c ON uc.courseId = c.id
+    WHERE uc.userId = %s AND c.name = %s
     """
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
@@ -46,7 +46,7 @@ def load_context(student_id, course_name):
 
 # Function to save updated context to the database
 def save_context(student_id, course_id, updated_context):
-    query = "UPDATE Student_Courses SET learned_context = %s WHERE student_id = %s AND course_id = %s"
+    query = "UPDATE user_courses SET learnedContext = %s WHERE userId = %s AND courseId = %s"
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(query, (updated_context, student_id, course_id))
@@ -76,7 +76,7 @@ def generate_gpt_response(student_id, course_name, user_question):
         # Fetch the course ID
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id FROM Courses WHERE name = %s", (course_name,))
+                cursor.execute("SELECT id FROM courses WHERE name = %s", (course_name,))
                 course_row = cursor.fetchone()
                 if not course_row:
                     raise ValueError("Course ID not found.")

@@ -158,7 +158,11 @@ def main():
 
         # Check if the course already exists
         cursor.execute(
-            "SELECT id FROM Courses WHERE name = %s AND proctor_id = %s;",
+            """SELECT c.id 
+            FROM courses c
+            JOIN user_courses uc ON c.id = uc.courseId
+            JOIN users u ON uc.userId = u.id
+            WHERE c.name = %s AND u.id = %s AND u.role = 1;""",
             (course_name, proctor_id)
         )
         course = cursor.fetchone()
@@ -167,18 +171,24 @@ def main():
             # Update the existing course's context
             course_id = course[0]
             cursor.execute(
-                "UPDATE Courses SET context = %s WHERE id = %s;",
+                "UPDATE courses SET context = %s WHERE id = %s;",
                 (initial_prompt, course_id)
             )
             print(f"Updated context for course ID: {course_id}")
         else:
             # Insert a new course
             cursor.execute(
-                "INSERT INTO Courses (proctor_id, name, context) VALUES (%s, %s, %s) RETURNING id;",
-                (proctor_id, course_name, initial_prompt)
+                "INSERT INTO courses (name, context) VALUES (%s, %s) RETURNING id;",
+                (course_name, initial_prompt)
             )
             course_id = cursor.fetchone()[0]
             print(f"Created new course with ID: {course_id}")
+
+            # Associate the proctor with the course
+            cursor.execute(
+                "INSERT INTO user_courses (userId, courseId, learnedContext) VALUES (%s, %s, '')",
+                (proctor_id, course_id)
+            )
 
         # Commit changes and close the connection
         conn.commit()

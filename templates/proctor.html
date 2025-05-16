@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messages</title>
+    <title>Proctor Page</title>
 
     <!-- tailwind css -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
@@ -103,48 +103,94 @@
                     </thead>
                 </table>
             </div>
-            <!-- remove for and class??? -->
-            <label for="className" class="form-label">TODO: implement in JayWing</label>
+            <label>TODO: implement in JayWing</label>
         </div>
     </div>
 
     <!-- Add Enrollment Form -->
-            <div class="card bg-dark text-white mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Add New Enrollment</h5>
-                </div>
-                <div class="card-body">
-                    <form id="enrollmentForm">
-                        <div class="row">
-                            <!-- Class dropdown -->
-                            <div class="col-md-4 mb-3">
-                                <label for="courses-dropdown" class="form-label">Select Course:</label>
-                                <select class="form-select bg-dark text-white" id="courses-dropdown">
-                                    <!-- Courses will be dynamically populated here -->
-                                </select>
-                            </div>
+    <div class="card bg-dark text-white mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Manage Enrollment</h5>
+        </div>
+        <div class="card-body">
+            <form id="enrollmentForm">
+                <div class="row">
+                    <!-- Class dropdown -->
+                    <div class="col-md-4 mb-3">
+                        <label for="courses-dropdown" class="form-label">Select Course:</label>
+                        <select class="form-select bg-dark text-white" id="courses-dropdown">
+                            <!-- Courses will be dynamically populated here -->
+                        </select>
+                    </div>
 
-                            <!-- User input -->
-                            <div class="col-md-4 mb-3">
-                                <label for="student-username" class="form-label">Student Name</label>
-                                <input type="text" class="form-control bg-dark text-white" id="student-username">
-                            </div>
-                        
-                            <!-- User role -->
-                            <div class="col-md-4 mb-3">
-                                <label for="roleOfClass" class="form-label">Role (TODO: implement in JayWing)</label>
-                                <select class="form-select bg-dark text-white" id="roleOfClass" name="roleOfClass">
-                                    <option value="tutor">Tutor</option>
-                                    <option value="tutee">Tutee</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Enrollment</button>
-                    </form>
+                    <!-- User input -->
+                    <div class="col-md-4 mb-3">
+                        <label for="student-username" class="form-label">Student Name</label>
+                        <input type="text" class="form-control bg-dark text-white" id="student-username">
+                    </div>
+                
+                    <!-- User role -->
+                    <div class="col-md-4 mb-3">
+                        <label for="roleOfClass" class="form-label">Role (TODO: implement in JayWing)</label>
+                        <select class="form-select bg-dark text-white" id="roleOfClass" name="roleOfClass">
+                            <option value="tutor">Tutor</option>
+                            <option value="tutee">Tutee</option>
+                        </select>
+                    </div>
                 </div>
+                <button type="submit" class="btn btn-primary">Add Enrollment</button>
+            </form>
+
+            <div class="table-responsive mt-4">
+                <table class="table table-dark">
+                    <thead>
+                        <tr>
+                            <th>Class Name</th>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
+            <label>TODO: implement in JayWing</label>
+        </div>
+    </div>
 
-    <!-- TODO: Add in file upload section -->
+    <!-- File Upload Section -->
+    <div class="card bg-dark text-white mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Manage Proctor Notes</h5>
+        </div>
+        <div class="card-body">
+            <form id="proctorForm">
+                <div class="row">
+                    <!-- Class dropdown -->
+                    <div class="col-md-4 mb-3">
+                        <label for="courses-dropdown" class="form-label">Select Course:</label>
+                        <select class="form-select bg-dark text-white" id="courses-dropdown">
+                            <!-- Courses will be dynamically populated here -->
+                        </select>
+                    </div>
+
+                    <!-- User input -->
+                    <form>
+                        <div class="col-md-4 mb-3" id="file-upload-div">
+                            <label class="form-label" for="file-input">Upload Documents</label>
+                            <input type="file" class="form-control-file" id="file-input" multiple>
+                        </div>
+                    </form>
+                
+                </div>
+                <button id="train-button" type="submit" class="btn btn-primary">Train Model</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div id="preview-div">
+        <!-- Thumbnails of uploaded files will appear here -->
+    </div>
 
 </div>
 

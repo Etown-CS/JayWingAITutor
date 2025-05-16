@@ -11,9 +11,18 @@ import io
 #import numpy as np
 from google.cloud import storage  # Google Cloud Storage library
 from dotenv import load_dotenv
+from uuid import uuid4
+
+# Pinecone/LangChain imports
+from pinecone import Pinecone
+from pinecone import ServerlessSpec
+from langchain_openai import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_pinecone import PineconeVectorStore
 
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 #For local testing:
 #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "gcloud_keys/ds400-capstone-7c0083efd90a.json"
 
@@ -76,10 +85,12 @@ def extract_text_from_pdf(pdf_bytes):
 # Heuristic to check if the text is gibberish
 def is_valid_text(text):
     if len(text) < 100:  # Arbitrary threshold for very short text
+        print("Text too short to be valid.")
         return False
     # Check ratio of alphabetic to non-alphabetic characters
     alpha_chars = len(re.findall(r'[a-zA-Z]', text))
     if alpha_chars / len(text) < 0.5:  # Less than 50% of text is alphabetic
+        print("Text contains too many non-alphabetic characters.")
         return False
     return True
 
@@ -130,6 +141,67 @@ def extract_text_from_pptx(pptx_bytes):
             text += slide_cleaned + " /-\ "
     return text
 
+# Function to chunk text
+def chunk_text(text, chunk_size=1000):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size = chunk_size,
+        chunk_overlap = 100,
+        separators=["\n\n", "\n", ".", "!", "?", " "]
+    )
+
+    chunks = text_splitter.split_text(text)
+    return chunks
+
+# Function to embed and store text in Pinecone
+def to_pinecone(text, course_name):
+    chunks = chunk_text(text) # TODO: toy with chunk size and overlap
+
+    # Prepare metadata for each chunk
+    metadatas = [{"course_name": course_name} for _ in chunks]
+
+    # Initialize embedding model
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    print("Embedding document chunks...")
+    vectors = embeddings.embed_documents(chunks)
+
+    # Initialize Pinecone index
+    index_name = "ai-tutor-index"
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=1536,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1")
+        )
+
+    index = pc.Index(index_name)
+
+    
+    vectorstore = PineconeVectorStore(
+        index=pc.Index(index_name),
+        embedding=embeddings,
+        namespace=course_name
+    )
+
+    # Batch upsert to meet 4mb limit
+    print(f"Upserting {len(vectors)} vectors into Pinecone...")
+    batch_size = 50
+    for i in range(0, len(vectors), batch_size):
+        batch_vectors = vectors[i:i + batch_size]
+        batch_metas = metadatas[i:i + batch_size]
+
+        upsert_data = [
+            {
+                "id": f"{course_name}-{uuid4()}",
+                "values": vec,
+                "metadata": meta
+            }
+            for vec, meta in zip(batch_vectors, batch_metas)
+        ]
+
+        index.upsert(vectors=upsert_data, namespace=course_name)
+    
+    print("Upsert complete.")
 
 # Main function
 def main():
@@ -144,6 +216,9 @@ def main():
     
     # Read course notes
     course_notes = read_docs_from_gcs(username, course_name, proctor_id)
+
+    # Vector database storage
+    to_pinecone(course_notes, course_name)
     
     # Construct initial prompt
     initial_prompt = (

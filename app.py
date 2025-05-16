@@ -133,6 +133,7 @@ def delete_file():
     
     return jsonify(success=False, message="File not found at "+file_path)
 
+# TODO: Add chunking and embedding here
 # Train model endpoint
 @app.route("/train", methods=["POST"])
 def train_model():

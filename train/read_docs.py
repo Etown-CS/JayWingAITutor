@@ -67,7 +67,10 @@ def extract_text_from_pdf(pdf_bytes):
     text = ""
     for page_num in range(doc.page_count):
         page = doc.load_page(page_num)
-        text += page.get_text()  # Get text from page
+        page_text = page.get_text("text")
+        # Normalize whitespace
+        cleaned = re.sub(r'\s+', ' ', page_text).strip()
+        text += cleaned + " /-\ "
     return text
 
 # Heuristic to check if the text is gibberish
@@ -115,9 +118,16 @@ def extract_text_from_pptx(pptx_bytes):
     prs = Presentation(io.BytesIO(pptx_bytes))
     text = ""
     for slide in prs.slides:
+        slide_text = []
         for shape in slide.shapes:
             if hasattr(shape, "text"):
-                text += shape.text + "\n"
+                line = shape.text.strip()
+                if line:
+                    slide_text.append(line)
+        if slide_text:
+            slide_cleaned = " ".join(slide_text)
+            slide_cleaned = re.sub(r'\s+', ' ', slide_cleaned)
+            text += slide_cleaned + " /-\ "
     return text
 
 
@@ -162,7 +172,7 @@ def main():
             FROM courses c
             JOIN user_courses uc ON c.id = uc.courseId
             JOIN users u ON uc.userId = u.id
-            WHERE c.name = %s AND u.id = %s AND u.role = 1;""",
+            WHERE c.name = %s AND u.id = %s AND u.role = 1;""", # Proctor check may not be needed
             (course_name, proctor_id)
         )
         course = cursor.fetchone()

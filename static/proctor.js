@@ -244,6 +244,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // TODO: Check if course already exists
+        
+
         fetch('/add-course', {
             method: 'POST',
             headers: {
@@ -261,8 +264,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 option.textContent = courseName;
                 coursesDropdown.appendChild(option);
 
-                // Close the modal and clear the input
-                modal.style.display = 'none';
                 courseNameInput.value = '';
             } else {
                 alert('Error adding course: ' + data.message);

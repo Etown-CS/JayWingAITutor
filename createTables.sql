@@ -1,7 +1,6 @@
 DROP TABLE user_courses;
 DROP TABLE users;
 DROP TABLE courses;
-DROP TABLE course_chunks;
 
 -- USERS TABLE
 CREATE TABLE users (
@@ -26,14 +25,5 @@ CREATE TABLE user_courses (
     learnedContext TEXT,
     PRIMARY KEY (userId, courseId),
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- COURSE_CHUNKS TABLE --> Upgrade to use proper embedding in the future
-CREATE TABLE course_chunks (
-    id SERIAL PRIMARY KEY,
-    courseId INT NOT NULL,
-    chunkText TEXT,
-    embedding FLOAT,
     FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
 );

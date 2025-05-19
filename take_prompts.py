@@ -2,13 +2,20 @@ import os
 import openai
 from dotenv import load_dotenv
 import psycopg2
-from psycopg2.extras import DictCursor
+
+# Pinecone/LangChain imports
+from pinecone import Pinecone
+from pinecone import ServerlessSpec
+from langchain_openai import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_pinecone import PineconeVectorStore
 
 # Load environment variables from the .env file
 load_dotenv()
 
-# Access the OpenAI API key
+# Access API keys
 openai.api_key = os.getenv("OPENAI_API_KEY")
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 # Database connection utility
 def get_db_connection():
@@ -25,7 +32,6 @@ DB_NAME = os.environ.get("DB_NAME")
 DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
 
-# Function to load context from the database
 # Function to load context from the database
 def load_context(student_id, course_name):
     query = """

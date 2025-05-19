@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,16 +12,16 @@
     </header>
     <div id="course-selection">
         <label for="courses-dropdown">Select Course:</label>
-        <select id="courses-dropdown">
+        <select id="courses-dropdown"> -->
             <!-- Options will be dynamically added via JavaScript -->
-        </select>
+        <!-- </select>
         <button id="switch-course-btn">Switch Course</button>
     </div>
     
     <div id="chat-container">
-        <div id="conversation">
+        <div id="conversation"> -->
             <!-- Previous conversation will be loaded here -->
-        </div>
+        <!-- </div>
         <div id="input-container">
             <textarea id="student-question" placeholder="Ask a question..."></textarea>
             <button id="submit-question">Ask Tutor</button>
@@ -29,5 +29,141 @@
     </div>
 
     <script src="/static/student.js"></script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages</title>
+
+    <!-- tailwind css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+
+    <!-- bootstrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- custom css -->
+    <link rel="stylesheet" href="../static/student.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="d-flex flex-wrap justify-content-center py-3 bg-primary">
+        <h1>Student Page</h1>
+    </header>  
+
+    <div>
+        <div class="grid grid-cols-4">
+            <!-- Sidebar with chats list -->
+            <div class="d-flex flex-column flex-shrink-0 p-3 bg-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <!-- Chat Search Bar -->
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="🔍 Search Chats..." aria-label="ChatSearch" aria-describedby="basic-addon1">
+                        <button type="button" class="input-group-text" id="sidebar">≣</button>
+                    </div>
+                </div>
+
+                <!-- Sorts/Filters -->
+                <div class="btn-group">
+                    <select class="form-select bg-primary text-white" id="sort-by-btn" name="sortBy">
+                        <option value="coursesByRecent">Sort by: Recent</option>
+                        <option value="coursesByDiscipline">Sort by: Discipline</option>
+                    </select>
+                    <select class="form-select bg-primary text-white" id="filter-by-btn" name="filterBy">
+                        <option value="allCourses">All</option>
+                        <!-- List disciplines -->
+                    </select>
+                </div>
+                    
+
+                <!-- List of existing chats -->
+                <div class="space-y-2">
+                    <!-- TODO: implement in JayWing (php) -->
+                </div>
+            </div>
+            
+            <!-- Main chat area -->
+            <div class="col-span-3 bg-white p-4 flex-grow-1">
+                    <div class="flex flex-col">
+                        <!-- Chat header -->
+                        <div class="pb-4 mb-4 row align-self-start">
+                            <h2 class="text-xl font-bold">courseName (php)</h2>
+                            <div class="text-sm text-gray-500">
+                                courseDescription
+                            </div>
+                        </div>
+                        
+                        <!-- Messages area -->
+                        <div class="flex-1 overflow-y-auto mb-4 space-y-4">
+                            TODO: implement in JayWing
+                            <!-- <?php
+                            $stmt = $connection->prepare("
+                                SELECT m.*, u.username, u.firstName, u.lastName
+                                FROM Messages m
+                                JOIN User u ON m.sender_id = u.user_id
+                                WHERE m.chat_id = ?
+                                ORDER BY m.message_id ASC
+                            ");
+                            $stmt->bind_param("i", $currentChat);
+                            $stmt->execute();
+                            $messages = $stmt->get_result();
+                            
+                            while ($message = $messages->fetch_assoc()):
+                                $isOwnMessage = $message['sender_id'] == $userId;
+                            ?>
+                                <div data-message-id="<?php echo $message['message_id']; ?>" class="flex <?php echo $isOwnMessage ? 'justify-end' : 'justify-start'; ?>">
+                                    <div class="max-w-[70%] <?php echo $isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100'; ?> rounded-lg p-3">
+                                        <?php if (!$isOwnMessage): ?>
+                                            <div class="text-sm font-medium <?php echo $isOwnMessage ? 'text-white' : 'text-gray-900'; ?>">
+                                                <?php echo htmlspecialchars($message['firstName'] . ' ' . $message['lastName']); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div><?php echo nl2br(htmlspecialchars($message['messageContent'])); ?></div>
+                                    </div>
+                                </div>
+                            <?php endwhile; ?> -->
+                        </div>
+                        
+                        <!-- Message input -->
+                        <form method="POST" name="messageForm" class="mt-auto">
+                            <input type="hidden" name="action" value="send_message">
+                            <!-- <input type="hidden" name="chat_id" value="<?php echo $currentChat; ?>"> -->
+                            <div class="flex gap-2">
+                                <textarea
+                                    id="userInput"
+                                    name="message"
+                                    class="flex-1 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words"
+                                    placeholder="Ask a question..."
+                                    required
+                                ></textarea>
+                                <button
+                                    type="submit"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    ➤
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- When no chats are currently opened: -->
+                <!-- <?php else: ?>
+                    <div class="h-[600px] flex items-center justify-center text-gray-500">
+                        Select a chat or create a new one to start messaging
+                    </div>
+                <?php endif; ?> -->
+            </div>
+        </div>
+    </div>
+
+    <footer id="footer"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="../js/global.js"></script>
+    <script src="../js/chat.js"></script>
 </body>
 </html>

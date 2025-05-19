@@ -132,7 +132,7 @@
                     <!-- User role -->
                     <div class="col-md-4 mb-3">
                         <label for="roleOfClass" class="form-label">Role (TODO: implement in JayWing)</label>
-                        <select class="form-select bg-dark text-white" id="roleOfClass" name="roleOfClass">
+                        <select class="form-select bg-dark text-white" id="roleOfClass" name="roleOfClass" disabled>
                             <option value="tutor">Tutor</option>
                             <option value="tutee">Tutee</option>
                         </select>
@@ -183,15 +183,14 @@
                 
                 </div>
                 <button id="train-button" type="submit" class="btn btn-primary">Train Model</button>
+
+                <!-- Preview Section -->
+                <div id="preview-div">
+                    <!-- Thumbnails of uploaded files will appear here -->
+                </div>
             </form>
         </div>
     </div>
-
-    <!-- Preview Section -->
-    <div id="preview-div">
-        <!-- Thumbnails of uploaded files will appear here -->
-    </div>
-
 </div>
 
 <footer>

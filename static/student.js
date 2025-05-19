@@ -76,3 +76,17 @@ function updateConversation(tutorResponse) {
 
 // Fetch courses when the page loads
 document.addEventListener('DOMContentLoaded', fetchAssignedCourses);
+
+// Change height of text box when typing
+
+const textarea = document.getElementById('userInput');
+
+textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+
+window.addEventListener('load', function() {
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight) + 'px';
+});

@@ -151,7 +151,7 @@ def extract_text_from_pptx(pptx_bytes):
     return text
 
 # Function to chunk text
-def chunk_text(text, chunk_size=750):
+def chunk_text(text, chunk_size=500):
     """
     Splits text into smaller chunks for embedding.
 

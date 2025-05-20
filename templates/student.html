@@ -1,37 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Tutor Interface</title>
-    <link rel="stylesheet" href="/static/student.css">
-</head>
-<body>
-    <header>
-        <h1>AI Tutor</h1>
-    </header>
-    <div id="course-selection">
-        <label for="courses-dropdown">Select Course:</label>
-        <select id="courses-dropdown"> -->
-            <!-- Options will be dynamically added via JavaScript -->
-        <!-- </select>
-        <button id="switch-course-btn">Switch Course</button>
-    </div>
-    
-    <div id="chat-container">
-        <div id="conversation"> -->
-            <!-- Previous conversation will be loaded here -->
-        <!-- </div>
-        <div id="input-container">
-            <textarea id="student-question" placeholder="Ask a question..."></textarea>
-            <button id="submit-question">Ask Tutor</button>
-        </div>
-    </div>
-
-    <script src="/static/student.js"></script>
-</body>
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,122 +14,179 @@
     <!-- custom css -->
     <link rel="stylesheet" href="../static/student.css">
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <header class="d-flex flex-wrap justify-content-center py-3 bg-primary">
-        <h1>Student Page</h1>
-    </header>  
+<body class="flex flex-col h-screen gap-0">
+    <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
+        Student Page
+    </header>
+    <div id="my-content" class="grid grid-cols-4 flex-grow w-full mt-0">
+        <!-- Sidebar with chats list -->
+        <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-gray-100 min-h-0">
+            <div class="flex justify-between items-center mb-4">
+                <!-- Chat Search Bar -->
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="🔍 Search Chats..." aria-label="ChatSearch" aria-describedby="basic-addon1">
+                    <button type="button" class="input-group-text" id="collapse-sidebar">≣</button>
+                </div>
+            </div>
 
-    <div>
-        <div class="grid grid-cols-4">
-            <!-- Sidebar with chats list -->
-            <div class="d-flex flex-column flex-shrink-0 p-3 bg-gray-100">
-                <div class="flex justify-between items-center mb-4">
-                    <!-- Chat Search Bar -->
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="🔍 Search Chats..." aria-label="ChatSearch" aria-describedby="basic-addon1">
-                        <button type="button" class="input-group-text" id="sidebar">≣</button>
-                    </div>
+            <!-- Sorts/Filters -->
+            <div class="btn-group">
+                <select class="form-select bg-primary text-white" id="sort-by-btn" name="sortBy">
+                    <option value="coursesByRecent">Sort by: Recent</option>
+                    <option value="coursesByDiscipline">Sort by: Discipline</option>
+                </select>
+                <select class="form-select bg-primary text-white" id="filter-by-btn" name="filterBy">
+                    <option value="allCourses">All</option>
+                    <!-- List disciplines -->
+                </select>
+            </div>
+
+            <!-- List of existing chats -->
+            <div class="space-y-2 flex-grow overflow-y-auto">
+                <!-- TODO: implement with php -->
+                <div class="d-grid gap-2">
+                    <a href="?chat_id=1" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=2" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=3" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=4" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=5" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=6" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=7" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=8" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
+                    <a href="?chat_id=9" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
+                        <div class="font-medium truncate">courseName</div>
+                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
+                    </a>
                 </div>
 
-                <!-- Sorts/Filters -->
-                <div class="btn-group">
-                    <select class="form-select bg-primary text-white" id="sort-by-btn" name="sortBy">
-                        <option value="coursesByRecent">Sort by: Recent</option>
-                        <option value="coursesByDiscipline">Sort by: Discipline</option>
-                    </select>
-                    <select class="form-select bg-primary text-white" id="filter-by-btn" name="filterBy">
-                        <option value="allCourses">All</option>
-                        <!-- List disciplines -->
-                    </select>
-                </div>
-                    
-
-                <!-- List of existing chats -->
-                <div class="space-y-2">
-                    <!-- TODO: implement in JayWing (php) -->
+            </div>
+        </div>
+        
+        <!-- Main chat area -->
+        <div id="chat-container" class="flex flex-col col-span-3 bg-white p-4 min-h-0">
+            <!-- Chat header -->
+            <div class="pb-4 mb-4 align-self-start">
+                <h2 class="text-xl font-bold">courseName (php)</h2>
+                <div class="text-sm text-gray-500">
+                    courseDescription
                 </div>
             </div>
             
-            <!-- Main chat area -->
-            <div class="col-span-3 bg-white p-4 flex-grow-1">
-                    <div class="flex flex-col">
-                        <!-- Chat header -->
-                        <div class="pb-4 mb-4 row align-self-start">
-                            <h2 class="text-xl font-bold">courseName (php)</h2>
-                            <div class="text-sm text-gray-500">
-                                courseDescription
-                            </div>
-                        </div>
-                        
-                        <!-- Messages area -->
-                        <div class="flex-1 overflow-y-auto mb-4 space-y-4">
-                            TODO: implement in JayWing
-                            <!-- <?php
-                            $stmt = $connection->prepare("
-                                SELECT m.*, u.username, u.firstName, u.lastName
-                                FROM Messages m
-                                JOIN User u ON m.sender_id = u.user_id
-                                WHERE m.chat_id = ?
-                                ORDER BY m.message_id ASC
-                            ");
-                            $stmt->bind_param("i", $currentChat);
-                            $stmt->execute();
-                            $messages = $stmt->get_result();
-                            
-                            while ($message = $messages->fetch_assoc()):
-                                $isOwnMessage = $message['sender_id'] == $userId;
-                            ?>
-                                <div data-message-id="<?php echo $message['message_id']; ?>" class="flex <?php echo $isOwnMessage ? 'justify-end' : 'justify-start'; ?>">
-                                    <div class="max-w-[70%] <?php echo $isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100'; ?> rounded-lg p-3">
-                                        <?php if (!$isOwnMessage): ?>
-                                            <div class="text-sm font-medium <?php echo $isOwnMessage ? 'text-white' : 'text-gray-900'; ?>">
-                                                <?php echo htmlspecialchars($message['firstName'] . ' ' . $message['lastName']); ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        <div><?php echo nl2br(htmlspecialchars($message['messageContent'])); ?></div>
-                                    </div>
-                                </div>
-                            <?php endwhile; ?> -->
-                        </div>
-                        
-                        <!-- Message input -->
-                        <form method="POST" name="messageForm" class="mt-auto">
-                            <input type="hidden" name="action" value="send_message">
-                            <!-- <input type="hidden" name="chat_id" value="<?php echo $currentChat; ?>"> -->
-                            <div class="flex gap-2">
-                                <textarea
-                                    id="userInput"
-                                    name="message"
-                                    class="flex-1 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words"
-                                    placeholder="Ask a question..."
-                                    required
-                                ></textarea>
-                                <button
-                                    type="submit"
-                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    ➤
-                                </button>
-                            </div>
-                        </form>
+            <!-- Messages area -->
+            <div id="conversation" class="flex-1 overflow-y-auto mb-4 space-y-4">
+                <!-- Previous conversation will be loaded here -->
+                <div class="flex justify-end">
+                    <div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                        This is a message from the user. It can be quite long to test how the chat window scrolls. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                     </div>
-                    <!-- When no chats are currently opened: -->
-                <!-- <?php else: ?>
-                    <div class="h-[600px] flex items-center justify-center text-gray-500">
-                        Select a chat or create a new one to start messaging
+                </div>
+                <div class="flex justify-start">
+                    <div class="bg-gray-200 p-2 rounded-lg max-w-xs">
+                        This is a reply from the bot.
                     </div>
-                <?php endif; ?> -->
+                </div>
+                <div class="flex justify-end">
+                    <div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                        Another message from the user.
+                    </div>
+                </div>
+                <div class="flex justify-start">
+                    <div class="bg-gray-200 p-2 rounded-lg max-w-xs">
+                        And another reply. This one is also a bit longer to simulate real conversation flow. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                        Short message.
+                    </div>
+                </div>
+                <div class="flex justify-start">
+                    <div class="bg-gray-200 p-2 rounded-lg max-w-xs">
+                        Okay, here is a really long message to absolutely guarantee a scrollbar appears if the window is small enough. This message needs to be exceptionally verbose to exceed the height of the chat window and demonstrate the `overflow-y-auto` functionality. We are going to keep adding more text here, making sure it's long enough to push other messages out of view, forcing the scrollbar to become visible. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+                    </div>
+                </div>
+                 <div class="flex justify-end">
+                    <div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                        This is a message from the user. It can be quite long to test how the chat window scrolls. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    </div>
+                </div>
+                <div class="flex justify-start">
+                    <div class="bg-gray-200 p-2 rounded-lg max-w-xs">
+                        This is a reply from the bot.
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                        Another message from the user.
+                    </div>
+                </div>
+                <div class="flex justify-start">
+                    <div class="bg-gray-200 p-2 rounded-lg max-w-xs">
+                        And another reply. This one is also a bit longer to simulate real conversation flow. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs">
+                        Short message.
+                    </div>
+                </div>
+                <div class="flex justify-start">
+                    <div class="bg-gray-200 p-2 rounded-lg max-w-xs">
+                        Okay, here is a really long message to absolutely guarantee a scrollbar appears if the window is small enough. This message needs to be exceptionally verbose to exceed the height of the chat window and demonstrate the `overflow-y-auto` functionality. We are going to keep adding more text here, making sure it's long enough to push other messages out of view, forcing the scrollbar to become visible. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+                    </div>
+                </div>
+                <!-- php? -->
             </div>
+
+            <!-- Message input -->
+            <form method="POST" name="messageForm" class="mt-auto">
+                <!-- php -->
+                <div id="input-container" class="flex gap-2">
+                    <textarea
+                        id="student-question"
+                        name="message"
+                        class="flex-1 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words resize-none overflow-hidden max-h-96"
+                        placeholder="Ask a question..."
+                        rows="1"
+                        required
+                    ></textarea>
+                </div>
+            </form>
+            <!-- When no chats are currently opened: -->
+            <!-- php -->
         </div>
     </div>
 
-    <footer id="footer"></footer>
+    <!-- <footer id="footer"></footer> -->
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Custom JS -->
-    <script src="../js/global.js"></script>
-    <script src="../js/chat.js"></script>
+    <script src="../static/student.js"></script>
 </body>
 </html>

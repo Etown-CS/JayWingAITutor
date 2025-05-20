@@ -1,3 +1,26 @@
+/* In your ../static/student.css file */
+html, body {
+    height: 100%;
+    margin: 0 !important; /* Use !important to override Bootstrap if needed */
+    padding: 0 !important; /* Use !important to override Bootstrap if needed */
+    box-sizing: border-box;
+}
+
+/* Inherit box-sizing for all elements */
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Ensure no default gaps from Bootstrap's grid system if used on body/main containers */
+.row, .container, .container-fluid {
+    --bs-gutter-x: 0; /* Bootstrap 5 gutter removal */
+    --bs-gutter-y: 0;
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 0;
+    padding-left: 0;
+}
+
 textarea {
     resize: none;
     overflow: hidden;

@@ -2,6 +2,7 @@ DROP TABLE user_courses;
 DROP TABLE users;
 DROP TABLE courses;
 
+-- MAKE SURE YOU GIVE ACCESS TO THESE TABLES TO THE USER IN .env FILE
 -- USERS TABLE
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -14,7 +15,6 @@ CREATE TABLE users (
 CREATE TABLE courses (
     id SERIAL PRIMARY KEY,
     name VARCHAR(45) NOT NULL,
-    context TEXT,
     filepath VARCHAR(45)
 );
 
@@ -22,8 +22,10 @@ CREATE TABLE courses (
 CREATE TABLE user_courses (
     userId INT NOT NULL,
     courseId INT NOT NULL,
-    learnedContext TEXT,
     PRIMARY KEY (userId, courseId),
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
 );
+
+-- Access grant below
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON users, courses, user_courses TO {INSERT_USER};

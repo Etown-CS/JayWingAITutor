@@ -4,7 +4,7 @@ from google.cloud import storage
 from werkzeug.utils import secure_filename
 import subprocess
 import json
-from take_prompts import generate_gpt_response, save_context
+from take_prompts import generate_gpt_response
 import psycopg2
 from dotenv import load_dotenv
 

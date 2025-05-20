@@ -84,6 +84,22 @@ def get_docs(course, question):
     print(f"Unique document names: {unique_doc_names}")
     return files
 
+def printTokens(response):
+    '''
+    Prints the token usage of the OpenAI API response.
+    Args:
+        response (dict): The OpenAI API response.
+    '''
+    usage = response.usage
+    # Extract token usage information
+    print("\n🔢 Token Usage Summary")
+    print("-" * 30)
+    print(f"Prompt Tokens:     {usage.prompt_tokens}")
+    print(f"Completion Tokens: {usage.completion_tokens}")
+    print(f"Total Tokens:      {usage.total_tokens}")
+    print("-" * 30)
+
+
 def update_chat_logs(student_id, course_name, user_question, tutor_response):
     # TODO
     pass
@@ -139,6 +155,8 @@ def generate_gpt_response(student_id, course_name, user_question):
             messages=messages,
             temperature=0.7 # How creative the response is
         )
+        # Log token usage
+        printTokens(response)
         tutor_response = response.choices[0].message.content
 
         # Update chat history

@@ -1,8 +1,7 @@
-import os
-from flask import Flask, request, jsonify, render_template, send_from_directory, session
+import os, subprocess, io
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, send_file
 from google.cloud import storage
 from werkzeug.utils import secure_filename
-import subprocess
 from take_prompts import generate_gpt_response
 import psycopg2
 from dotenv import load_dotenv
@@ -164,24 +163,35 @@ def delete_file():
     return jsonify(success=True, message=f"GCS deleted: {gcs_deleted}, Pinecone deleted: {pinecone_deleted}")
 
 # Not tested or implemented
-@app.route('/download', methods=['GET'])
+@app.route('/download')
 def download_file():
     file_name = request.args.get('file')
     course = request.args.get('course')
 
     if not file_name or not course:
-        return jsonify(success=False, message="Missing file or course")
+        return jsonify(success=False, message="Missing file or course"), 400
 
     folder_prefix = session.get('folder_prefix')
-    full_path = f"{folder_prefix}/{course}/{file_name}"
-    blob = bucket.blob(full_path)
+    if not folder_prefix:
+        return jsonify(success=False, message="No folder prefix in session"), 400
+
+    blob_path = f"{folder_prefix}/{course}/{file_name}"
+    blob = bucket.blob(blob_path)
 
     if not blob.exists():
-        return jsonify(success=False, message="File does not exist")
+        return jsonify(success=False, message="File not found in bucket"), 404
 
-    # Generate a signed URL valid for 5 minutes
-    url = blob.generate_signed_url(version='v4', expiration=300, method='GET')
-    return jsonify(success=True, url=url)
+    # Download file content into memory
+    file_data = blob.download_as_bytes()
+    file_stream = io.BytesIO(file_data)
+
+    # Determine content type (you could also guess with `mimetypes`)
+    content_type = 'application/pdf' if file_name.endswith('.pdf') else 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+
+    return send_file(file_stream,
+                     as_attachment=True,
+                     download_name=file_name,
+                     mimetype=content_type)
 
 # Train model endpoint
 @app.route("/train", methods=["POST"])

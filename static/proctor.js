@@ -55,31 +55,41 @@ function saveFileToDocsFolder(file, course) {
 // Display file preview based on file type
 function displayFilePreview(fileName, fileType, isTrained) {
     const preview = document.createElement('div');
-    preview.className = 'file-preview flex items-center gap-3 p-2 rounded bg-gray-800 text-white shadow-sm';
+    preview.className = 'file-preview flex flex-col items-center gap-1 p-3 rounded bg-gray-800 text-white shadow-sm w-40';
 
     if (!isTrained) {
         preview.classList.add('border', 'border-yellow-500');
     }
 
     // Extract short name
-    let abbreviatedFileName = fileName.split("/").pop().split(".")[0];
+    const abbreviatedFileName = fileName.split("/").pop().split(".")[0];
+
+    // Create download link
+    const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
+    const selectedCourseName = coursesDropdownUpload.selectedOptions[0]?.text || '';
+    const link = document.createElement('a');
+    link.href = `/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
+    link.title = "Download file";
+    link.setAttribute('download', fileName);
 
     // File icon
     const img = document.createElement('img');
-    img.className = 'w-8 h-8';
+    img.className = 'w-16 h-16 object-contain';  // Fixes size & prevents stretching
     img.src = fileType.includes("pdf") ? "static/img/pdf-new.png" :
               fileType.includes("pptx") ? "static/img/pptx.png" :
               "static/img/default.png";
 
+    link.appendChild(img);
+
     // File name text
     const fileNameElement = document.createElement('div');
-    fileNameElement.className = 'file-name truncate max-w-[200px]';
-    fileNameElement.title = abbreviatedFileName;  // Tooltip on hover
+    fileNameElement.className = 'file-name text-sm text-center break-words w-full leading-tight mt-1';
+    fileNameElement.title = abbreviatedFileName;
     fileNameElement.textContent = abbreviatedFileName;
 
     // Delete button
     const deleteButton = document.createElement('button');
-    deleteButton.className = 'delete-icon text-red-400 hover:text-red-600 font-bold ml-auto';
+    deleteButton.className = 'delete-icon absolute top-1 right-1 text-white bg-red-600 px-2 rounded';
     deleteButton.innerText = 'X';
     deleteButton.title = "Remove file";
     deleteButton.addEventListener('click', () => {
@@ -87,12 +97,18 @@ function displayFilePreview(fileName, fileType, isTrained) {
         removeFileFromDocsFolder(fileName);
     });
 
+    // Wrapper to position delete icon
+    const wrapper = document.createElement('div');
+    wrapper.className = 'relative';
+    wrapper.appendChild(link);
+    wrapper.appendChild(deleteButton)
+
     // Combine
-    preview.appendChild(img);
+    preview.appendChild(wrapper);
     preview.appendChild(fileNameElement);
-    preview.appendChild(deleteButton);
     previewDiv.appendChild(preview);
 }
+
 
 function removeFileFromDocsFolder(fileName) {
     const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
@@ -103,8 +119,8 @@ function removeFileFromDocsFolder(fileName) {
         alert("Please select a course.");
         return;
     }
-    console.log(fileName)
-    console.log(selectedCourseName)
+    // console.log(fileName)
+    // console.log(selectedCourseName)
     fetch(`/delete?file=${fileName}&course=${selectedCourseName}`, {
         method: "DELETE"
     })

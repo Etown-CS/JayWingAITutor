@@ -163,6 +163,26 @@ def delete_file():
 
     return jsonify(success=True, message=f"GCS deleted: {gcs_deleted}, Pinecone deleted: {pinecone_deleted}")
 
+# Not tested or implemented
+@app.route('/download', methods=['GET'])
+def download_file():
+    file_name = request.args.get('file')
+    course = request.args.get('course')
+
+    if not file_name or not course:
+        return jsonify(success=False, message="Missing file or course")
+
+    folder_prefix = session.get('folder_prefix')
+    full_path = f"{folder_prefix}/{course}/{file_name}"
+    blob = bucket.blob(full_path)
+
+    if not blob.exists():
+        return jsonify(success=False, message="File does not exist")
+
+    # Generate a signed URL valid for 5 minutes
+    url = blob.generate_signed_url(version='v4', expiration=300, method='GET')
+    return jsonify(success=True, url=url)
+
 # Train model endpoint
 @app.route("/train", methods=["POST"])
 def train_model():

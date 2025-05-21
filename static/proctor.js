@@ -1,7 +1,6 @@
 const fileUploadDiv = document.getElementById('file-upload-div');
 const fileInput = document.getElementById('file-input');
 const previewDiv = document.getElementById('preview-div');
-const trainButton = document.getElementById('train-button');
 const docsFolder = "docs"; // Folder to store files
 
 // Handle file input
@@ -120,36 +119,6 @@ function removeFileFromDocsFolder(fileName) {
     .catch(err => console.error('Error removing file:', err));
 }
 
-// Run the take_prompts.py script when the button is clicked
-trainButton.addEventListener('click', () => {
-    console.log("Running read_docs.py...");
-    const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
-    const selectedCourseName = coursesDropdownUpload.selectedOptions[0].text;  // This gets the course name
-    console.log("Trying to train for course"+selectedCourseName)
-    if (!selectedCourseName) {
-        alert("Please select a course.");
-        return;
-    }
-
-    fetch("/train", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ course_name: selectedCourseName })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log("Model trained successfully.");
-            updateTrainedFiles();
-        } else {
-            console.error(`Error training model: ${data.message}`);
-        }
-    })
-    .catch(err => console.error('Error training model:', err));
-});
-
 // Update preview after training to mark files as trained
 function updateTrainedFiles() {
     const previews = document.querySelectorAll('.file-preview');
@@ -158,16 +127,27 @@ function updateTrainedFiles() {
     });
 }
 
-// Function to load existing files in the docs folder
+// Function to load existing files from currently selected course
+// and display them in the preview area
 function loadExistingFiles() {
-    fetch("/load-docs")
-    .then(response => response.json())
-    .then(files => {
-        files.forEach(file => {
-            displayFilePreview(file.name, file.type, file.isTrained);
-        });
-    })
-    .catch(err => console.error("Error loading files:", err));
+    const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
+    const selectedCourse = coursesDropdownUpload.value;
+    const selectedCourseName = coursesDropdownUpload.selectedOptions[0]?.text;
+
+    if (!selectedCourseName) {
+        console.warn("No course selected, skipping file load.");
+        return;
+    }
+
+    fetch(`/load-docs?course=${encodeURIComponent(selectedCourseName)}`)
+        .then(response => response.json())
+        .then(files => {
+            previewDiv.innerHTML = ''; // Clear existing previews
+            files.forEach(file => {
+                displayFilePreview(file.name, file.type, file.isTrained);
+            });
+        })
+        .catch(err => console.error("Error loading files:", err));
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -175,7 +155,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
     const addCourseBtn = document.getElementById('add-course-btn');
     const modal = document.getElementById('add-course-modal');
-    const courseNameInput = document.getElementById('course-name-input');    
+    const courseNameInput = document.getElementById('course-name-input');
+
+    // Modify loaded files when a new course is selected
+    coursesDropdownUpload.addEventListener('change', loadExistingFiles);
 
     // Fetch courses from the server
     fetch('/get-courses')
@@ -194,6 +177,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     option2.textContent = course.name;
                     coursesDropdownUpload.appendChild(option2);
                 });
+
+                if (data.courses.length > 0) {
+                    coursesDropdownUpload.value = data.courses[0].id;
+                    loadExistingFiles();
+                }
             } else {
                 console.error(data.message);
             }
@@ -289,4 +277,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 // Load existing files on page load
-window.onload = loadExistingFiles;
+// window.onload = loadExistingFiles;

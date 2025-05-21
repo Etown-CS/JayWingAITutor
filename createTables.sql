@@ -14,8 +14,10 @@ CREATE TABLE users (
 -- COURSES TABLE
 CREATE TABLE courses (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(45) NOT NULL,
-    filepath VARCHAR(45)
+    name VARCHAR(45) UNIQUE NOT NULL,
+    courseCode VARCHAR(45) UNIQUE,
+    description TEXT,
+    filepath VARCHAR(45) UNIQUE
 );
 
 -- USER_COURSES TABLE (join table)
@@ -29,3 +31,5 @@ CREATE TABLE user_courses (
 
 -- Access grant below
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON users, courses, user_courses TO {INSERT_USER};
+-- GRANT USAGE, SELECT ON SEQUENCE courses_id_seq TO {INSERT_USER};
+-- GRANT USAGE, SELECT ON SEQUENCE users_id_seq TO {INSERT_USER};

@@ -151,7 +151,7 @@ def extract_text_from_pptx(pptx_bytes):
     return text
 
 # Function to chunk text
-def chunk_text(text, chunk_size=500):
+def chunk_text(text, chunk_size=750):
     """
     Splits text into smaller chunks for embedding.
 
@@ -201,7 +201,7 @@ def to_pinecone(text_dict, course_name):
 
         vectors = embeddings.embed_documents(chunks)
         metadatas = [
-            {"course_name": course_name, "filename": filename, chunk_text: chunk}
+            {"course_name": course_name, "filename": filename, "chunk_text": chunk}
             for chunk in chunks
         ]
 

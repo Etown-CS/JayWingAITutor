@@ -1,11 +1,11 @@
-import os
-from flask import Flask, request, jsonify, render_template, send_from_directory, session
+import os, subprocess, io
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, send_file
 from google.cloud import storage
 from werkzeug.utils import secure_filename
-import subprocess
 from take_prompts import generate_gpt_response
 import psycopg2
 from dotenv import load_dotenv
+from pinecone import Pinecone
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -20,6 +20,7 @@ DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 bucket_name = "ai-tutor-docs-bucket" 
 
@@ -67,32 +68,43 @@ def upload_file():
         filename = secure_filename(file.filename)
         # Construct the file path with course included
         file_path = f"{session.get('folder_prefix')}/{course}/{filename}"
+
+        # Upload the file to the bucket
         blob = bucket.blob(file_path)
         blob.upload_from_file(file)
+
+        # Upload the file to Pinecone
+        try:
+            subprocess.run(['python', 'train/read_docs.py',
+                            session.get('username'), 
+                            course, 
+                            str(session.get('id'))], 
+                            check=True)
+        except subprocess.CalledProcessError as e:
+            return jsonify(success=False, message=f"File uploaded but Pinecone ingestion failed: {str(e)}")
         return jsonify(success=True, message="File uploaded")
     
     return jsonify(success=False, message="Invalid file")
 
 @app.route('/load-docs', methods=['GET'])
 def load_docs():
-    # Initialize the storage client 
     storage_client = storage.Client()
-    bucket_name = "ai-tutor-docs-bucket"
     bucket = storage_client.bucket(bucket_name)
 
-    # Get the folder prefix for the current session
     folder_prefix = session.get('folder_prefix')
-    if not folder_prefix:
-        return jsonify({'error': 'Folder prefix not found in session'}), 400
+    course_name = request.args.get('course')  # <-- get selected course
 
-    # List blobs in the bucket with the specified prefix
-    blobs = bucket.list_blobs(prefix=folder_prefix)
-    
-    # Filter out directories and invalid file types
+    if not folder_prefix or not course_name:
+        return jsonify({'error': 'Missing folder prefix or course name'}), 400
+
+    # Combine to target specific course folder
+    course_path_prefix = f"{folder_prefix}/{course_name}/"
+    blobs = bucket.list_blobs(prefix=course_path_prefix)
+
     valid_extensions = ['pdf', 'pptx']
     file_list = [
         {
-            'name': blob.name.replace(folder_prefix, ''),  # Remove prefix from file name
+            'name': blob.name.replace(course_path_prefix, ''),  # remove folder path
             'type': 'pdf' if blob.name.endswith('.pdf') else 'pptx'
         }
         for blob in blobs
@@ -101,6 +113,7 @@ def load_docs():
 
     return jsonify(file_list)
 
+# Is this ever even used?
 @app.route('/docs/<filename>')
 def get_doc(filename):
     # Serve file from bucket
@@ -114,25 +127,72 @@ def get_doc(filename):
 # Delete file endpoint
 @app.route('/delete', methods=['DELETE'])
 def delete_file():
-    file_name = request.args.get('file')  # File name to delete
-    course = request.args.get('course')  # Course directory
+    file_name = request.args.get('file')
+    course = request.args.get('course')
 
     if not file_name:
         return jsonify(success=False, message="No file specified")
     if not course:
         return jsonify(success=False, message="No course specified")
 
-    # Construct the file path with course included
-    file_path = f"{session.get('folder_prefix')}{file_name}" #through testing, folder_prefix already had username/coursename/ 
+    file_path = f"{session.get('folder_prefix')}/{course}/{file_name}"
     blob = bucket.blob(file_path)
 
+    gcs_deleted = False
+    pinecone_deleted = False
+
+    # Attempt to delete from GCS
     if blob.exists():
         blob.delete()
-        return jsonify(success=True, message="File deleted")
-    
-    return jsonify(success=False, message="File not found at "+file_path)
+        gcs_deleted = True
 
-# TODO: Add chunking and embedding here
+    # Attempt to delete from Pinecone
+    try:
+        index_name = "ai-tutor-index"
+        index = pc.Index(index_name)
+
+        # Delete vectors by metadata filter
+        index.delete(
+            filter={"filename": file_name, "course_name": course},
+            namespace=course
+        )
+        pinecone_deleted = True
+    except Exception as e:
+        return jsonify(success=False, message=f"GCS deleted: {gcs_deleted}, but error deleting from Pinecone: {str(e)}")
+
+    return jsonify(success=True, message=f"GCS deleted: {gcs_deleted}, Pinecone deleted: {pinecone_deleted}")
+
+# Not tested or implemented
+@app.route('/download')
+def download_file():
+    file_name = request.args.get('file')
+    course = request.args.get('course')
+
+    if not file_name or not course:
+        return jsonify(success=False, message="Missing file or course"), 400
+
+    folder_prefix = session.get('folder_prefix')
+    if not folder_prefix:
+        return jsonify(success=False, message="No folder prefix in session"), 400
+
+    blob_path = f"{folder_prefix}/{course}/{file_name}"
+    blob = bucket.blob(blob_path)
+
+    if not blob.exists():
+        return jsonify(success=False, message="File not found in bucket"), 404
+
+    # Download file content into memory
+    file_data = blob.download_as_bytes()
+    file_stream = io.BytesIO(file_data)
+
+    # Determine content type (you could also guess with `mimetypes`)
+    content_type = 'application/pdf' if file_name.endswith('.pdf') else 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+
+    return send_file(file_stream,
+                     as_attachment=True,
+                     download_name=file_name,
+                     mimetype=content_type)
+
 # Train model endpoint
 @app.route("/train", methods=["POST"])
 def train_model():
@@ -160,7 +220,7 @@ def train_model():
 @app.route('/assign-student', methods=['POST'])
 def assign_student():
     """
-    Assign a student to a course and update the `learned_context` for all entries in that course.
+    Assign a student to a course.
     """
     try:
         data = request.get_json()
@@ -178,7 +238,7 @@ def assign_student():
                             JOIN user_courses uc ON c.id = uc.courseId 
                             JOIN users u ON u.id = uc.userId 
                             WHERE c.name = %s AND u.id = %s AND u.role = 1"""
-
+        
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(student_query, (student_username,))
@@ -193,24 +253,14 @@ def assign_student():
                     return jsonify({'success': False, 'message': 'Course not found.'}), 404
                 course_id = course_row[0]
 
-                # Fetch the current context for the course
-                context_query = "SELECT context FROM courses WHERE id = %s"
-                cursor.execute(context_query, (course_id,))
-                context_row = cursor.fetchone()
-                learned_context = context_row[0] if context_row else ""
-
                 # Insert into Student_Courses table
                 insert_query = """
-                INSERT INTO user_courses (userId, courseId, learnedContext) 
-                VALUES (%s, %s, %s)
+                INSERT INTO user_courses (userId, courseId) 
+                VALUES (%s, %s)
                 """
-                cursor.execute(insert_query, (student_id, course_id, learned_context))
+                cursor.execute(insert_query, (student_id, course_id))
 
-                # Update learned_context for all course entries
-                update_query = "UPDATE user_courses SET learnedContext = %s WHERE courseId = %s"
-                cursor.execute(update_query, (learned_context, course_id))
-
-            conn.commit()  # Ensure changes are committed
+            conn.commit()
 
         return jsonify({'success': True, 'message': 'Student assigned successfully.'}), 200
     except Exception as e:
@@ -303,14 +353,14 @@ def add_course():
     try:
         # Insert the new course into the Courses table
         cursor.execute(
-            "INSERT INTO courses (name, context, filepath) VALUES (%s, '', %s) RETURNING id",
+            "INSERT INTO courses (name, filepath) VALUES (%s, %s) RETURNING id",
             (course_name, f"{folder_prefix}{course_name}/")
         )
         course_id = cursor.fetchone()[0]
 
         # Associate the professor with the course
         cursor.execute(
-            "INSERT INTO user_courses (userId, courseId, learnedContext) VALUES (%s, %s, '')",
+            "INSERT INTO user_courses (userId, courseId) VALUES (%s, %s)",
             (proctor_id, course_id)
         )
         conn.commit()

@@ -88,7 +88,7 @@
                         <textarea readonly class="form-control bg-dark text-white" id="class-description" style="height: 37.6px;"></textarea>
                     </div>
                 </div>
-                <button type="submit" id="add-course-btn" class="btn btn-primary">Add New Course</button>
+                <button type="button" id="add-course-btn" class="btn btn-primary">Add New Course</button>
             </form>
             
             <div class="table-responsive mt-4">
@@ -117,8 +117,8 @@
                 <div class="row">
                     <!-- Class dropdown -->
                     <div class="col-md-4 mb-3">
-                        <label for="courses-dropdown" class="form-label">Select Course:</label>
-                        <select class="form-select bg-dark text-white" id="courses-dropdown">
+                        <label for="courses-dropdown-enroll" class="form-label">Select Course:</label>
+                        <select class="form-select bg-dark text-white" id="courses-dropdown-enroll">
                             <!-- Courses will be dynamically populated here -->
                         </select>
                     </div>
@@ -138,7 +138,7 @@
                         </select>
                     </div>
                 </div>
-                <button id="assign-student-btn" type="submit" class="btn btn-primary">Add Enrollment</button>
+                <button id="assign-student-btn" type="button" class="btn btn-primary">Add Enrollment</button>
             </form>
 
             <div class="table-responsive mt-4">
@@ -167,22 +167,20 @@
                 <div class="row">
                     <!-- Class dropdown -->
                     <div class="col-md-4 mb-3">
-                        <label for="courses-dropdown" class="form-label">Select Course:</label>
-                        <select class="form-select bg-dark text-white" id="courses-dropdown">
+                        <label for="courses-dropdown-upload" class="form-label">Select Course:</label>
+                        <select class="form-select bg-dark text-white" id="courses-dropdown-upload">
                             <!-- Courses will be dynamically populated here -->
                         </select>
                     </div>
 
                     <!-- User input -->
-                    <form>
-                        <div class="col-md-4 mb-3" id="file-upload-div">
-                            <label class="form-label" for="file-input">Upload Documents</label>
-                            <input type="file" class="form-control-file" id="file-input" multiple>
-                        </div>
-                    </form>
+                    <div class="col-md-4 mb-3" id="file-upload-div">
+                        <label class="form-label" for="file-input">Upload Documents</label>
+                        <input type="file" class="form-control-file" id="file-input" multiple>
+                    </div>
                 
                 </div>
-                <button id="train-button" type="submit" class="btn btn-primary">Train Model</button>
+                <button id="train-button" type="button" class="btn btn-primary">Train Model</button>
 
                 <!-- Preview Section -->
                 <div id="preview-div">

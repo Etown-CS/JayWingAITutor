@@ -4,27 +4,11 @@ const previewDiv = document.getElementById('preview-div');
 const trainButton = document.getElementById('train-button');
 const docsFolder = "docs"; // Folder to store files
 
-// Clicking on the div opens the file selector
-fileUploadDiv.addEventListener('click', () => {
-    fileInput.click();
-});
-
 // Handle file input
 fileInput.addEventListener('change', handleFiles);
 
-// Drag-and-drop functionality
-fileUploadDiv.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    fileUploadDiv.style.backgroundColor = '#E1261C'; // Change color when hovering with a file
-});
-
-fileUploadDiv.addEventListener('dragleave', () => {
-    fileUploadDiv.style.backgroundColor = '#3DB5E6'; // Change back to original color
-});
-
 fileUploadDiv.addEventListener('drop', (e) => {
     e.preventDefault();
-    fileUploadDiv.style.backgroundColor = '#3DB5E6'; // Reset background
     const files = e.dataTransfer.files;
     handleFiles({ target: { files } });
 });
@@ -32,10 +16,10 @@ fileUploadDiv.addEventListener('drop', (e) => {
 // Function to handle files and display thumbnails
 function handleFiles(event) {
     console.log(event)
-    const coursesDropdown = document.getElementById('courses-dropdown');
+    const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
     const files = event.target.files;
-    const selectedCourse = coursesDropdown.value;
-    const selectedCourseName = coursesDropdown.selectedOptions[0].text;  // This gets the course name
+    const selectedCourse = coursesDropdownUpload.value;
+    const selectedCourseName = coursesDropdownUpload.selectedOptions[0].text;  // This gets the course name
     // if the above name call doesnt work, consider .text instead (data seemed to contain the text but maybe it doesnt always?)
     if (!selectedCourseName) {
         alert("Please select a course before uploading files.");
@@ -72,30 +56,39 @@ function saveFileToDocsFolder(file, course) {
 // Display file preview based on file type
 function displayFilePreview(fileName, fileType, isTrained) {
     const preview = document.createElement('div');
-    preview.className = 'file-preview';
+    preview.className = 'file-preview flex items-center gap-3 p-2 rounded bg-gray-800 text-white shadow-sm';
+
     if (!isTrained) {
-        preview.classList.add('untrained');
+        preview.classList.add('border', 'border-yellow-500');
     }
 
+    // Extract short name
+    let abbreviatedFileName = fileName.split("/").pop().split(".")[0];
+
+    // File icon
     const img = document.createElement('img');
-    if (fileType.includes("pdf")) {
-        img.src = "img/pdf.png";
-    } else if (fileType.includes("pptx")) {
-        img.src = "img/pptx.png";
-    }
+    img.className = 'w-8 h-8';
+    img.src = fileType.includes("pdf") ? "static/img/pdf-new.png" :
+              fileType.includes("pptx") ? "static/img/pptx.png" :
+              "static/img/default.png";
 
+    // File name text
     const fileNameElement = document.createElement('div');
-    fileNameElement.className = 'file-name';
-    fileNameElement.textContent = fileName;
+    fileNameElement.className = 'file-name truncate max-w-[200px]';
+    fileNameElement.title = abbreviatedFileName;  // Tooltip on hover
+    fileNameElement.textContent = abbreviatedFileName;
 
+    // Delete button
     const deleteButton = document.createElement('button');
-    deleteButton.className = 'delete-icon';
+    deleteButton.className = 'delete-icon text-red-400 hover:text-red-600 font-bold ml-auto';
     deleteButton.innerText = 'X';
+    deleteButton.title = "Remove file";
     deleteButton.addEventListener('click', () => {
         preview.remove();
         removeFileFromDocsFolder(fileName);
     });
 
+    // Combine
     preview.appendChild(img);
     preview.appendChild(fileNameElement);
     preview.appendChild(deleteButton);
@@ -103,9 +96,9 @@ function displayFilePreview(fileName, fileType, isTrained) {
 }
 
 function removeFileFromDocsFolder(fileName) {
-    const coursesDropdown = document.getElementById('courses-dropdown');
-    const selectedCourse = coursesDropdown.value;
-    const selectedCourseName = coursesDropdown.selectedOptions[0].text;  // This gets the course name
+    const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
+    const selectedCourse = coursesDropdownUpload.value;
+    const selectedCourseName = coursesDropdownUpload.selectedOptions[0].text;  // This gets the course name
 
     if (!selectedCourseName) {
         alert("Please select a course.");
@@ -130,8 +123,8 @@ function removeFileFromDocsFolder(fileName) {
 // Run the take_prompts.py script when the button is clicked
 trainButton.addEventListener('click', () => {
     console.log("Running read_docs.py...");
-    const coursesDropdown = document.getElementById('courses-dropdown');
-    const selectedCourseName = coursesDropdown.selectedOptions[0].text;  // This gets the course name
+    const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
+    const selectedCourseName = coursesDropdownUpload.selectedOptions[0].text;  // This gets the course name
     console.log("Trying to train for course"+selectedCourseName)
     if (!selectedCourseName) {
         alert("Please select a course.");
@@ -178,22 +171,28 @@ function loadExistingFiles() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    const coursesDropdown = document.getElementById('courses-dropdown');
+    const coursesDropdownEnroll = document.getElementById('courses-dropdown-enroll');
+    const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
     const addCourseBtn = document.getElementById('add-course-btn');
     const modal = document.getElementById('add-course-modal');
-    const courseNameInput = document.getElementById('course-name-input');
+    const courseNameInput = document.getElementById('course-name-input');    
 
     // Fetch courses from the server
     fetch('/get-courses')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Populate the dropdown menu
+                // Populate both dropdowns with the same course options
                 data.courses.forEach(course => {
-                    const option = document.createElement('option');
-                    option.value = course.id;
-                    option.textContent = course.name;
-                    coursesDropdown.appendChild(option);
+                    const option1 = document.createElement('option');
+                    option1.value = course.id;
+                    option1.textContent = course.name;
+                    coursesDropdownEnroll.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = course.id;
+                    option2.textContent = course.name;
+                    coursesDropdownUpload.appendChild(option2);
                 });
             } else {
                 console.error(data.message);
@@ -202,7 +201,8 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(error => console.error('Error fetching courses:', error));
 
     // Add/Save the new course
-    addCourseBtn.addEventListener('click', function () {
+    addCourseBtn.addEventListener('click', function (event) {
+        event.preventDefault(); // Prevent form submission and page reload
         const courseName = courseNameInput.value.trim();
 
         if (!courseName) {
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // TODO: Check if course already exists
         
-
+        console.log('Sending new course name:', courseName); // delete
         fetch('/add-course', {
             method: 'POST',
             headers: {
@@ -222,13 +222,21 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(data => {
+            console.log('Server response:', data); // delete
             if (data.success) {
                 alert('Course added successfully!');
                 // Add the new course to the dropdown
-                const option = document.createElement('option');
-                option.value = data.course_id;
-                option.textContent = courseName;
-                coursesDropdown.appendChild(option);
+                const optionUpload = document.createElement('option');
+                optionUpload.value = data.course.id;
+                optionUpload.textContent = courseName;
+
+                const optionEnroll = document.createElement('option');
+                optionEnroll.value = data.course.id;
+                optionEnroll.textContent = courseName;
+
+                coursesDropdownUpload.appendChild(optionUpload);
+                coursesDropdownEnroll.appendChild(optionEnroll);
+
 
                 courseNameInput.value = '';
             } else {
@@ -241,10 +249,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    document.getElementById('assign-student-btn').addEventListener('click', () => {
+    document.getElementById('assign-student-btn').addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent form submission and page reload
         const studentUsername = document.getElementById('student-username').value.trim();
-        const coursesDropdown = document.getElementById('courses-dropdown'); 
-        const selectedCourseName = coursesDropdown.selectedOptions[0].text;  // This gets the course name.
+        const coursesDropdownEnroll = document.getElementById('courses-dropdown-enroll'); 
+        const selectedCourseName = coursesDropdownEnroll.selectedOptions[0].text;  // This gets the course name.
 
         if (!studentUsername) {
             alert("Please enter a student username.");
@@ -271,6 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(err => {
             console.error('Error assigning student:', err);
+            console.trace();
             alert('An error occurred while assigning the student.');
         });
     });

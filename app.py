@@ -132,7 +132,6 @@ def delete_file():
     
     return jsonify(success=False, message="File not found at "+file_path)
 
-# TODO: Add chunking and embedding here
 # Train model endpoint
 @app.route("/train", methods=["POST"])
 def train_model():
@@ -160,7 +159,7 @@ def train_model():
 @app.route('/assign-student', methods=['POST'])
 def assign_student():
     """
-    Assign a student to a course and update the `learned_context` for all entries in that course.
+    Assign a student to a course.
     """
     try:
         data = request.get_json()
@@ -178,7 +177,7 @@ def assign_student():
                             JOIN user_courses uc ON c.id = uc.courseId 
                             JOIN users u ON u.id = uc.userId 
                             WHERE c.name = %s AND u.id = %s AND u.role = 1"""
-
+        
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(student_query, (student_username,))
@@ -193,24 +192,14 @@ def assign_student():
                     return jsonify({'success': False, 'message': 'Course not found.'}), 404
                 course_id = course_row[0]
 
-                # Fetch the current context for the course
-                context_query = "SELECT context FROM courses WHERE id = %s"
-                cursor.execute(context_query, (course_id,))
-                context_row = cursor.fetchone()
-                learned_context = context_row[0] if context_row else ""
-
                 # Insert into Student_Courses table
                 insert_query = """
-                INSERT INTO user_courses (userId, courseId, learnedContext) 
-                VALUES (%s, %s, %s)
+                INSERT INTO user_courses (userId, courseId) 
+                VALUES (%s, %s)
                 """
-                cursor.execute(insert_query, (student_id, course_id, learned_context))
+                cursor.execute(insert_query, (student_id, course_id))
 
-                # Update learned_context for all course entries
-                update_query = "UPDATE user_courses SET learnedContext = %s WHERE courseId = %s"
-                cursor.execute(update_query, (learned_context, course_id))
-
-            conn.commit()  # Ensure changes are committed
+            conn.commit()
 
         return jsonify({'success': True, 'message': 'Student assigned successfully.'}), 200
     except Exception as e:
@@ -303,14 +292,14 @@ def add_course():
     try:
         # Insert the new course into the Courses table
         cursor.execute(
-            "INSERT INTO courses (name, context, filepath) VALUES (%s, '', %s) RETURNING id",
+            "INSERT INTO courses (name, filepath) VALUES (%s, %s) RETURNING id",
             (course_name, f"{folder_prefix}{course_name}/")
         )
         course_id = cursor.fetchone()[0]
 
         # Associate the professor with the course
         cursor.execute(
-            "INSERT INTO user_courses (userId, courseId, learnedContext) VALUES (%s, %s, '')",
+            "INSERT INTO user_courses (userId, courseId) VALUES (%s, %s)",
             (proctor_id, course_id)
         )
         conn.commit()

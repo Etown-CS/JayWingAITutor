@@ -80,7 +80,6 @@
 // WORKING: textarea expands with text when typed
 document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('student-question');
-    const submitButton = document.getElementById('submit-question');
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
 
     function autoResizeTextarea() {
@@ -103,6 +102,48 @@ document.addEventListener('DOMContentLoaded', () => {
             form.submit(); // Submit the form
             textarea.value = ''; // Clear textarea after sending
             autoResizeTextarea(); // Reset height
+        }
+    });
+});
+
+// In your ../static/student.js file
+
+// Sidebar toggle button logic
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('toggle-sidebar');
+const content = document.getElementById('my-content');
+
+toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+    content.classList.toggle('collapsed-sidebar');
+
+    // Optional: Change button text/icon for better UX
+    if (sidebar.classList.contains('collapsed')) {
+        toggleBtn.textContent = '☰'; // Icon for "expand"
+    } else {
+        toggleBtn.textContent = '≣'; // Icon for "collapse"
+    }
+});
+
+// Keep your existing textarea auto-resize logic.
+document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('student-question');
+    const form = document.forms.messageForm;
+
+    function autoResizeTextarea() {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    textarea.addEventListener('input', autoResizeTextarea);
+    autoResizeTextarea();
+
+    textarea.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            form.submit();
+            textarea.value = '';
+            autoResizeTextarea();
         }
     });
 });

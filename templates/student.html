@@ -27,10 +27,12 @@
                 <div class="px-3 pt-3 d-flex align-items-center w-full">
                     <input
                         type="text"
+                        id="searchBar"
                         class="form-control flex-grow-1 me-2 sidebar-content-hide"
                         placeholder="🔍 Search Chats..."
                         aria-label="ChatSearch"
                         aria-describedby="basic-addon1"
+                        oninput="filterClasses()"
                     >
                     <button
                         type="button"
@@ -56,43 +58,8 @@
             <!-- List of existing chats -->
             <div class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto sidebar-content-hide">
                 <!-- TODO: implement with php -->
-                <div class="d-grid gap-2">
-                    <a href="?chat_id=1" class="block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=2" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=3" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=4" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=5" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=6" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=7" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=8" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
-                    <a href="?chat_id=9" class="block p-3 rounded active:bg-gray-300 hover:bg-gray-200 bg-gray-100 message-container">
-                        <div class="font-medium truncate">courseName</div>
-                        <div class="text-xs text-gray-500 truncate">mostRecentMessage</div>
-                    </a>
+                <div id="chat-div" class="d-grid gap-2">
+                    <!-- Dynamically added via JS -->
                 </div>
 
             </div>

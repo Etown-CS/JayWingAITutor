@@ -299,7 +299,7 @@ def get_courses():
                        FROM courses c 
                        JOIN user_courses uc ON c.id = uc.courseId 
                        JOIN users u ON uc.userId = u.id 
-                       WHERE u.id = %s AND u.role = 1""", (proctor_id,))
+                       WHERE u.id = %s""", (proctor_id,))
         courses = cursor.fetchall()
         # Return a list of courses as JSON
         return jsonify(success=True, courses=[{"id": row[0], "name": row[1]} for row in courses])

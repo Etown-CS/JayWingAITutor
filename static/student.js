@@ -1,83 +1,44 @@
-// // Fetch available courses for the student
-// function fetchAssignedCourses() {
-//     fetch('/get-student-courses')
-//         .then(response => response.json())
-//         .then(data => {
-//             if (data.success) {
-//                 populateCourseDropdown(data.courses);
-//             } else {
-//                 console.error("Error fetching courses:", data.message);
-//             }
-//         })
-//         .catch(err => {
-//             console.error("Error:", err);
-//         });
-// }
+const chatDiv = document.getElementById('chat-div');
 
-// // Populate the dropdown with courses
-// function populateCourseDropdown(courses) {
-//     const dropdown = document.getElementById('courses-dropdown');
-//     dropdown.innerHTML = ""; // Clear existing options
+// Existing question submission functionality
+// TODO: find a way to get the course from the database to fix
+function askQuestion() {
+    const question = document.getElementById('student-question').value;
+    // const coursesDropdown = document.getElementById('courses-dropdown');
+    // const selectedCourseName = coursesDropdown.selectedOptions[0].text;
 
-//     courses.forEach(course => {
-//         const option = document.createElement('option');
-//         option.value = course.id; // Use course ID as the value
-//         option.textContent = course.name; // Display course name
-//         dropdown.appendChild(option);
-//     });
-// }
+    fetch('/ask-question', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            question: question,
+            courseName: selectedCourseName,
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateConversation(data.response);
+            } else {
+                console.error("Error in response:", data.message);
+            }
+        })
+        .catch(err => {
+            console.error("Error:", err);
+        });
+};
 
-// // Handle course switch button click
-// document.getElementById('switch-course-btn').addEventListener('click', () => {
-//     const selectedCourseId = document.getElementById('courses-dropdown').value;
-//     console.log("Selected course ID:", selectedCourseId);
+function updateConversation(tutorResponse) {
+    const conversationDiv = document.getElementById('conversation');
+    const newMessage = document.createElement('p');
+    newMessage.textContent = tutorResponse;
+    conversationDiv.appendChild(newMessage);
+    conversationDiv.scrollTop = conversationDiv.scrollHeight;
+}
 
-//     // This is a placeholder for future functionality
-//     alert(`Course switched to ID: ${selectedCourseId}`);
-// });
-
-// // Existing question submission functionality
-// document.getElementById('submit-question').addEventListener('click', function () {
-//     const question = document.getElementById('student-question').value;
-//     const coursesDropdown = document.getElementById('courses-dropdown');
-//     const selectedCourseName = coursesDropdown.selectedOptions[0].text;
-
-//     fetch('/ask-question', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({
-//             question: question,
-//             courseName: selectedCourseName,
-//         }),
-//     })
-//         .then(response => response.json())
-//         .then(data => {
-//             if (data.success) {
-//                 updateConversation(data.response);
-//             } else {
-//                 console.error("Error in response:", data.message);
-//             }
-//         })
-//         .catch(err => {
-//             console.error("Error:", err);
-//         });
-// });
-
-// function updateConversation(tutorResponse) {
-//     const conversationDiv = document.getElementById('conversation');
-//     const newMessage = document.createElement('p');
-//     newMessage.textContent = tutorResponse;
-//     conversationDiv.appendChild(newMessage);
-//     conversationDiv.scrollTop = conversationDiv.scrollHeight;
-// }
-
-
-// // Fetch courses when the page loads
-// document.addEventListener('DOMContentLoaded', fetchAssignedCourses);
-
-// WORKING: textarea expands with text when typed
+// Text area expands with text when typed
 document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('student-question');
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
@@ -99,14 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
     textarea.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Prevent default new line
+            askQuestion(); // Submit question to AI Tutor
             form.submit(); // Submit the form
             textarea.value = ''; // Clear textarea after sending
             autoResizeTextarea(); // Reset height
         }
     });
 });
-
-// In your ../static/student.js file
 
 // Sidebar toggle button logic
 const sidebar = document.getElementById('sidebar');
@@ -125,25 +85,93 @@ toggleBtn.addEventListener('click', () => {
     }
 });
 
-// Keep your existing textarea auto-resize logic.
-document.addEventListener('DOMContentLoaded', () => {
-    const textarea = document.getElementById('student-question');
-    const form = document.forms.messageForm;
 
-    function autoResizeTextarea() {
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
-    }
+// Fetch courses from the server
+fetch('/get-courses')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Populate both dropdowns with the same course options
+            data.courses.forEach(course => {
+                displayCourses(course)
+            });
 
-    textarea.addEventListener('input', autoResizeTextarea);
-    autoResizeTextarea();
-
-    textarea.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            form.submit();
-            textarea.value = '';
-            autoResizeTextarea();
+            if (data.courses.length > 0) {
+                coursesDropdownUpload.value = data.courses[0].id;
+            }
+        } else {
+            console.error(data.message);
         }
-    });
-});
+    })
+    .catch(error => console.error('Error fetching courses:', error));
+
+// Display courses in sidebar
+function displayCourses(course) {
+    const courseBtn = document.createElement('a');
+    courseBtn.className = 'block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container';
+    courseBtn.href = `?chat_id=${course.id}`;
+
+    // Name of Course
+    const courseName = document.createElement('div');
+    courseName.className = 'font-medium truncate';
+    courseName.textContent = course.name;
+
+    courseBtn.appendChild(courseName);
+
+
+    // Most Recent Message
+    const mostRecentMessage = document.createElement('div');
+    mostRecentMessage.className = 'text-xs text-gray-500 truncate';
+    mostRecentMessage.textContent = 'TODO: mostRecentMessage';
+
+    courseBtn.appendChild(mostRecentMessage);
+
+
+    // Combine
+    chatDiv.appendChild(courseBtn);
+}
+
+// TODO: // Fetch messages from the server
+// fetch('/get-messages')
+//     .then(response => response.json())
+//     .then(data => {
+//         if (data.success) {
+//             // Populate both dropdowns with the same course options
+//             data.courses.forEach(course => {
+//                 displayMessages(TODO)
+//             });
+
+//             if (data.courses.length > 0) {
+//                 coursesDropdownUpload.value = data.courses[0].id;
+//             }
+//         } else {
+//             console.error(data.message);
+//         }
+//     })
+//     .catch(error => console.error('Error fetching messages:', error));
+
+// // Display messages in chat area
+// function displayMessages(TODO) {
+//     const courseBtn = document.createElement('a');
+//     courseBtn.className = 'block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container';
+//     courseBtn.href = `?chat_id=${course.id}`;
+
+//     // Name of Course
+//     const courseName = document.createElement('div');
+//     courseName.className = 'font-medium truncate';
+//     courseName.textContent = course.name;
+
+//     courseBtn.appendChild(courseName);
+
+
+//     // Most Recent Message
+//     const mostRecentMessage = document.createElement('div');
+//     mostRecentMessage.className = 'text-xs text-gray-500 truncate';
+//     mostRecentMessage.textContent = 'TODO: mostRecentMessage';
+
+//     courseBtn.appendChild(mostRecentMessage);
+
+
+//     // Combine
+//     chatDiv.appendChild(courseBtn);
+// }

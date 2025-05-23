@@ -308,6 +308,30 @@ def get_courses():
     finally:
         cursor.close()
         conn.close()
+
+@app.route('/get-messages', methods=['GET'])
+def get_courses():
+    proctor_id = session.get("id")
+    if not proctor_id:
+        return jsonify(success=False, message="Unauthorized"), 401
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""SELECT c.id, c.name 
+                       FROM courses c 
+                       JOIN user_courses uc ON c.id = uc.courseId 
+                       JOIN users u ON uc.userId = u.id 
+                       WHERE u.id = %s""", (proctor_id,))
+        courses = cursor.fetchall()
+        # Return a list of courses as JSON
+        return jsonify(success=True, courses=[{"id": row[0], "name": row[1]} for row in courses])
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+    finally:
+        cursor.close()
+        conn.close()
+
         
 @app.route('/get-student-courses', methods=['GET'])
 def get_student_courses():

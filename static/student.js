@@ -1,5 +1,11 @@
 const chatDiv = document.getElementById('chat-div');
 
+window.onload = function() {
+      const scrollable = document.getElementById('conversation');
+      scrollable.scrollTop = scrollable.scrollHeight;
+    };
+
+
 // Existing question submission functionality
 // TODO: find a way to get the course from the database to fix
 function askQuestion() {
@@ -95,10 +101,6 @@ fetch('/get-courses')
             data.courses.forEach(course => {
                 displayCourses(course)
             });
-
-            if (data.courses.length > 0) {
-                coursesDropdownUpload.value = data.courses[0].id;
-            }
         } else {
             console.error(data.message);
         }
@@ -131,19 +133,16 @@ function displayCourses(course) {
     chatDiv.appendChild(courseBtn);
 }
 
-// TODO: // Fetch messages from the server
+
+// // Fetch messages from the server
 // fetch('/get-messages')
 //     .then(response => response.json())
 //     .then(data => {
 //         if (data.success) {
 //             // Populate both dropdowns with the same course options
-//             data.courses.forEach(course => {
-//                 displayMessages(TODO)
+//             data.courses.forEach(message => {
+//                 displayMessages(message)
 //             });
-
-//             if (data.courses.length > 0) {
-//                 coursesDropdownUpload.value = data.courses[0].id;
-//             }
 //         } else {
 //             console.error(data.message);
 //         }
@@ -151,8 +150,8 @@ function displayCourses(course) {
 //     .catch(error => console.error('Error fetching messages:', error));
 
 // // Display messages in chat area
-// function displayMessages(TODO) {
-//     const courseBtn = document.createElement('a');
+// function displayMessages(message) {
+//     const message = document.createElement('div');
 //     courseBtn.className = 'block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container';
 //     courseBtn.href = `?chat_id=${course.id}`;
 

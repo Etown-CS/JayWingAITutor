@@ -310,7 +310,7 @@ def get_courses():
         conn.close()
 
 @app.route('/get-messages', methods=['GET'])
-def get_courses():
+def get_messages():
     proctor_id = session.get("id")
     if not proctor_id:
         return jsonify(success=False, message="Unauthorized"), 401

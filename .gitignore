@@ -4,3 +4,5 @@ context.json
 docs
 note.txt
 testCourseSQL.py
+node_modules/
+__pycache__/

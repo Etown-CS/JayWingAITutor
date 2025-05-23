@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory,
 from google.cloud import storage
 from werkzeug.utils import secure_filename
 from take_prompts import generate_gpt_response
-import psycopg2
+import mysql.connector
 from dotenv import load_dotenv
 from pinecone import Pinecone
 
@@ -18,6 +18,7 @@ DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")
 DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
+DB_PORT = os.environ.get("DB_PORT")
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
@@ -39,18 +40,6 @@ ALLOWED_EXTENSIONS = {'pdf', 'pptx'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/')
-def index():
-    return render_template('home.html')
-
-@app.route('/student')
-def student():
-    return render_template('student.html')
-
-@app.route('/proctor')
-def proctor():
-    return render_template('proctor.html')
 
 # Upload file endpoint
 @app.route('/upload', methods=['POST'])
@@ -114,15 +103,15 @@ def load_docs():
     return jsonify(file_list)
 
 # Is this ever even used?
-@app.route('/docs/<filename>')
-def get_doc(filename):
-    # Serve file from bucket
-    blob = bucket.blob(f"{session.get('folder_prefix')}{filename}")
-    if blob.exists():
-        file_data = blob.download_as_bytes()
-        response = send_from_directory(file_data, mimetype='application/pdf' if filename.endswith('.pdf') else 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
-        return response
-    return jsonify(success=False, message="File not found"), 404
+# @app.route('/docs/<filename>')
+# def get_doc(filename):
+#     # Serve file from bucket
+#     blob = bucket.blob(f"{session.get('folder_prefix')}{filename}")
+#     if blob.exists():
+#         file_data = blob.download_as_bytes()
+#         response = send_from_directory(file_data, mimetype='application/pdf' if filename.endswith('.pdf') else 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
+#         return response
+#     return jsonify(success=False, message="File not found"), 404
 
 # Delete file endpoint
 @app.route('/delete', methods=['DELETE'])
@@ -239,30 +228,35 @@ def assign_student():
                             JOIN users u ON u.id = uc.userId 
                             WHERE c.name = %s AND u.id = %s AND u.role = 1"""
         
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(student_query, (student_username,))
-                student_row = cursor.fetchone()
-                if not student_row:
-                    return jsonify({'success': False, 'message': 'Student not found.'}), 404
-                student_id = student_row[0]
+        # Establish a database connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-                cursor.execute(course_query, (course_name, proctor_id))
-                course_row = cursor.fetchone()
-                if not course_row:
-                    return jsonify({'success': False, 'message': 'Course not found.'}), 404
-                course_id = course_row[0]
+        try:
+            cursor.execute(student_query, (student_username,))
+            student_row = cursor.fetchone()
+            if not student_row:
+                return jsonify({'success': False, 'message': 'Student not found.'}), 404
+            student_id = student_row[0]
 
-                # Insert into Student_Courses table
-                insert_query = """
-                INSERT INTO user_courses (userId, courseId) 
-                VALUES (%s, %s)
-                """
-                cursor.execute(insert_query, (student_id, course_id))
+            cursor.execute(course_query, (course_name, proctor_id))
+            course_row = cursor.fetchone()
+            if not course_row:
+                return jsonify({'success': False, 'message': 'Course not found.'}), 404
+            course_id = course_row[0]
+
+            # Insert into Student_Courses table
+            insert_query = """
+            INSERT INTO user_courses (userId, courseId) 
+            VALUES (%s, %s)
+            """
+            cursor.execute(insert_query, (student_id, course_id))
 
             conn.commit()
-
-        return jsonify({'success': True, 'message': 'Student assigned successfully.'}), 200
+            return jsonify({'success': True, 'message': 'Student assigned successfully.'}), 200
+        finally:
+            cursor.close()
+            conn.close()
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -332,7 +326,6 @@ def get_messages():
         cursor.close()
         conn.close()
 
-        
 @app.route('/get-student-courses', methods=['GET'])
 def get_student_courses():
     try:
@@ -348,11 +341,20 @@ def get_student_courses():
         INNER JOIN users u ON uc.userId = u.id 
         WHERE u.id = %s AND u.role = 0
         """
-        with get_db_connection().cursor() as cursor:
+
+        # Establish a database connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Fetch the courses for the student
             cursor.execute(query, (student_id,))
             courses = [{'id': row[0], 'name': row[1]} for row in cursor.fetchall()]
+            return jsonify({'success': True, 'courses': courses}), 200
+        finally:
+            cursor.close()
+            conn.close()
 
-        return jsonify({'success': True, 'courses': courses}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -377,10 +379,10 @@ def add_course():
     try:
         # Insert the new course into the Courses table
         cursor.execute(
-            "INSERT INTO courses (name, filepath) VALUES (%s, %s) RETURNING id",
+            "INSERT INTO courses (name, filepath) VALUES (%s, %s)",
             (course_name, f"{folder_prefix}{course_name}/")
         )
-        course_id = cursor.fetchone()[0]
+        course_id = cursor.lastrowid  # Get the ID of the newly created course
 
         # Associate the professor with the course
         cursor.execute(
@@ -409,11 +411,12 @@ def add_course():
 
 
 def get_db_connection():
-    conn = psycopg2.connect(
+    conn = mysql.connector.connect(
         host=DB_HOST,
-        dbname=DB_NAME,
+        database=DB_NAME,
         user=DB_USER,
-        password=DB_PASS
+        password=DB_PASS,
+        port=int(DB_PORT)
     )
     return conn
 
@@ -424,7 +427,6 @@ def login():
     password = data.get("password")
     role = data.get("role")  # Either "student" or "proctor"
 
-    table = "Students" if role == "student" else "Proctors"
     conn = get_db_connection()
     cursor = conn.cursor()
 

@@ -1,5 +1,6 @@
 import os, subprocess, io
-from flask import Flask, request, jsonify, render_template, send_from_directory, session, send_file
+from flask import Flask, request, jsonify, session, send_file
+from flask_cors import CORS
 from google.cloud import storage
 from werkzeug.utils import secure_filename
 from backend.take_prompts import generate_gpt_response
@@ -7,7 +8,8 @@ import mysql.connector
 from dotenv import load_dotenv
 from pinecone import Pinecone
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__)
+CORS(app)
 
 app.secret_key = os.urandom(24) #random session ID
 

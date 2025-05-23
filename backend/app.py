@@ -2,7 +2,7 @@ import os, subprocess, io
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, send_file
 from google.cloud import storage
 from werkzeug.utils import secure_filename
-from take_prompts import generate_gpt_response
+from backend.take_prompts import generate_gpt_response
 import mysql.connector
 from dotenv import load_dotenv
 from pinecone import Pinecone

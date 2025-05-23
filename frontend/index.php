@@ -76,20 +76,26 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("/login", {
+            const response = await fetch("http://localhost:5000/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include", 
                 body: JSON.stringify({ username, password, role })
             });
 
             const data = await response.json();
 
             if (data.success) {
-                window.location.href = data.route;
+                if (data.route === "/student") {
+                    window.location.href = "student.php";
+                } else if (data.route === "/proctor") {
+                    window.location.href = "proctor.php";
+                }
             } else {
-                alert(data.message);  // Display error message
+                alert(data.message);
             }
         }
+
     </script>
 </body>
 </html>

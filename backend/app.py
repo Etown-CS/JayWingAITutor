@@ -3,18 +3,18 @@ from flask import Flask, request, jsonify, session, send_file
 from flask_cors import CORS
 from google.cloud import storage
 from werkzeug.utils import secure_filename
-from backend.take_prompts import generate_gpt_response
+from take_prompts import generate_gpt_response
 import mysql.connector
 from dotenv import load_dotenv
 from pinecone import Pinecone
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True, origins=["http://localhost"])
 
 app.secret_key = os.urandom(24) #random session ID
 
 # Load environment variables
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")

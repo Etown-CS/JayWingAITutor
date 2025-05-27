@@ -66,7 +66,7 @@ def upload_file():
 
         # Upload the file to Pinecone
         try:
-            subprocess.run(['python', 'train/read_docs.py',
+            subprocess.run(['python', 'read_docs.py',
                             session.get('username'), 
                             course, 
                             str(session.get('id'))], 
@@ -200,7 +200,7 @@ def train_model():
             return jsonify({"success": False, "message": "Course name is required"}), 400
 
         # Run the training script with username, course_name, and proctor_id
-        subprocess.run(['python', 'train/read_docs.py', username, course_name, str(proctor_id)], check=True)
+        subprocess.run(['python', 'read_docs.py', username, course_name, str(proctor_id)], check=True)
 
         return jsonify({"success": True, "message": f"Training completed successfully for course {course_name}!"}), 200
     except subprocess.CalledProcessError as e:

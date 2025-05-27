@@ -32,10 +32,11 @@ storage_client = storage.Client()
 bucket = storage_client.bucket(bucket_name)
 
 # Ensure the "admin" folder exists in the bucket
-def ensure_user_folder_exists():
-    blob = bucket.blob(session.get('folder_prefix')+'/')
-    if not blob.exists():
-        blob.upload_from_string("", content_type="application/x-www-form-urlencoded")
+# Can potentially be deleted - not currently used
+# def ensure_user_folder_exists():
+#     blob = bucket.blob(session.get('folder_prefix')+'/')
+#     if not blob.exists():
+#         blob.upload_from_string("", content_type="application/x-www-form-urlencoded")
 
 # Check if a file has an allowed extension
 ALLOWED_EXTENSIONS = {'pdf', 'pptx'}
@@ -43,9 +44,25 @@ ALLOWED_EXTENSIONS = {'pdf', 'pptx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_user_info_from_headers():
+    user_id = request.headers.get("X-User-Id")
+    username = request.headers.get("X-Username")
+    user_role = request.headers.get("X-User-Role")
+
+    if not user_id or not username or user_role is None:
+        return None, None, None
+    
+    folder_prefix = f"{username}_{user_id}"
+    return user_id, username, int(user_role), folder_prefix
+
 # Upload file endpoint
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
     # Check for file and course parameters
     if 'file' not in request.files:
         return jsonify(success=False, message="No file part")
@@ -58,7 +75,7 @@ def upload_file():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         # Construct the file path with course included
-        file_path = f"{session.get('folder_prefix')}/{course}/{filename}"
+        file_path = f"{folder_prefix}/{course}/{filename}"
 
         # Upload the file to the bucket
         blob = bucket.blob(file_path)
@@ -67,9 +84,9 @@ def upload_file():
         # Upload the file to Pinecone
         try:
             subprocess.run(['python', 'read_docs.py',
-                            session.get('username'), 
+                            username, 
                             course, 
-                            str(session.get('id'))], 
+                            user_id], 
                             check=True)
         except subprocess.CalledProcessError as e:
             return jsonify(success=False, message=f"File uploaded but Pinecone ingestion failed: {str(e)}")
@@ -79,10 +96,14 @@ def upload_file():
 
 @app.route('/load-docs', methods=['GET'])
 def load_docs():
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
 
-    folder_prefix = session.get('folder_prefix')
     course_name = request.args.get('course')  # <-- get selected course
 
     if not folder_prefix or not course_name:
@@ -118,6 +139,11 @@ def load_docs():
 # Delete file endpoint
 @app.route('/delete', methods=['DELETE'])
 def delete_file():
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
     file_name = request.args.get('file')
     course = request.args.get('course')
 
@@ -126,7 +152,7 @@ def delete_file():
     if not course:
         return jsonify(success=False, message="No course specified")
 
-    file_path = f"{session.get('folder_prefix')}/{course}/{file_name}"
+    file_path = f"{folder_prefix}/{course}/{file_name}"
     blob = bucket.blob(file_path)
 
     gcs_deleted = False
@@ -153,16 +179,19 @@ def delete_file():
 
     return jsonify(success=True, message=f"GCS deleted: {gcs_deleted}, Pinecone deleted: {pinecone_deleted}")
 
-# Not tested or implemented
 @app.route('/download')
 def download_file():
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
     file_name = request.args.get('file')
     course = request.args.get('course')
 
     if not file_name or not course:
         return jsonify(success=False, message="Missing file or course"), 400
 
-    folder_prefix = session.get('folder_prefix')
     if not folder_prefix:
         return jsonify(success=False, message="No folder prefix in session"), 400
 
@@ -187,20 +216,19 @@ def download_file():
 # Train model endpoint
 @app.route("/train", methods=["POST"])
 def train_model():
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
     try:
-        # Get session and request data
-        username = session.get("username")  # Proctor's username
-        proctor_id = session.get("id")  # Proctor's ID
-        if not username or not proctor_id:
-            return jsonify({"success": False, "message": "User not logged in or proctor ID missing"}), 401
-        
         data = request.get_json()
         course_name = data.get("course_name")
         if not course_name:
             return jsonify({"success": False, "message": "Course name is required"}), 400
 
         # Run the training script with username, course_name, and proctor_id
-        subprocess.run(['python', 'read_docs.py', username, course_name, str(proctor_id)], check=True)
+        subprocess.run(['python', 'read_docs.py', username, course_name, str(user_id)], check=True)
 
         return jsonify({"success": True, "message": f"Training completed successfully for course {course_name}!"}), 200
     except subprocess.CalledProcessError as e:
@@ -213,13 +241,17 @@ def assign_student():
     """
     Assign a student to a course.
     """
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
     try:
         data = request.get_json()
         student_username = data.get('username')
         course_name = data.get('course_name')
-        proctor_id = session.get('id')  # Ensure proctor is logged in
         
-        if not (student_username and course_name and proctor_id):
+        if not (student_username and course_name and user_id):
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Fetch the student ID
@@ -241,7 +273,7 @@ def assign_student():
                 return jsonify({'success': False, 'message': 'Student not found.'}), 404
             student_id = student_row[0]
 
-            cursor.execute(course_query, (course_name, proctor_id))
+            cursor.execute(course_query, (course_name, user_id))
             course_row = cursor.fetchone()
             if not course_row:
                 return jsonify({'success': False, 'message': 'Course not found.'}), 404
@@ -266,17 +298,20 @@ def assign_student():
 # Student-specific API for asking questions
 @app.route('/ask-question', methods=['POST'])
 def ask_question():
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id:
+        return jsonify(success=False, message="Unauthorized"), 401
     try:
         data = request.get_json()
-        student_id = session.get('id')
         course_name = data.get('courseName')
         question = data.get('question')
 
-        if not (student_id and course_name and question):
+        if not (user_id and course_name and question):
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Call the generate_gpt_response function
-        tutor_response = generate_gpt_response(student_id, course_name, question)
+        tutor_response = generate_gpt_response(user_id, course_name, question)
         
         return jsonify({'success': True, 'response': tutor_response}), 200
     except Exception as e:
@@ -284,8 +319,9 @@ def ask_question():
 
 @app.route('/get-courses', methods=['GET'])
 def get_courses():
-    proctor_id = session.get("id")
-    if not proctor_id:
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
         return jsonify(success=False, message="Unauthorized"), 401
 
     conn = get_db_connection()
@@ -295,7 +331,7 @@ def get_courses():
                        FROM courses c 
                        JOIN user_courses uc ON c.id = uc.courseId 
                        JOIN users u ON uc.userId = u.id 
-                       WHERE u.id = %s""", (proctor_id,))
+                       WHERE u.id = %s""", (user_id,))
         courses = cursor.fetchall()
         # Return a list of courses as JSON
         return jsonify(success=True, courses=[{"id": row[0], "name": row[1]} for row in courses])
@@ -307,8 +343,9 @@ def get_courses():
 
 @app.route('/get-messages', methods=['GET'])
 def get_messages():
-    proctor_id = session.get("id")
-    if not proctor_id:
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id:
         return jsonify(success=False, message="Unauthorized"), 401
 
     conn = get_db_connection()
@@ -318,7 +355,7 @@ def get_messages():
                        FROM courses c 
                        JOIN user_courses uc ON c.id = uc.courseId 
                        JOIN users u ON uc.userId = u.id 
-                       WHERE u.id = %s""", (proctor_id,))
+                       WHERE u.id = %s""", (user_id,))
         courses = cursor.fetchall()
         # Return a list of courses as JSON
         return jsonify(success=True, courses=[{"id": row[0], "name": row[1]} for row in courses])
@@ -330,10 +367,13 @@ def get_messages():
 
 @app.route('/get-student-courses', methods=['GET'])
 def get_student_courses():
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
     try:
-        student_id = session.get('id')
-
-        if not student_id:
+        if not user_id:
             return jsonify({'success': False, 'message': 'Student not logged in.'}), 403
 
         query = """
@@ -350,7 +390,7 @@ def get_student_courses():
 
         try:
             # Fetch the courses for the student
-            cursor.execute(query, (student_id,))
+            cursor.execute(query, (user_id,))
             courses = [{'id': row[0], 'name': row[1]} for row in cursor.fetchall()]
             return jsonify({'success': True, 'courses': courses}), 200
         finally:
@@ -362,12 +402,12 @@ def get_student_courses():
 
 @app.route('/add-course', methods=['POST'])
 def add_course():
-    # Get the proctor ID and folder prefix from the session
-    proctor_id = session.get("id")
-    folder_prefix = session.get("folder_prefix")
-
-    if not proctor_id or not folder_prefix:
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
         return jsonify(success=False, message="Unauthorized"), 401
+    
+    folder_prefix = f"{username}_{user_id}"
 
     # Get the new course name from the request
     data = request.json
@@ -389,7 +429,7 @@ def add_course():
         # Associate the professor with the course
         cursor.execute(
             "INSERT INTO user_courses (userId, courseId) VALUES (%s, %s)",
-            (proctor_id, course_id)
+            (user_id, course_id)
         )
         conn.commit()
 

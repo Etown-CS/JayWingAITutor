@@ -112,6 +112,8 @@
 
             const data = await response.json();
             if (data.success) {
+                sessionStorage.setItem('user_id', data.user_id);
+                sessionStorage.setItem('role', data.role);
                 window.location.href = data.route;
             } else {
                 alert(data.message);

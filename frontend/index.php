@@ -75,18 +75,23 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("backend/login.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "same-origin",
-                body: JSON.stringify({ username, password })
-            });
+            try {
+                const response = await fetch("../backend/login.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify({ username, password, role: "student" }) // or dynamic role
+                });
 
-            const data = await response.json();
-            if (data.success) {
-                window.location.href = data.route;
-            } else {
-                alert(data.message);
+                if (!response.ok) throw new Error("HTTP error " + response.status);
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = data.route;
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert("Login failed: " + err.message);
             }
         }
 
@@ -94,7 +99,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("backend/signup.php", {
+            const response = await fetch("../backend/signup.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "same-origin",

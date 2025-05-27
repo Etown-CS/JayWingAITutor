@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/session_handler.php';
-require_once '../includes/db_connect.php';
+require_once '../backend/includes/session_handler.php';
+require_once '../backend/includes/db_connect.php';
 ?>
 
 <!DOCTYPE html>

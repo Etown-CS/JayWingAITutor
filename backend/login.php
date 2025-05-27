@@ -12,17 +12,15 @@ $data = json_decode(file_get_contents('php://input'), true);
 
 $username = $data['username'] ?? '';
 $password = $data['password'] ?? '';
-$role = $data['role'] ?? '';
 
-if (!$username || !$password || !$role) {
-    echo json_encode(['success' => false, 'message' => 'Missing username, password, or role']);
+if (!$username || !$password) {
+    echo json_encode(['success' => false, 'message' => 'Missing username or password']);
     exit;
 }
 
-$roleValue = $role === 'proctor' ? 1 : 0;
-
-$stmt = $connection->prepare("SELECT id, username, password, role FROM users WHERE username = ? AND role = ?");
-$stmt->bind_param("si", $username, $roleValue);
+// Query by username only (no role filtering)
+$stmt = $connection->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
+$stmt->bind_param("s", $username);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -32,9 +30,11 @@ if ($user = $result->fetch_assoc()) {
         $_SESSION['username'] = $user['username'];
         $_SESSION['admin'] = $user['role'];
 
+        // Redirect based on role (1 = proctor, 0 = student)
+        $route = ($user['role'] == 1) ? 'proctor.php' : 'student.php';
         echo json_encode([
             'success' => true,
-            'route' => $user['role'] === 1 ? 'proctor.php' : 'student.php'
+            'route' => $route
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Incorrect password']);

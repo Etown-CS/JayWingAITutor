@@ -80,7 +80,7 @@
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "same-origin",
-                    body: JSON.stringify({ username, password, role: "student" }) // or dynamic role
+                    body: JSON.stringify({ username, password})
                 });
 
                 if (!response.ok) throw new Error("HTTP error " + response.status);

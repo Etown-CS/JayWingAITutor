@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <style>
-        /* Your existing CSS here */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -61,41 +60,58 @@
         <h1>Welcome to the AI Tutor System</h1>
         <div class="input-field">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username">
+            <input type="text" id="username" placeholder="Enter your username">
         </div>
         <div class="input-field">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password">
+            <input type="password" id="password" placeholder="Enter your password">
         </div>
-        <button onclick="handleLogin('student')">Go to Student Page</button>
-        <button onclick="handleLogin('proctor')">Go to Proctor Page</button>
+        <button onclick="handleLogin()">Login</button>
+        <button onclick="handleSignup()">Sign Up</button>
     </div>
 
     <script>
-        async function handleLogin(role) {
+        async function handleLogin() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("http://localhost:5000/login", {
+            const response = await fetch("backend/login.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include", 
-                body: JSON.stringify({ username, password, role })
+                credentials: "same-origin",
+                body: JSON.stringify({ username, password })
             });
 
             const data = await response.json();
-
             if (data.success) {
-                if (data.route === "/student") {
-                    window.location.href = "student.php";
-                } else if (data.route === "/proctor") {
-                    window.location.href = "proctor.php";
-                }
+                window.location.href = data.route;
             } else {
                 alert(data.message);
             }
         }
 
+        async function handleSignup() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("backend/signup.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    username,
+                    password,
+                    role: "student" // default to student
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = data.route;
+            } else {
+                alert(data.message);
+            }
+        }
     </script>
 </body>
 </html>

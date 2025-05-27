@@ -422,55 +422,55 @@ def get_db_connection():
     )
     return conn
 
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
-    role = data.get("role")  # Either "student" or "proctor"
+# @app.route("/login", methods=["POST"])
+# def login():
+#     data = request.json
+#     username = data.get("username")
+#     password = data.get("password")
+#     role = data.get("role")  # Either "student" or "proctor"
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+#     conn = get_db_connection()
+#     cursor = conn.cursor()
 
-    # TODO: Modify this to work only as a login and create a separate create account function
-    try:
-        # Check if user exists
-        role_value = 0 if role == 'student' else 1
-        cursor.execute("SELECT id, password FROM users WHERE username = %s AND role = %s", (username, role_value))
-        user = cursor.fetchone()
+#     # TODO: Modify this to work only as a login and create a separate create account function
+#     try:
+#         # Check if user exists
+#         role_value = 0 if role == 'student' else 1
+#         cursor.execute("SELECT id, password FROM users WHERE username = %s AND role = %s", (username, role_value))
+#         user = cursor.fetchone()
 
-        if user:
-            # User exists, check password
-            if user[1] == password:
-                session["id"] = user[0] #first changing the session id and pass, making bucket if one doesnt exist
-                session['username'] = username
-                if role == 'proctor':
-                    session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
-                    ensure_user_folder_exists()
-                return jsonify({"success": True, "message": "Login successful", "route": f"/{role}"})
-            else:
-                return jsonify({"success": False, "message": "Incorrect password"}), 401
-        else:
-            # TODO: Modify this
-            # Temporarily send message to create account
-            return jsonify({"success": False, "message": "User does not exist, please create an account"}), 401
-            # User doesn't exist, create account
-            # # If this is reimplemented, it will need updated to match new database
-            # cursor.execute(f"INSERT INTO {table} (username, password) VALUES (%s, %s) RETURNING id", (username, password)) 
-            # user_id = cursor.fetchone()[0]  # Fetch the new ID
-            # conn.commit()
+#         if user:
+#             # User exists, check password
+#             if user[1] == password:
+#                 session["id"] = user[0] #first changing the session id and pass, making bucket if one doesnt exist
+#                 session['username'] = username
+#                 if role == 'proctor':
+#                     session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
+#                     ensure_user_folder_exists()
+#                 return jsonify({"success": True, "message": "Login successful", "route": f"/{role}"})
+#             else:
+#                 return jsonify({"success": False, "message": "Incorrect password"}), 401
+#         else:
+#             # TODO: Modify this
+#             # Temporarily send message to create account
+#             return jsonify({"success": False, "message": "User does not exist, please create an account"}), 401
+#             # User doesn't exist, create account
+#             # # If this is reimplemented, it will need updated to match new database
+#             # cursor.execute(f"INSERT INTO {table} (username, password) VALUES (%s, %s) RETURNING id", (username, password)) 
+#             # user_id = cursor.fetchone()[0]  # Fetch the new ID
+#             # conn.commit()
 
-            # session["id"] = user_id #first changing the session id and pass, making bucket if one doesnt exist
-            # session['username'] = username
-            # if role == 'proctor':
-            #         session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
-            #         ensure_user_folder_exists()            
-            # return jsonify({"success": True, "message": "Account created", "route": f"/{role}"})
+#             # session["id"] = user_id #first changing the session id and pass, making bucket if one doesnt exist
+#             # session['username'] = username
+#             # if role == 'proctor':
+#             #         session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
+#             #         ensure_user_folder_exists()            
+#             # return jsonify({"success": True, "message": "Account created", "route": f"/{role}"})
     
-    finally:
-        # Ensure the cursor and connection are closed
-        cursor.close()
-        conn.close()
+#     finally:
+#         # Ensure the cursor and connection are closed
+#         cursor.close()
+#         conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)

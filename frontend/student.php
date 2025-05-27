@@ -1,3 +1,8 @@
+<?php
+require_once '../includes/session_handler.php';
+require_once '../includes/db_connect.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,7 +64,36 @@
             <div class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto sidebar-content-hide">
                 <!-- TODO: implement with php -->
                 <div id="chat-div" class="d-grid gap-2">
-                    <!-- Dynamically added via JS -->
+                     <?php
+                        $stmt = $connection->prepare("
+                        SELECT DISTINCT c.chat_id, c.chatName, c.chatDescription
+                        FROM Chat c
+                        LEFT JOIN Messages m ON c.chat_id = m.chat_id
+                        LEFT JOIN Chat_Participant cp ON c.chat_id = cp.chat_id
+                        WHERE cp.user_id = ?
+                        ORDER BY c.chat_id DESC
+                        ");
+                        $stmt->bind_param("i", $userId);
+                        $stmt->execute();
+                        $chats = $stmt->get_result();
+                        
+                        if (isset($error)) {
+                            echo '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">';
+                            echo '<strong class="font-bold">Error!</strong>';
+                            echo '<span class="block sm:inline"> ' . htmlspecialchars($error) . '</span>';
+                            echo '</div>';
+                        }
+
+                        while ($chat = $chats->fetch_assoc()):
+                    ?>
+                    <a href="?chat_id=<?php echo htmlspecialchars($chat['chat_id'], ENT_QUOTES, 'UTF-8'); ?>" 
+                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['chat_id'] ? 'bg-gray-100' : ''; ?> message-container">
+                        <div class="font-medium truncate"><?php echo htmlspecialchars($chat['chatName'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <?php if ($chat['chatDescription']): ?>
+                            <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['chatDescription'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <?php endif; ?>
+                    </a>
+                    <?php endwhile; ?>
                 </div>
 
             </div>

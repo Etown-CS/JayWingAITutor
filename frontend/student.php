@@ -140,6 +140,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         $stmt->bind_param("i", $userId);
                         $stmt->execute();
                         $chats = $stmt->get_result();
+
+                        // For tracking courses already displayed
+                        $displayedCourses = [];
                         
                         if (isset($error)) {
                             echo '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">';
@@ -149,6 +152,11 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         }
 
                         while ($chat = $chats->fetch_assoc()):
+                            $courseName = $chat['courseName'];
+                            if (in_array($courseName, $displayedCourses)) {
+                                continue; // Skip if course already displayed
+                            }
+                            $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
                     <a href="?chatId=<?php echo htmlspecialchars($chat['chatId'], ENT_QUOTES, 'UTF-8'); ?>" 
                         class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['chatId'] ? 'bg-gray-100' : ''; ?> message-container">

@@ -188,18 +188,17 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <div id="conversation" class="flex-1 overflow-y-auto space-y-4 -mb-3 -mt-2 w-full">
                         <?php
                         $stmt = $connection->prepare("
-                            SELECT m.*, u.username
-                            FROM Messages m
-                            JOIN User u ON m.sender_id = u.user_id
-                            WHERE m.chat_id = ?
-                            ORDER BY m.message_id ASC
+                            SELECT m.question, m.answer, m.sourceName
+                            FROM messages m
+                            JOIN chats c ON c.chatId = m.chatId
+                            WHERE m.chatId = ?
+                            ORDER BY m.timestamp ASC;
                         ");
                         $stmt->bind_param("i", $currentChat);
                         $stmt->execute();
                         $messages = $stmt->get_result();
                         
                         while ($message = $messages->fetch_assoc()):
-                            $isOwnMessage = $message['sender_id'] == $userId;
                         ?>
                             <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36">
                                 <div data-message-id="<?php echo $message['message_id']; ?>" class="flex py-2 <?php echo $isOwnMessage ? 'justify-end' : 'justify-start'; ?>">

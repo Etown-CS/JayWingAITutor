@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     // Insert the message if validation passes
     $stmt = $connection->prepare("INSERT INTO messages (chatId, question) VALUES (?, ?)");
-    $stmt->bind_param("iis", $chatId, $messageContent);
+    $stmt->bind_param("is", $chatId, $messageContent);
     $stmt->execute();
     $stmt->close();
     
@@ -77,6 +77,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     $chatCourseName = $result->fetch_assoc()['name'] ?? '';
     echo " - DEBUG: courseName = $chatCourseName";
 
+} else {
+    $currentChat = 0;
 }
 
 ?>

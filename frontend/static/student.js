@@ -88,3 +88,39 @@ toggleBtn.addEventListener('click', () => {
     console.log("Content classes:", content.classList);
 
 });
+
+// TODO: Change the way different courses are sorted (fix and implement with new db when ready)
+document.getElementById('sort-by-btn').addEventListener('change', function () {
+    const sortBy = this.value;
+    
+    fetch(`get_sorted_chats.php?sortBy=${sortBy}`)
+        .then(response => response.json())
+        .then(data => {
+            const chatDiv = document.getElementById('chat-div');
+            chatDiv.innerHTML = ''; // Clear current list
+
+            data.forEach(chat => {
+                const a = document.createElement('a');
+                a.href = `?chatId=${chat.chatId}`;
+                a.className = 'block p-3 rounded bg-gray-100 message-container';
+
+                const title = document.createElement('div');
+                title.className = 'font-medium truncate';
+                title.textContent = chat.courseName;
+
+                a.appendChild(title);
+
+                if (chat.answer) {
+                    const subtitle = document.createElement('div');
+                    subtitle.className = 'text-xs text-gray-500 truncate';
+                    subtitle.textContent = chat.answer;
+                    a.appendChild(subtitle);
+                }
+
+                chatDiv.appendChild(a);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching chats:', error);
+        });
+});

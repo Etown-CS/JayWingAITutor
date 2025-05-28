@@ -118,13 +118,24 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
                         $stmt = $connection->prepare("
-                        SELECT c.name AS courseName, m.answer
-                        FROM courses AS c
-                        JOIN user_courses AS uc ON c.id = uc.courseId
-                        JOIN chats AS ch ON uc.userCoursesId = ch.userCoursesId
-                        JOIN messages AS m ON ch.chatId = m.chatId
+                        SELECT 
+                            c.name AS courseName,
+                            ch.chatId,
+                            m.question AS latestQuestion,
+                            latest.latestTimestamp AS lastInteracted
+                        FROM user_courses uc
+                        JOIN courses c ON c.id = uc.courseId
+                        LEFT JOIN chats ch ON ch.userCoursesId = uc.userCoursesId
+                        LEFT JOIN (
+                            SELECT chatId, MAX(timestamp) AS latestTimestamp
+                            FROM messages
+                            GROUP BY chatId
+                        ) latest ON latest.chatId = ch.chatId
+                        LEFT JOIN messages m ON m.chatId = ch.chatId AND m.timestamp = latest.latestTimestamp
                         WHERE uc.userId = ?
-                        ORDER BY m.timestamp DESC;
+                        ORDER BY 
+                            latest.latestTimestamp IS NULL,   -- Push NULLs to bottom
+                            latest.latestTimestamp DESC;      -- Most recent messages first
                         ");
                         $stmt->bind_param("i", $userId);
                         $stmt->execute();
@@ -141,9 +152,11 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     ?>
                     <a href="?chatId=<?php echo htmlspecialchars($chat['chatId'], ENT_QUOTES, 'UTF-8'); ?>" 
                         class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['chatId'] ? 'bg-gray-100' : ''; ?> message-container">
-                        <div class="font-medium truncate"><?php echo htmlspecialchars($chat['c.name'], ENT_QUOTES, 'UTF-8'); ?></div>
-                        <?php if ($chat['m.answer']): ?>
-                            <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['m.answer'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <?php if ($chat['latestQuestion']): ?>
+                            <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['latestQuestion'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <?php else: ?>
+                            <div class="text-xs text-gray-500">No messages yet</div>
                         <?php endif; ?>
                     </a>
                     <?php endwhile; ?>

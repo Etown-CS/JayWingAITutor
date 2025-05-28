@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     // Insert the message if validation passes
     $stmt = $connection->prepare("INSERT INTO messages (chatId, question) VALUES (?, ?)");
-    $stmt->bind_param("iis", $chatId, $messageContent);
+    $stmt->bind_param("is", $chatId, $messageContent);
     $stmt->execute();
     $stmt->close();
     
@@ -51,6 +51,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     $stmt->bind_param("ii", $currentChat, $userCoursesId);
     $stmt->execute();
     $result = $stmt->get_result();
+} else {
+    $currentChat = 0;
 }
 
 ?>
@@ -211,11 +213,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36">
                                 <div data-message-id="<?php echo $message['message_id']; ?>" class="flex py-2 <?php echo $isOwnMessage ? 'justify-end' : 'justify-start'; ?>">
                                     <div class="max-w-2xl <?php echo $isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100'; ?> rounded-lg p-2">
-                                        <?php if (!$isOwnMessage): ?>
-                                            <div class="text-sm font-medium <?php echo $isOwnMessage ? 'text-white' : 'text-gray-900'; ?>">
-                                                <?php echo htmlspecialchars($message['username']); ?>
-                                            </div>
-                                        <?php endif; ?>
                                         <div><?php echo nl2br(htmlspecialchars($message['messageContent'])); ?></div>
                                     </div>
                                 </div>

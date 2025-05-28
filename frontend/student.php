@@ -1,6 +1,58 @@
 <?php
 require_once '../backend/includes/session_handler.php';
 require_once '../backend/includes/db_connect.php';
+
+$isUserLoggedIn = isLoggedIn();
+if ($isUserLoggedIn) {
+    $userId = $_SESSION['user_id'];
+}
+
+// Handle new message submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_message') {
+    $messageContent = $_POST['message'];
+    $chatId = $_POST['chat_id'];
+
+    // Validate that the user is a participant of the chat before inserting the message
+    $stmt = $connection->prepare("
+        SELECT 1 
+        FROM chats 
+        WHERE chatId = ? AND userCoursesId = ?
+    ");
+    $stmt->bind_param("ii", $chatId, $userCoursesId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        // User is not part of this chat, redirect them or show an error
+        header("Location: index.php"); // Redirect to a safe page
+        exit();
+    }
+
+    // Insert the message if validation passes
+    $stmt = $connection->prepare("INSERT INTO messages (chatId, question) VALUES (?, ?)");
+    $stmt->bind_param("iis", $chatId, $messageContent);
+    $stmt->execute();
+    $stmt->close();
+    
+    header("Location: ?chatId=" . $chatId);
+    exit();
+}
+
+
+if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) {
+    $currentChat = (int) $_GET['chatId'];
+    
+    // Validate that the user is a participant of the chat
+    $stmt = $connection->prepare("
+        SELECT 1 
+        FROM chats 
+        WHERE chatId = ? AND userCoursesId = ?
+    ");
+    $stmt->bind_param("ii", $currentChat, $userCoursesId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -17,7 +69,7 @@ require_once '../backend/includes/db_connect.php';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!-- custom css -->
-    <link rel="stylesheet" href="../static/student.css">
+    <link rel="stylesheet" href="static/student.css">
 </head>
 <body class="flex flex-col h-screen gap-0 overflow-hidden">
     <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
@@ -64,14 +116,15 @@ require_once '../backend/includes/db_connect.php';
             <div class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto sidebar-content-hide">
                 <!-- TODO: implement with php -->
                 <div id="chat-div" class="d-grid gap-2">
-                     <?php
+                    <?php
                         $stmt = $connection->prepare("
-                        SELECT DISTINCT c.chat_id, c.chatName, c.chatDescription
-                        FROM Chat c
-                        LEFT JOIN Messages m ON c.chat_id = m.chat_id
-                        LEFT JOIN Chat_Participant cp ON c.chat_id = cp.chat_id
-                        WHERE cp.user_id = ?
-                        ORDER BY c.chat_id DESC
+                        SELECT c.name AS courseName, m.answer
+                        FROM courses AS c
+                        JOIN user_courses AS uc ON c.id = uc.courseId
+                        JOIN chats AS ch ON uc.userCoursesId = ch.userCoursesId
+                        JOIN messages AS m ON ch.chatId = m.chatId
+                        WHERE uc.userId = ?
+                        ORDER BY m.timestamp DESC;
                         ");
                         $stmt->bind_param("i", $userId);
                         $stmt->execute();
@@ -86,11 +139,11 @@ require_once '../backend/includes/db_connect.php';
 
                         while ($chat = $chats->fetch_assoc()):
                     ?>
-                    <a href="?chat_id=<?php echo htmlspecialchars($chat['chat_id'], ENT_QUOTES, 'UTF-8'); ?>" 
-                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['chat_id'] ? 'bg-gray-100' : ''; ?> message-container">
-                        <div class="font-medium truncate"><?php echo htmlspecialchars($chat['chatName'], ENT_QUOTES, 'UTF-8'); ?></div>
-                        <?php if ($chat['chatDescription']): ?>
-                            <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['chatDescription'], ENT_QUOTES, 'UTF-8'); ?></div>
+                    <a href="?chatId=<?php echo htmlspecialchars($chat['chatId'], ENT_QUOTES, 'UTF-8'); ?>" 
+                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['chatId'] ? 'bg-gray-100' : ''; ?> message-container">
+                        <div class="font-medium truncate"><?php echo htmlspecialchars($chat['c.name'], ENT_QUOTES, 'UTF-8'); ?></div>
+                        <?php if ($chat['m.answer']): ?>
+                            <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['m.answer'], ENT_QUOTES, 'UTF-8'); ?></div>
                         <?php endif; ?>
                     </a>
                     <?php endwhile; ?>
@@ -101,99 +154,75 @@ require_once '../backend/includes/db_connect.php';
         
 
 
-        <!-- Main chat area -->
+        <!-- Main chat area JAYWING -->
         <div id="chat-container" class="flex flex-col bg-white py-2 h-full overflow-hidden">
-            <!-- Chat header -->
-            <div class="align-self-start px-3 w-full border-b-2 border-gray-100">
-                <h2 class="text-xl font-bold">courseName (php)</h2>
-                <div class="text-sm text-gray-500 pb-2">courseDescription</div>
-            </div>
-
-            <!-- Messages area -->
-            <div id="conversation" class="flex-1 overflow-y-auto space-y-4 -mb-3 -mt-2 w-full">
-                <!-- Previous conversation will be loaded here -->
-                <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36">
-                    <div class="flex justify-end py-2">
-                        <div class="bg-blue-500 text-white p-2 rounded-lg max-w-2xl">
-                            This is a message from the user. It can be quite long to test how the chat window scrolls. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                        </div>
+            <?php if ($currentChat): ?>
+                <?php
+                // Get chat details
+                $stmt = $connection->prepare("SELECT * FROM chats WHERE chatId = ?");
+                $stmt->bind_param("i", $currentChat);
+                $stmt->execute();
+                $chatDetails = $stmt->get_result()->fetch_assoc();
+                ?>
+                
+                <div class="flex flex-col h-[600px]">
+                    <!-- Chat header -->
+                    <div class="align-self-start px-3 w-full border-b-2 border-gray-100">
+                        <h2 class="text-xl font-bold"><?php echo htmlspecialchars($chatDetails['courseName'], ENT_QUOTES, 'UTF-8'); ?></h2>
                     </div>
-                    <div class="flex justify-start py-2">
-                        <div class="bg-gray-200 p-2 rounded-lg max-w-2xl">
-                            This is a reply from the bot.
-                        </div>
+                    
+                    <!-- Messages area -->
+                    <div id="conversation" class="flex-1 overflow-y-auto space-y-4 -mb-3 -mt-2 w-full">
+                        <?php
+                        $stmt = $connection->prepare("
+                            SELECT m.*, u.username
+                            FROM Messages m
+                            JOIN User u ON m.sender_id = u.user_id
+                            WHERE m.chat_id = ?
+                            ORDER BY m.message_id ASC
+                        ");
+                        $stmt->bind_param("i", $currentChat);
+                        $stmt->execute();
+                        $messages = $stmt->get_result();
+                        
+                        while ($message = $messages->fetch_assoc()):
+                            $isOwnMessage = $message['sender_id'] == $userId;
+                        ?>
+                            <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36">
+                                <div data-message-id="<?php echo $message['message_id']; ?>" class="flex py-2 <?php echo $isOwnMessage ? 'justify-end' : 'justify-start'; ?>">
+                                    <div class="max-w-2xl <?php echo $isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100'; ?> rounded-lg p-2">
+                                        <?php if (!$isOwnMessage): ?>
+                                            <div class="text-sm font-medium <?php echo $isOwnMessage ? 'text-white' : 'text-gray-900'; ?>">
+                                                <?php echo htmlspecialchars($message['username']); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div><?php echo nl2br(htmlspecialchars($message['messageContent'])); ?></div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
                     </div>
-                    <div class="flex justify-end py-2">
-                        <div class="bg-blue-500 text-white p-2 rounded-lg max-w-2xl">
-                            Another message from the user.
+                    
+                    <!-- Message input -->
+                    <form method="POST" name="messageForm" class="mt-auto w-full">
+                        <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36">
+                            <textarea
+                                id="student-question"
+                                name="message"
+                                class="flex-1 border rounded-lg p-2 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words resize-none overflow-y-auto max-h-48"
+                                placeholder="Ask a question..."
+                                rows="1"
+                                required
+                            ></textarea>
                         </div>
-                    </div>
-                    <div class="flex justify-start py-2">
-                        <div class="bg-gray-200 p-2 rounded-lg max-w-2xl">
-                            And another reply. This one is also a bit longer to simulate real conversation flow. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                        </div>
-                    </div>
-                    <div class="flex justify-end py-2">
-                        <div class="bg-blue-500 text-white p-2 rounded-lg max-w-2xl">
-                            Short message.
-                        </div>
-                    </div>
-                    <div class="flex justify-start py-2">
-                        <div class="bg-gray-200 p-2 rounded-lg max-w-2xl">
-                            Okay, here is a really long message to absolutely guarantee a scrollbar appears if the window is small enough. This message needs to be exceptionally verbose to exceed the height of the chat window and demonstrate the overflow y auto functionality. We are going to keep adding more text here, making sure it's long enough to push other messages out of view, forcing the scrollbar to become visible. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
-                        </div>
-                    </div>
-                    <div class="flex justify-end py-2">
-                        <div class="bg-blue-500 text-white p-2 rounded-lg max-w-2xl">
-                            This is a message from the user. It can be quite long to test how the chat window scrolls. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                        </div>
-                    </div>
-                    <div class="flex justify-start py-2">
-                        <div class="bg-gray-200 p-2 rounded-lg max-w-2xl">
-                            This is a reply from the bot.
-                        </div>
-                    </div>
-                    <div class="flex justify-end py-2">
-                        <div class="bg-blue-500 text-white p-2 rounded-lg max-w-2xl">
-                            Another message from the user.
-                        </div>
-                    </div>
-                    <div class="flex justify-start py-2">
-                        <div class="bg-gray-200 p-2 rounded-lg max-w-2xl">
-                            And another reply. This one is also a bit longer to simulate real conversation flow. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                        </div>
-                    </div>
-                    <div class="flex justify-end py-2">
-                        <div class="bg-blue-500 text-white p-2 rounded-lg max-w-2xl">
-                            Short message.
-                        </div>
-                    </div>
-                    <div class="flex justify-start py-2">
-                        <div class="bg-gray-200 p-2 rounded-lg max-w-2xl">
-                            Okay, here is a really long message to absolutely guarantee a scrollbar appears if the window is small enough. This message needs to be exceptionally verbose to exceed the height of the chat window and demonstrate the overflow y auto functionality. We are going to keep adding more text here, making sure it's long enough to push other messages out of view, forcing the scrollbar to become visible. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
-                        </div>
-                    </div>
+                        <div class="text-xs text-center text-gray-500 pb-2">AI Tutor can make mistakes. Chat is logged and viewable by teachers.</div>
+                    </form>
                 </div>
-                <!-- php? -->
-            </div>
-
-            <!-- Message input -->
-            <form method="POST" name="messageForm" class="mt-auto w-full">
-                <!-- php -->
-                <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36">
-                    <textarea
-                        id="student-question"
-                        name="message"
-                        class="flex-1 border rounded-lg p-2 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words resize-none overflow-y-auto max-h-48"
-                        placeholder="Ask a question..."
-                        rows="1"
-                        required
-                    ></textarea>
+            <?php else: ?>
+                <div class="h-[600px] flex items-center justify-center text-gray-500">
+                    Select a chat to start messaging
                 </div>
-                <div class="text-xs text-center text-gray-500 pb-2">AI Tutor can make mistakes. Chat is logged and viewable by teachers.</div>
-            </form>
-            <!-- When no chats are currently opened: -->
-            <!-- php -->
+            <?php endif; ?>
         </div>
     </div>
 
@@ -203,6 +232,6 @@ require_once '../backend/includes/db_connect.php';
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Custom JS -->
-    <script src="../static/student.js"></script>
+    <script src="static/student.js"></script>
 </body>
 </html>

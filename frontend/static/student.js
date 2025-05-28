@@ -81,97 +81,10 @@ const toggleBtn = document.getElementById('toggle-sidebar');
 const content = document.getElementById('my-content');
 
 toggleBtn.addEventListener('click', () => {
+    console.log("Toggle button clicked!");
     sidebar.classList.toggle('collapsed');
     content.classList.toggle('collapsed-sidebar');
+    console.log("Sidebar classes:", sidebar.classList);
+    console.log("Content classes:", content.classList);
 
-    // Optional: Change button text/icon for better UX
-    if (sidebar.classList.contains('collapsed')) {
-        toggleBtn.textContent = '☰'; // Icon for "expand"
-    } else {
-        toggleBtn.textContent = '≣'; // Icon for "collapse"
-    }
 });
-
-
-// Fetch courses from the server
-fetch('/get-courses')
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Populate both dropdowns with the same course options
-            data.courses.forEach(course => {
-                displayCourses(course)
-            });
-        } else {
-            console.error(data.message);
-        }
-    })
-    .catch(error => console.error('Error fetching courses:', error));
-
-// Display courses in sidebar
-function displayCourses(course) {
-    const courseBtn = document.createElement('a');
-    courseBtn.className = 'block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container';
-    courseBtn.href = `?chat_id=${course.id}`;
-
-    // Name of Course
-    const courseName = document.createElement('div');
-    courseName.className = 'font-medium truncate';
-    courseName.textContent = course.name;
-
-    courseBtn.appendChild(courseName);
-
-
-    // Most Recent Message
-    const mostRecentMessage = document.createElement('div');
-    mostRecentMessage.className = 'text-xs text-gray-500 truncate';
-    mostRecentMessage.textContent = 'TODO: mostRecentMessage';
-
-    courseBtn.appendChild(mostRecentMessage);
-
-
-    // Combine
-    chatDiv.appendChild(courseBtn);
-}
-
-
-// // Fetch messages from the server
-// fetch('/get-messages')
-//     .then(response => response.json())
-//     .then(data => {
-//         if (data.success) {
-//             // Populate both dropdowns with the same course options
-//             data.courses.forEach(message => {
-//                 displayMessages(message)
-//             });
-//         } else {
-//             console.error(data.message);
-//         }
-//     })
-//     .catch(error => console.error('Error fetching messages:', error));
-
-// // Display messages in chat area
-// function displayMessages(message) {
-//     const message = document.createElement('div');
-//     courseBtn.className = 'block p-3 rounded hover:bg-gray-200 bg-gray-100 message-container';
-//     courseBtn.href = `?chat_id=${course.id}`;
-
-//     // Name of Course
-//     const courseName = document.createElement('div');
-//     courseName.className = 'font-medium truncate';
-//     courseName.textContent = course.name;
-
-//     courseBtn.appendChild(courseName);
-
-
-//     // Most Recent Message
-//     const mostRecentMessage = document.createElement('div');
-//     mostRecentMessage.className = 'text-xs text-gray-500 truncate';
-//     mostRecentMessage.textContent = 'TODO: mostRecentMessage';
-
-//     courseBtn.appendChild(mostRecentMessage);
-
-
-//     // Combine
-//     chatDiv.appendChild(courseBtn);
-// }

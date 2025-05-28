@@ -14,11 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     // Validate that the user is a participant of the chat before inserting the message
     $stmt = $connection->prepare("
-        SELECT 1 
-        FROM chats 
-        WHERE chatId = ? AND userCoursesId = ?
+        SELECT 1
+        FROM user_courses uc
+        WHERE uc.userId = ?
+        AND uc.userCoursesId = ?;
     ");
-    $stmt->bind_param("ii", $chatId, $userCoursesId);
+    $stmt->bind_param("ii", $userId, $currentChat);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -38,19 +39,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit();
 }
 
-
+// Executes when chat is opened
 if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) {
     $currentChat = (int) $_GET['chatId'];
+    echo "DEBUG: userId = $userId, chatId = $currentChat";
     
-    // Validate that the user is a participant of the chat
+    // Validate that the user is a participant of the chat before inserting the message
     $stmt = $connection->prepare("
-        SELECT 1 
-        FROM chats 
-        WHERE chatId = ? AND userCoursesId = ?
+        SELECT 1
+        FROM user_courses uc
+        WHERE uc.userId = ?
+        AND uc.userCoursesId = ?;
     ");
-    $stmt->bind_param("ii", $currentChat, $userCoursesId);
+    $stmt->bind_param("ii", $userId, $currentChat);
     $stmt->execute();
     $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        // User is not part of this chat, redirect them or show an error
+        header("Location: index.php"); // Redirect to a safe page
+        exit();
+    }
+
+    // User is validated at this point
+    // Get course name chat is for
+    $stmt = $connection->prepare("
+        SELECT c.name
+        FROM user_courses uc
+        JOIN courses c ON c.id = uc.courseId
+        WHERE uc.userCoursesId = ?;
+    ");
+    $stmt->bind_param("i", $currentChat);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Store result in $courseName
+    $chatCourseName = $result->fetch_assoc()['name'] ?? '';
+    echo " - DEBUG: courseName = $chatCourseName";
+
 }
 
 ?>
@@ -117,21 +143,21 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 <!-- TODO: implement with php -->
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
+                    // Need courseName, chatId, latestQuestion, lastInteracted
                         $stmt = $connection->prepare("
                         SELECT 
                             c.name AS courseName,
-                            ch.chatId,
+                            uc.userCoursesId,
                             m.question AS latestQuestion,
                             latest.latestTimestamp AS lastInteracted
                         FROM user_courses uc
                         JOIN courses c ON c.id = uc.courseId
-                        LEFT JOIN chats ch ON ch.userCoursesId = uc.userCoursesId
                         LEFT JOIN (
-                            SELECT chatId, MAX(timestamp) AS latestTimestamp
+                            SELECT userCoursesId, MAX(timestamp) AS latestTimestamp
                             FROM messages
-                            GROUP BY chatId
-                        ) latest ON latest.chatId = ch.chatId
-                        LEFT JOIN messages m ON m.chatId = ch.chatId AND m.timestamp = latest.latestTimestamp
+                            GROUP BY userCoursesId
+                        ) latest ON latest.userCoursesId = uc.userCoursesId
+                        LEFT JOIN messages m ON m.userCoursesId = uc.userCoursesId AND m.timestamp = latest.latestTimestamp
                         WHERE uc.userId = ?
                         ORDER BY 
                             latest.latestTimestamp IS NULL,   -- Push NULLs to bottom
@@ -158,8 +184,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             }
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
-                    <a href="?chatId=<?php echo htmlspecialchars($chat['chatId'], ENT_QUOTES, 'UTF-8'); ?>" 
-                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['chatId'] ? 'bg-gray-100' : ''; ?> message-container">
+                    <a href="?chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>" 
+                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-100' : ''; ?> message-container">
                         <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
                         <?php if ($chat['latestQuestion']): ?>
                             <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['latestQuestion'], ENT_QUOTES, 'UTF-8'); ?></div>
@@ -173,7 +199,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
             </div>
         </div>
         
-
 
         <!-- Main chat area JAYWING -->
         <div id="chat-container" class="flex flex-col bg-white py-2 h-full overflow-hidden">
@@ -189,7 +214,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 <div class="flex flex-col h-[600px]">
                     <!-- Chat header -->
                     <div class="align-self-start px-3 w-full border-b-2 border-gray-100">
-                        <h2 class="text-xl font-bold"><?php echo htmlspecialchars($chatDetails['courseName'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                        <h2 class="text-xl font-bold"><?php echo "$chatCourseName"; ?></h2>
                     </div>
                     
                     <!-- Messages area -->
@@ -205,23 +230,36 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         $stmt->bind_param("i", $currentChat);
                         $stmt->execute();
                         $messages = $stmt->get_result();
-                        
+
                         while ($message = $messages->fetch_assoc()):
                         ?>
-                            <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36">
-                                <div data-message-id="<?php echo $message['message_id']; ?>" class="flex py-2 <?php echo $isOwnMessage ? 'justify-end' : 'justify-start'; ?>">
-                                    <div class="max-w-2xl <?php echo $isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100'; ?> rounded-lg p-2">
-                                        <?php if (!$isOwnMessage): ?>
-                                            <div class="text-sm font-medium <?php echo $isOwnMessage ? 'text-white' : 'text-gray-900'; ?>">
-                                                <?php echo htmlspecialchars($message['username']); ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        <div><?php echo nl2br(htmlspecialchars($message['messageContent'])); ?></div>
+                            <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
+                                <!-- User Question (Gray) -->
+                                <?php if (!empty($message['question'])): ?>
+                                    <div class="flex py-2 justify-start">
+                                        <div class="max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2">
+                                            <div class="text-sm font-medium">You</div>
+                                            <div><?php echo nl2br(htmlspecialchars($message['question'])); ?></div>
+                                        </div>
                                     </div>
-                                </div>
+                                <?php endif; ?>
+
+                                <!-- AI Answer (Blue) -->
+                                <?php if (!empty($message['answer'])): ?>
+                                    <div class="flex py-2 justify-end">
+                                        <div class="max-w-2xl bg-blue-500 text-white rounded-lg p-2">
+                                            <div class="text-sm font-medium">AI Tutor</div>
+                                            <div><?php echo nl2br(htmlspecialchars($message['answer'])); ?></div>
+                                            <?php if (!empty($message['sourceName'])): ?>
+                                                <div class="text-xs text-gray-200 mt-1">Source: <?php echo htmlspecialchars($message['sourceName']); ?></div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endwhile; ?>
                     </div>
+
                     
                     <!-- Message input -->
                     <form method="POST" name="messageForm" class="mt-auto w-full">

@@ -34,7 +34,9 @@ if ($user = $result->fetch_assoc()) {
         $route = ($user['role'] == 1) ? 'proctor.php' : 'student.php';
         echo json_encode([
             'success' => true,
-            'route' => $route
+            'route' => $route,
+            'user_id' => $user['id'],
+            'role' => $user['role']
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Incorrect password']);

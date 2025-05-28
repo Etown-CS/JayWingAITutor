@@ -41,7 +41,12 @@ function saveFileToDocsFolder(file, course) {
     fetch(`${FLASK_API}/upload`, {
         method: "POST",
         body: formData,
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
     })
     .then(response => response.json())
     .then(data => {
@@ -125,7 +130,12 @@ function removeFileFromDocsFolder(fileName) {
     // console.log(selectedCourseName)
     fetch(`${FLASK_API}/delete?file=${fileName}&course=${selectedCourseName}`, {
         method: "DELETE",
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
     })
     .then(response => response.json())
     .then(data => {
@@ -160,7 +170,12 @@ function loadExistingFiles() {
 
     fetch(`${FLASK_API}/load-docs?course=${encodeURIComponent(selectedCourseName)}`, {
         method: "GET",
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
     })
         .then(response => response.json())
         .then(files => {
@@ -185,7 +200,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fetch courses from the server
     fetch(`${FLASK_API}/get-courses`, {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
     })
         .then(response => response.json())
         .then(data => {
@@ -223,12 +243,16 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        console.log('Sending new course name:', courseName); // delete
-        fetch(`${FLASK_API}/add-course`, {
+        // console.log('Sending new course name:', courseName); // delete
+        // console.log("Sending headers:", userId, userRole, username);
+        fetch(`${FLASK_API}/add-course`, { 
             method: 'POST',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-User-Id': userId,
+                'X-User-Role': userRole,
+                'X-Username': username
             },
             body: JSON.stringify({ name: courseName })
         })
@@ -276,7 +300,10 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-User-Id': userId,
+                'X-User-Role': userRole,
+                'X-Username': username
             },
             body: JSON.stringify({ 
                 username: studentUsername, 

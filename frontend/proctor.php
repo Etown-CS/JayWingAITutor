@@ -1,3 +1,8 @@
+<?php
+session_start();
+echo "<!-- SESSION: " . print_r($_SESSION, true) . " -->";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,6 +199,11 @@
 <footer>
     <p> 2024 AI Tutor Proctor Page</p>
 </footer>
+<script>
+    const userId = "<?php echo $_SESSION['user_id']; ?>";
+    const username = "<?php echo $_SESSION['username']; ?>";
+    const userRole = "<?php echo $_SESSION['admin']; ?>"; // 1 = proctor, 0 = student
+</script>
 
 <script src="static/proctor.js"></script>
 </body>

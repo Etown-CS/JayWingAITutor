@@ -99,7 +99,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("../api/backend/signup.php", {
+            const response = await fetch("../backend/api/signup.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "same-origin",

@@ -92,7 +92,8 @@ def upload_file():
             subprocess.run(['python', 'read_docs.py',
                             username, 
                             course, 
-                            user_id], 
+                            user_id,
+                            filename], 
                             check=True)
         except subprocess.CalledProcessError as e:
             return jsonify(success=False, message=f"File uploaded but Pinecone ingestion failed: {str(e)}")

@@ -97,10 +97,10 @@ def get_recent_chat_history(user_id, course_name, memory_limit=5):
         print(f"⚠️ Chat history contains fewer than {memory_limit} Q&A pairs (i.e., fewer than {memory_limit * 2} messages).")
 
     # Print chat_history for debugging
-    for i, message in enumerate(chat_history):
-        role = message["role"]
-        content = message["content"]
-        print(f"Message {i+1}: [{role}] {content}")
+    # for i, message in enumerate(chat_history):
+    #     role = message["role"]
+    #     content = message["content"]
+    #     print(f"Message {i+1}: [{role}] {content}")
 
     return chat_history
 
@@ -145,6 +145,11 @@ def get_docs(course, question):
             "document_name": file_name,
             "chunk_text": chunk_text
         })
+
+    for result in search_results["matches"]:
+        metadata = result.get("metadata", {})
+        print(f"Score: {result['score']} | File: {metadata.get('filename')} | Text snippet: {metadata.get('chunk_text')[:100]}...")
+
 
     # print unique doc names
     unique_doc_names = set(doc["document_name"] for doc in files)

@@ -21,21 +21,18 @@ $query = "
     SELECT 
         c.name AS courseName,
         uc.userCoursesId,
-        MAX(m.timestamp) AS latestMessageTime,
-        (
-            SELECT m2.answer 
-            FROM messages m2 
-            WHERE m2.userCoursesId = uc.userCoursesId 
-              AND m2.answer IS NOT NULL 
-            ORDER BY m2.timestamp DESC 
-            LIMIT 1
-        ) AS answer
+        m.question AS latestQuestion,
+        latest.latestTimestamp AS lastInteracted
     FROM user_courses uc
-    JOIN courses c ON uc.courseId = c.id
-    LEFT JOIN messages m ON uc.userCoursesId = m.userCoursesId
+    JOIN courses c ON c.id = uc.courseId
+    LEFT JOIN (
+        SELECT userCoursesId, MAX(timestamp) AS latestTimestamp
+        FROM messages
+        GROUP BY userCoursesId
+    ) latest ON latest.userCoursesId = uc.userCoursesId
+    LEFT JOIN messages m ON m.userCoursesId = uc.userCoursesId AND m.timestamp = latest.latestTimestamp
     WHERE uc.userId = ?
-    GROUP BY uc.userCoursesId
-    $orderClause
+    $orderClause;
 ";
 
 $stmt = $connection->prepare($query);

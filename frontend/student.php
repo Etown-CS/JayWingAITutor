@@ -235,21 +235,21 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     
                     <!-- Messages area -->
                     <div id="conversation" class="flex-1 overflow-y-auto space-y-4 -mb-3 -mt-2 w-full">
-                        <?php
-                        $stmt = $connection->prepare("
-                            SELECT m.question, m.answer, m.sourceName
-                            FROM messages m
-                            JOIN user_courses uc ON uc.userCoursesId = m.userCoursesId
-                            WHERE uc.userCoursesId = ?
-                            ORDER BY m.timestamp ASC;
-                        ");
-                        $stmt->bind_param("i", $currentChat);
-                        $stmt->execute();
-                        $messages = $stmt->get_result();
+                        <div id="chat-locaction" class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
+                            <?php
+                            $stmt = $connection->prepare("
+                                SELECT m.question, m.answer, m.sourceName
+                                FROM messages m
+                                JOIN user_courses uc ON uc.userCoursesId = m.userCoursesId
+                                WHERE uc.userCoursesId = ?
+                                ORDER BY m.timestamp ASC;
+                            ");
+                            $stmt->bind_param("i", $currentChat);
+                            $stmt->execute();
+                            $messages = $stmt->get_result();
 
-                        while ($message = $messages->fetch_assoc()):
-                        ?>
-                            <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
+                            while ($message = $messages->fetch_assoc()):
+                            ?>
                                 <!-- User Question (Gray) -->
                                 <?php if (!empty($message['question'])): ?>
                                     <div class="flex py-2 justify-end">
@@ -272,8 +272,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                            </div>
-                        <?php endwhile; ?>
+                            <?php endwhile; ?>
+                        </div>
                     </div>
 
                     

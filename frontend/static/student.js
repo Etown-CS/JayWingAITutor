@@ -11,6 +11,7 @@ window.onload = function() {
 // TODO: find a way to get the course from the database to fix
 function askQuestion(selectedCourseName) {
     const question = document.getElementById('student-question').value;
+    updateConversation(question, 0);
 
     fetch(`${FLASK_API}/ask-question`, {
         method: 'POST',
@@ -25,7 +26,12 @@ function askQuestion(selectedCourseName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                updateConversation(data.response);
+                if (data.sourceName) {
+                    updateConversationSources(data.response, data.sourceName);
+                }
+                else {
+                    updateConversation(data.response, 1);
+                }
             } else {
                 console.error("Error in response:", data.message);
             }
@@ -35,12 +41,61 @@ function askQuestion(selectedCourseName) {
         });
 };
 
-function updateConversation(tutorResponse) {
-    const conversationDiv = document.getElementById('conversation');
-    const newMessage = document.createElement('p');
-    newMessage.textContent = tutorResponse;
-    conversationDiv.appendChild(newMessage);
-    conversationDiv.scrollTop = conversationDiv.scrollHeight;
+function updateConversation(text, role) {
+    const chatLocactionDiv = document.getElementById('chat-locaction');
+
+    const newMessageAlignment = document.createElement('div');
+    if (role == 0) { newMessageAlignment.class = "flex py-2 justify-end"; }
+    else { newMessageAlignment.class = "flex py-2 justify-start"; }
+    
+    const newMessageBubble = document.createElement('div');
+    if (role == 0) { newMessageBubble.class = "max-w-2xl bg-blue-500 text-white rounded-lg p-2"; }
+    else { newMessageBubble.class = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2"; }
+
+
+    const newMessageFrom = document.createElement('div');
+    newMessageFrom.class = "text-sm font-medium";
+    if (role == 0) { newMessageFrom.textContent = "You"; }
+    else { newMessageFrom.textContent = "AI Tutor"; }
+
+    const newMessageText = document.createElement('div');
+    newMessageText.textContent = text;
+
+    newMessageBubble.appendChild(newMessageFrom);
+    newMessageBubble.appendChild(newMessageText);
+
+    newMessageAlignment.appendChild(newMessageBubble);
+
+    chatLocactionDiv.appendChild(newMessageAlignment);
+}
+
+function updateConversationSources(text, sourceName) {
+    const chatLocactionDiv = document.getElementById('chat-locaction');
+
+    const newMessageAlignment = document.createElement('div');
+    newMessageAlignment.class = "flex py-2 justify-start";
+
+    const newMessageBubble = document.createElement('div');
+    newMessageBubble.class = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2";
+
+    const newMessageFrom = document.createElement('div');
+    newMessageFrom.class = "text-sm font-medium";
+    newMessageFrom.textContent = "AI Tutor";
+
+    const newMessageText = document.createElement('div');
+    newMessageText.textContent = tutorResponse;
+
+    const newMessageSource = document.createElement('div');
+    newMessageSource.class = "text-xs text-gray-200 mt-1";
+    newMessageSource.textContent = "Source: " + sourceName;
+
+    newMessageBubble.appendChild(newMessageFrom);
+    newMessageBubble.appendChild(newMessageText);
+    newMessageBubble.appendChild(newMessageSource);
+
+    newMessageAlignment.appendChild(newMessageBubble);
+
+    chatLocactionDiv.appendChild(newMessageAlignment);
 }
 
 // Text area expands with text when typed
@@ -71,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Prevent default new line
             askQuestion(currentCourseName); // Submit question to AI Tutor
-            form.submit(); // Submit the form
             textarea.value = ''; // Clear textarea after sending
             autoResizeTextarea(); // Reset height
         }
@@ -95,40 +149,18 @@ toggleBtn.addEventListener('click', () => {
 // TODO: Change the way different courses are sorted (fix and implement with new db when ready)
 document.getElementById('sort-by-btn').addEventListener('change', function () {
     const sortBy = this.value;
+    const urlParams = new URLSearchParams(window.location.search);
     
-    fetch('../backend/api/get_sorted_courses.php?sortBy=' + encodeURIComponent(sortBy))
-        .then(response => response.json())
-        .then(data => {
-            const chatDiv = document.getElementById('chat-div');
-            chatDiv.innerHTML = '';
+    // Preserve current chatId if it exists
+    const chatId = urlParams.get('chatId');
+    let newUrl = '?sortBy=' + encodeURIComponent(sortBy);
+    if (chatId) {
+        newUrl += '&chatId=' + encodeURIComponent(chatId);
+    }
 
-            const currentChatId = new URLSearchParams(window.location.search).get('chatId');
-
-            data.forEach(chat => {
-                const a = document.createElement('a');
-                a.href = `?chatId=${chat.userCoursesId}&sortBy=${encodeURIComponent(sortBy)}`;
-                a.className = (chat.userCoursesId == currentChatId)
-                    ? 'block p-3 rounded bg-gray-200 message-container'
-                    : 'block p-3 rounded bg-gray-100 message-container';
-
-                const title = document.createElement('div');
-                title.className = 'font-medium truncate';
-                title.textContent = chat.courseName;
-                a.appendChild(title);
-
-                const subtitle = document.createElement('div');
-                subtitle.className = 'text-xs text-gray-500 truncate';
-                subtitle.textContent = chat.latestQuestion ? chat.latestQuestion : 'No messages yet';
-                a.appendChild(subtitle);
-
-                chatDiv.appendChild(a);
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching courses:', error);
-        });
-
+    window.location.href = newUrl; // Force reload with new sorting
 });
+
 
 // Pre-select the sort option based on the URL
 window.addEventListener('DOMContentLoaded', () => {

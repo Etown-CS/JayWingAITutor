@@ -1,4 +1,4 @@
-const FLASK_API = "http://127.0.0.1:5000";
+const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
 
 window.onload = function() {
@@ -9,12 +9,10 @@ window.onload = function() {
 
 // Existing question submission functionality
 // TODO: find a way to get the course from the database to fix
-function askQuestion() {
+function askQuestion(selectedCourseName) {
     const question = document.getElementById('student-question').value;
-    // const coursesDropdown = document.getElementById('courses-dropdown');
-    // const selectedCourseName = coursesDropdown.selectedOptions[0].text;
 
-    fetch('/ask-question', {
+    fetch(`${FLASK_API}/ask-question`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -50,6 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('student-question');
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
 
+    // Global variables defined in PHP
+    console.log(currentCourseName); // Should show course name in browser console
+    console.log(currentChatId);     // Should show chatId
+
+
     function autoResizeTextarea() {
         // Reset height to 'auto' to correctly calculate scrollHeight
         textarea.style.height = 'auto';
@@ -67,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     textarea.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Prevent default new line
-            askQuestion(); // Submit question to AI Tutor
+            askQuestion(currentCourseName); // Submit question to AI Tutor
             form.submit(); // Submit the form
             textarea.value = ''; // Clear textarea after sending
             autoResizeTextarea(); // Reset height

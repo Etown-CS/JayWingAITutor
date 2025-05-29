@@ -1,5 +1,6 @@
 import os, subprocess, io
 from flask import Flask, request, jsonify, session, send_file
+import logging
 from flask_cors import CORS
 from google.cloud import storage
 from werkzeug.utils import secure_filename
@@ -26,6 +27,8 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CRE
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 bucket_name = "ai-tutor-docs-bucket" 
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
 # Initialize Google Cloud Storage client
 storage_client = storage.Client()
@@ -298,6 +301,9 @@ def assign_student():
 # Student-specific API for asking questions
 @app.route('/ask-question', methods=['POST'])
 def ask_question():
+    print("Ask question endpoint hit")
+    logging.debug("Ask question endpoint hit")
+
     # Get user info from headers
     user_id, username, user_role, folder_prefix = get_user_info_from_headers()
     if not user_id:
@@ -311,8 +317,9 @@ def ask_question():
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Call the generate_gpt_response function
-        tutor_response = generate_gpt_response(user_id, course_name, question)
-        
+        # tutor_response = generate_gpt_response(user_id, course_name, question)
+        tutor_response = "test response"  # Placeholder for actual response
+
         return jsonify({'success': True, 'response': tutor_response}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500

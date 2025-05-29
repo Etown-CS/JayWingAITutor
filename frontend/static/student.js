@@ -51,16 +51,16 @@ function updateConversation(text, role) {
     const chatLocactionDiv = document.getElementById('chat-locaction');
 
     const newMessageAlignment = document.createElement('div');
-    if (role == 0) { newMessageAlignment.class = "flex py-2 justify-end"; }
-    else { newMessageAlignment.class = "flex py-2 justify-start"; }
+    if (role == 0) { newMessageAlignment.className = "flex py-2 justify-end"; }
+    else { newMessageAlignment.className = "flex py-2 justify-start"; }
     
     const newMessageBubble = document.createElement('div');
-    if (role == 0) { newMessageBubble.class = "max-w-2xl bg-blue-500 text-white rounded-lg p-2"; }
-    else { newMessageBubble.class = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2"; }
+    if (role == 0) { newMessageBubble.className = "max-w-2xl bg-blue-500 text-white rounded-lg p-2"; }
+    else { newMessageBubble.className = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2"; }
 
 
     const newMessageFrom = document.createElement('div');
-    newMessageFrom.class = "text-sm font-medium";
+    newMessageFrom.className = "text-sm font-medium";
     if (role == 0) { newMessageFrom.textContent = "You"; }
     else { newMessageFrom.textContent = "AI Tutor"; }
 
@@ -79,20 +79,20 @@ function updateConversationSources(text, sourceName) {
     const chatLocactionDiv = document.getElementById('chat-locaction');
 
     const newMessageAlignment = document.createElement('div');
-    newMessageAlignment.class = "flex py-2 justify-start";
+    newMessageAlignment.className = "flex py-2 justify-start";
 
     const newMessageBubble = document.createElement('div');
-    newMessageBubble.class = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2";
+    newMessageBubble.className = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2";
 
     const newMessageFrom = document.createElement('div');
-    newMessageFrom.class = "text-sm font-medium";
+    newMessageFrom.className = "text-sm font-medium";
     newMessageFrom.textContent = "AI Tutor";
 
     const newMessageText = document.createElement('div');
     newMessageText.textContent = tutorResponse;
 
     const newMessageSource = document.createElement('div');
-    newMessageSource.class = "text-xs text-gray-200 mt-1";
+    newMessageSource.className = "text-xs text-gray-200 mt-1";
     newMessageSource.textContent = "Source: " + sourceName;
 
     newMessageBubble.appendChild(newMessageFrom);
@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             autoResizeTextarea(); // Reset height
         }
     });
+}
 });
 
 // Sidebar toggle button logic

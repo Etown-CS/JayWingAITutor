@@ -14,7 +14,7 @@ window.onload = function() {
 // TODO: find a way to get the course from the database to fix
 function askQuestion(selectedCourseName) {
     const question = document.getElementById('student-question').value;
-    updateConversation(question, 0);
+    updateConversationUser(question);
 
     fetch(`${FLASK_API}/ask-question`, {
         method: 'POST',
@@ -32,12 +32,7 @@ function askQuestion(selectedCourseName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                if (data.sourceName) {
-                    updateConversationSources(data.response, data.sourceName);
-                }
-                else {
-                    updateConversation(data.response, 1);
-                }
+                updateConversationAi(data.response, data.sourceName);
             } else {
                 console.error("Error in response:", data.message);
             }
@@ -47,22 +42,18 @@ function askQuestion(selectedCourseName) {
         });
 };
 
-function updateConversation(text, role) {
+function updateConversationUser(text) {
     const chatLocactionDiv = document.getElementById('chat-locaction');
 
     const newMessageAlignment = document.createElement('div');
-    if (role == 0) { newMessageAlignment.className = "flex py-2 justify-end"; }
-    else { newMessageAlignment.className = "flex py-2 justify-start"; }
+    newMessageAlignment.className = "flex py-2 justify-end";
     
     const newMessageBubble = document.createElement('div');
-    if (role == 0) { newMessageBubble.className = "max-w-2xl bg-blue-500 text-white rounded-lg p-2"; }
-    else { newMessageBubble.className = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2"; }
-
+    newMessageBubble.className = "max-w-2xl bg-blue-500 text-white rounded-lg p-2";
 
     const newMessageFrom = document.createElement('div');
     newMessageFrom.className = "text-sm font-medium";
-    if (role == 0) { newMessageFrom.textContent = "You"; }
-    else { newMessageFrom.textContent = "AI Tutor"; }
+    newMessageFrom.textContent = "You";
 
     const newMessageText = document.createElement('div');
     newMessageText.textContent = text;
@@ -75,7 +66,7 @@ function updateConversation(text, role) {
     chatLocactionDiv.appendChild(newMessageAlignment);
 }
 
-function updateConversationSources(text, sourceName) {
+function updateConversationAI(text, sourceName) {
     const chatLocactionDiv = document.getElementById('chat-locaction');
 
     const newMessageAlignment = document.createElement('div');

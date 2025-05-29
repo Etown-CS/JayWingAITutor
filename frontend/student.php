@@ -65,18 +65,22 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     // User is validated at this point
     // Get course name chat is for
     $stmt = $connection->prepare("
-        SELECT c.name
+        SELECT c.name, u.username, u.role
         FROM user_courses uc
         JOIN courses c ON c.id = uc.courseId
-        WHERE uc.userCoursesId = ?;
+        JOIN users u ON u.id = uc.userId
+        WHERE uc.userCoursesId = ?
+        AND uc.userId = ?;
     ");
-    $stmt->bind_param("i", $currentChat);
+    $stmt->bind_param("ii", $currentChat, $userId);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // Store result in $courseName
-    $chatCourseName = $result->fetch_assoc()['name'] ?? '';
-    // echo " - DEBUG: courseName = $chatCourseName";
+    // Store results
+    $row = $result->fetch_assoc();
+    $chatCourseName = $row['name'] ?? '';
+    $username = $row['username'] ?? '';
+    $userRole = $row['role'] ?? '';
 
 } else {
     $currentChat = 0;
@@ -102,6 +106,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <script>
         const currentCourseName = <?php echo json_encode($chatCourseName); ?>;
         const currentChatId = <?php echo json_encode($currentChat); ?>;
+        const username = <?php echo json_encode($username ?? null); ?>;
+        const userId = <?php echo json_encode($userId ?? null); ?>;
+        const userRole = <?php echo json_encode($userRole ?? null); ?>;
     </script>
 </head>
 <body class="flex flex-col h-screen gap-0 overflow-hidden">

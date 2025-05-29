@@ -260,10 +260,8 @@ def generate_gpt_response(user_id, course_name, user_question):
         # Update chat logs in database
         update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
 
-        # Append source information and return the full response
-        full_response = f"{tutor_response}\n\n📄 {source_info}"
-        print(f"\n\nGenerated response: {full_response}")
-        return (full_response, list(document_names))
+        print(f"\n\nGenerated response: {tutor_response}")
+        return (tutor_response, list(document_names))
 
     except Exception as e:
         return f"An error occurred: {str(e)}"

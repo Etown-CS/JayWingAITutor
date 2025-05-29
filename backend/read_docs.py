@@ -227,7 +227,7 @@ def main():
     username = sys.argv[1]
     course_name = sys.argv[2]
     proctor_id = int(sys.argv[3])
-    specific_file = sys.argv[4] if len(sys.argv) > 4 else None  # 👈 Add filename arg
+    specific_file = sys.argv[4] if len(sys.argv) > 4 else None
 
     print(f"Training context for user: {username}, course: {course_name}, proctor ID: {proctor_id}")
 

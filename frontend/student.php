@@ -143,8 +143,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
             <!-- Sorts/Filters -->
             <div class="d-flex gap-2 px-3 pb-3 sidebar-content-hide">
                 <select class="form-select bg-primary text-white w-75" id="sort-by-btn" name="sortBy">
-                    <option value="coursesByRecent">Sort by: Recent</option>
-                    <option value="coursesByDiscipline">Sort by: Discipline</option>
+                    <option value="sortRecent">Sort by: Recent</option>
+                    <option value="sortAlphabetical">Sort by: Alphabetical</option>
                 </select>
                 <select class="form-select bg-primary text-white w-25" id="filter-by-btn" name="filterBy">
                     <option value="allCourses">All</option>
@@ -157,26 +157,35 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 <!-- TODO: implement with php -->
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
-                    // Need courseName, chatId, latestQuestion, lastInteracted
-                        $stmt = $connection->prepare("
-                        SELECT 
-                            c.name AS courseName,
-                            uc.userCoursesId,
-                            m.question AS latestQuestion,
-                            latest.latestTimestamp AS lastInteracted
-                        FROM user_courses uc
-                        JOIN courses c ON c.id = uc.courseId
-                        LEFT JOIN (
-                            SELECT userCoursesId, MAX(timestamp) AS latestTimestamp
-                            FROM messages
-                            GROUP BY userCoursesId
-                        ) latest ON latest.userCoursesId = uc.userCoursesId
-                        LEFT JOIN messages m ON m.userCoursesId = uc.userCoursesId AND m.timestamp = latest.latestTimestamp
-                        WHERE uc.userId = ?
-                        ORDER BY 
-                            latest.latestTimestamp IS NULL,   -- Push NULLs to bottom
-                            latest.latestTimestamp DESC;      -- Most recent messages first
-                        ");
+                        // Need courseName, chatId, latestQuestion, lastInteracted
+                        $sortBy = $_GET['sortBy'] ?? 'sortRecent';
+
+                        $orderClause = match($sortBy) {
+                            'sortAlphabetical' => 'ORDER BY c.name ASC',
+                            default => 'ORDER BY 
+                                            latest.latestTimestamp IS NULL,
+                                            latest.latestTimestamp DESC'
+                        };
+
+                        $query = "
+                            SELECT 
+                                c.name AS courseName,
+                                uc.userCoursesId,
+                                m.question AS latestQuestion,
+                                latest.latestTimestamp AS lastInteracted
+                            FROM user_courses uc
+                            JOIN courses c ON c.id = uc.courseId
+                            LEFT JOIN (
+                                SELECT userCoursesId, MAX(timestamp) AS latestTimestamp
+                                FROM messages
+                                GROUP BY userCoursesId
+                            ) latest ON latest.userCoursesId = uc.userCoursesId
+                            LEFT JOIN messages m ON m.userCoursesId = uc.userCoursesId AND m.timestamp = latest.latestTimestamp
+                            WHERE uc.userId = ?
+                            $orderClause;
+                        ";
+
+                        $stmt = $connection->prepare($query);
                         $stmt->bind_param("i", $userId);
                         $stmt->execute();
                         $chats = $stmt->get_result();
@@ -198,8 +207,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             }
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
-                    <a href="?chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>" 
-                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-100' : ''; ?> message-container">
+                    <a href="?chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>&sortBy=<?php echo urlencode($_GET['sortBy'] ?? 'sortRecent'); ?>"
+                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> message-container">
                         <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
                         <?php if ($chat['latestQuestion']): ?>
                             <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['latestQuestion'], ENT_QUOTES, 'UTF-8'); ?></div>

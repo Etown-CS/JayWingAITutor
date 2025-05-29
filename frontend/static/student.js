@@ -104,41 +104,46 @@ if (toggleBtn) {
 
 
 // TODO: Change the way different courses are sorted (fix and implement with new db when ready)
-const sortByBtn = document.getElementById('sort-by-btn');
-if (sortByBtn) {
-    document.getElementById('sort-by-btn').addEventListener('change', function () {
-        const sortBy = this.value;
-        
-        fetch(`get_sorted_chats.php?sortBy=${sortBy}`)
-            .then(response => response.json())
-            .then(data => {
-                const chatDiv = document.getElementById('chat-div');
-                chatDiv.innerHTML = ''; // Clear current list
+document.getElementById('sort-by-btn').addEventListener('change', function () {
+    const sortBy = this.value;
+    
+    fetch('../backend/api/get_sorted_courses.php?sortBy=' + encodeURIComponent(sortBy))
+        .then(response => response.json())
+        .then(data => {
+            const chatDiv = document.getElementById('chat-div');
+            chatDiv.innerHTML = '';
 
-                data.forEach(chat => {
-                    const a = document.createElement('a');
-                    a.href = `?chatId=${chat.chatId}`;
-                    a.className = 'block p-3 rounded bg-gray-100 message-container';
+            const currentChatId = new URLSearchParams(window.location.search).get('chatId');
 
-                    const title = document.createElement('div');
-                    title.className = 'font-medium truncate';
-                    title.textContent = chat.courseName;
+            data.forEach(chat => {
+                const a = document.createElement('a');
+                a.href = `?chatId=${chat.userCoursesId}&sortBy=${encodeURIComponent(sortBy)}`;
+                a.className = (chat.userCoursesId == currentChatId)
+                    ? 'block p-3 rounded bg-gray-200 message-container'
+                    : 'block p-3 rounded bg-gray-100 message-container';
 
-                    a.appendChild(title);
+                const title = document.createElement('div');
+                title.className = 'font-medium truncate';
+                title.textContent = chat.courseName;
+                a.appendChild(title);
 
-                    if (chat.answer) {
-                        const subtitle = document.createElement('div');
-                        subtitle.className = 'text-xs text-gray-500 truncate';
-                        subtitle.textContent = chat.answer;
-                        a.appendChild(subtitle);
-                    }
+                const subtitle = document.createElement('div');
+                subtitle.className = 'text-xs text-gray-500 truncate';
+                subtitle.textContent = chat.latestQuestion ? chat.latestQuestion : 'No messages yet';
+                a.appendChild(subtitle);
 
-                    chatDiv.appendChild(a);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching chats:', error);
+                chatDiv.appendChild(a);
             });
-    });
+        })
+        .catch(error => {
+            console.error('Error fetching courses:', error);
+        });
 
-}
+});
+
+// Pre-select the sort option based on the URL
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedSort = urlParams.get('sortBy') || 'sortRecent';
+    document.getElementById('sort-by-btn').value = selectedSort;
+});

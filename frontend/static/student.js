@@ -89,7 +89,7 @@ function updateConversationSources(text, sourceName) {
     newMessageFrom.textContent = "AI Tutor";
 
     const newMessageText = document.createElement('div');
-    newMessageText.textContent = tutorResponse;
+    newMessageText.textContent = text;
 
     const newMessageSource = document.createElement('div');
     newMessageSource.className = "text-xs text-gray-200 mt-1";

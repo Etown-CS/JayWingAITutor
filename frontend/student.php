@@ -234,7 +234,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 $chatDetails = $stmt->get_result()->fetch_assoc();
                 ?>
                 
-                <div class="flex flex-col flex-1 w-full">
                     <!-- Chat header -->
                     <div class="align-self-start px-3 py-2 w-full border-b-4 border-gray-50">
                         <h2 class="text-xl font-bold text-left"><?php echo "$chatCourseName"; ?></h2>
@@ -299,7 +298,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         </div>
                         <div class="text-xs text-center text-gray-500 pb-2">AI Tutor can make mistakes. Chat is logged and viewable by teachers.</div>
                     </form>
-                </div>
             <?php else: ?>
                 <div class="h-[600px] flex items-center justify-center text-gray-500">
                     Select a chat to start messaging

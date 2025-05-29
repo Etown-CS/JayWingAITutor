@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Executes when chat is opened
 if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) {
     $currentChat = (int) $_GET['chatId'];
-    echo "DEBUG: userId = $userId, chatId = $currentChat";
+    // echo "DEBUG: userId = $userId, chatId = $currentChat";
     
     // Validate that the user is a participant of the chat before inserting the message
     $stmt = $connection->prepare("
@@ -75,7 +75,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
     // Store result in $courseName
     $chatCourseName = $result->fetch_assoc()['name'] ?? '';
-    echo " - DEBUG: courseName = $chatCourseName";
+    // echo " - DEBUG: courseName = $chatCourseName";
 
 } else {
     $currentChat = 0;
@@ -207,7 +207,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
             <?php if ($currentChat): ?>
                 <?php
                 // Get chat details
-                $stmt = $connection->prepare("SELECT * FROM chats WHERE chatId = ?");
+                $stmt = $connection->prepare("SELECT * FROM user_courses WHERE userCoursesId = ?");
                 $stmt->bind_param("i", $currentChat);
                 $stmt->execute();
                 $chatDetails = $stmt->get_result()->fetch_assoc();
@@ -225,8 +225,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         $stmt = $connection->prepare("
                             SELECT m.question, m.answer, m.sourceName
                             FROM messages m
-                            JOIN chats c ON c.chatId = m.chatId
-                            WHERE m.chatId = ?
+                            JOIN user_courses uc ON uc.userCoursesId = m.userCoursesId
+                            WHERE uc.userCoursesId = ?
                             ORDER BY m.timestamp ASC;
                         ");
                         $stmt->bind_param("i", $currentChat);

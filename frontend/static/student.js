@@ -2,9 +2,12 @@ const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
 
 window.onload = function() {
-      const scrollable = document.getElementById('conversation');
-      scrollable.scrollTop = scrollable.scrollHeight;
-    };
+    const scrollable = document.getElementById('conversation');
+    if (scrollable) {
+        scrollable.scrollTop = scrollable.scrollHeight;
+    }
+};
+
 
 
 // Existing question submission functionality
@@ -17,6 +20,9 @@ function askQuestion(selectedCourseName) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-User-Id': userId,
+            'X-User-Role': userRole, // defaults to 'student' in app.py
+            'X-Username': username
         },
         body: JSON.stringify({
             question: question,
@@ -104,22 +110,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
 
     // Global variables defined in PHP
-    console.log(currentCourseName); // Should show course name in browser console
-    console.log(currentChatId);     // Should show chatId
+    // console.log(currentCourseName); // Should show course name in browser console
+    // console.log(currentChatId);     // Should show chatId
 
+    if (textarea) {
+        function autoResizeTextarea() {
+            // Reset height to 'auto' to correctly calculate scrollHeight
+            textarea.style.height = 'auto';
+            // Set height to scrollHeight (content height)
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
 
-    function autoResizeTextarea() {
-        // Reset height to 'auto' to correctly calculate scrollHeight
-        textarea.style.height = 'auto';
-        // Set height to scrollHeight (content height)
-        textarea.style.height = textarea.scrollHeight + 'px';
-    }
+        // Adjust height on input (typing, pasting, cutting)
+        textarea.addEventListener('input', autoResizeTextarea);
 
-    // Adjust height on input (typing, pasting, cutting)
-    textarea.addEventListener('input', autoResizeTextarea);
-
-    // Initial resize in case there's pre-filled content
-    autoResizeTextarea();
+        // Initial resize in case there's pre-filled content
+        autoResizeTextarea();
 
     // Enter to send, Shift+Enter for new line
     textarea.addEventListener('keydown', (event) => {
@@ -137,14 +143,16 @@ const sidebar = document.getElementById('sidebar');
 const toggleBtn = document.getElementById('toggle-sidebar');
 const content = document.getElementById('my-content');
 
-toggleBtn.addEventListener('click', () => {
-    console.log("Toggle button clicked!");
-    sidebar.classList.toggle('collapsed');
-    content.classList.toggle('collapsed-sidebar');
-    console.log("Sidebar classes:", sidebar.classList);
-    console.log("Content classes:", content.classList);
+if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+        console.log("Toggle button clicked!");
+        sidebar.classList.toggle('collapsed');
+        content.classList.toggle('collapsed-sidebar');
+        console.log("Sidebar classes:", sidebar.classList);
+        console.log("Content classes:", content.classList);
+    });
+}
 
-});
 
 // TODO: Change the way different courses are sorted (fix and implement with new db when ready)
 document.getElementById('sort-by-btn').addEventListener('change', function () {

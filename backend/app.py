@@ -50,10 +50,13 @@ def allowed_file(filename):
 def get_user_info_from_headers():
     user_id = request.headers.get("X-User-Id")
     username = request.headers.get("X-Username")
-    user_role = request.headers.get("X-User-Role")
+    if (request.headers.get("X-User-Role") is None):
+        user_role = 0  # Default to student role if not provided
+    else:
+        user_role = request.headers.get("X-User-Role")
 
     if not user_id or not username or user_role is None:
-        return None, None, None
+        return None, None, None, None
     
     folder_prefix = f"{username}_{user_id}"
     return user_id, username, int(user_role), folder_prefix
@@ -306,6 +309,7 @@ def ask_question():
 
     # Get user info from headers
     user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    print(f"User ID: {user_id}, Username: {username}, User Role: {user_role}, Folder Prefix: {folder_prefix}")
     if not user_id:
         return jsonify(success=False, message="Unauthorized"), 401
     try:
@@ -317,8 +321,8 @@ def ask_question():
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Call the generate_gpt_response function
-        # tutor_response = generate_gpt_response(user_id, course_name, question)
-        tutor_response = "test response"  # Placeholder for actual response
+        tutor_response = generate_gpt_response(user_id, course_name, question)
+        # tutor_response = "test response"  # Placeholder for actual response
 
         return jsonify({'success': True, 'response': tutor_response}), 200
     except Exception as e:

@@ -221,6 +221,7 @@ def generate_gpt_response(user_id, course_name, user_question):
         # Create a context string from the documents and get source
         if not docs:
             source_info = "No relevant documents found."
+            document_names = set()
             context = ""
         else:
             # Combined text from the documents

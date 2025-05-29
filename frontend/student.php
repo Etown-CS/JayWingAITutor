@@ -213,10 +213,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 $chatDetails = $stmt->get_result()->fetch_assoc();
                 ?>
                 
-                <div class="flex flex-col h-[600px]">
+                <div class="flex flex-col flex-1 w-full">
                     <!-- Chat header -->
-                    <div class="align-self-start px-3 w-full border-b-2 border-gray-100">
-                        <h2 class="text-xl font-bold"><?php echo "$chatCourseName"; ?></h2>
+                    <div class="align-self-start px-3 py-2 w-full border-b-4 border-gray-50">
+                        <h2 class="text-xl font-bold text-left"><?php echo "$chatCourseName"; ?></h2>
                     </div>
                     
                     <!-- Messages area -->
@@ -238,8 +238,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             <div class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
                                 <!-- User Question (Gray) -->
                                 <?php if (!empty($message['question'])): ?>
-                                    <div class="flex py-2 justify-start">
-                                        <div class="max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2">
+                                    <div class="flex py-2 justify-end">
+                                        <div class="max-w-2xl bg-blue-500 text-white rounded-lg p-2">
                                             <div class="text-sm font-medium">You</div>
                                             <div><?php echo nl2br(htmlspecialchars($message['question'])); ?></div>
                                         </div>
@@ -248,8 +248,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
                                 <!-- AI Answer (Blue) -->
                                 <?php if (!empty($message['answer'])): ?>
-                                    <div class="flex py-2 justify-end">
-                                        <div class="max-w-2xl bg-blue-500 text-white rounded-lg p-2">
+                                    <div class="flex py-2 justify-start">
+                                        <div class="max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2">
                                             <div class="text-sm font-medium">AI Tutor</div>
                                             <div><?php echo nl2br(htmlspecialchars($message['answer'])); ?></div>
                                             <?php if (!empty($message['sourceName'])): ?>
@@ -265,11 +265,11 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     
                     <!-- Message input -->
                     <form method="POST" name="messageForm" class="mt-auto w-full">
-                        <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36">
+                        <div id="input-container" class="flex gap-2 justify-center">
                             <textarea
                                 id="student-question"
                                 name="message"
-                                class="flex-1 border rounded-lg p-2 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words resize-none overflow-y-auto max-h-48"
+                                class="max-w-2xl max-h-48 border rounded-lg p-2 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-auto"
                                 placeholder="Ask a question..."
                                 rows="1"
                                 required

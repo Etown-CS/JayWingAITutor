@@ -93,34 +93,43 @@ toggleBtn.addEventListener('click', () => {
 document.getElementById('sort-by-btn').addEventListener('change', function () {
     const sortBy = this.value;
     
-    fetch(`get_sorted_chats.php?sortBy=${sortBy}`)
+    fetch('../backend/api/get_sorted_courses.php?sortBy=' + encodeURIComponent(sortBy))
         .then(response => response.json())
         .then(data => {
             const chatDiv = document.getElementById('chat-div');
-            chatDiv.innerHTML = ''; // Clear current list
+            chatDiv.innerHTML = '';
+
+            const currentChatId = new URLSearchParams(window.location.search).get('chatId');
 
             data.forEach(chat => {
                 const a = document.createElement('a');
-                a.href = `?chatId=${chat.chatId}`;
-                a.className = 'block p-3 rounded bg-gray-100 message-container';
+                a.href = `?chatId=${chat.userCoursesId}&sortBy=${encodeURIComponent(sortBy)}`;
+                a.className = (chat.userCoursesId == currentChatId)
+                    ? 'block p-3 rounded bg-gray-200 message-container'
+                    : 'block p-3 rounded bg-gray-100 message-container';
 
                 const title = document.createElement('div');
                 title.className = 'font-medium truncate';
                 title.textContent = chat.courseName;
-
                 a.appendChild(title);
 
-                if (chat.answer) {
-                    const subtitle = document.createElement('div');
-                    subtitle.className = 'text-xs text-gray-500 truncate';
-                    subtitle.textContent = chat.answer;
-                    a.appendChild(subtitle);
-                }
+                const subtitle = document.createElement('div');
+                subtitle.className = 'text-xs text-gray-500 truncate';
+                subtitle.textContent = chat.latestQuestion ? chat.latestQuestion : 'No messages yet';
+                a.appendChild(subtitle);
 
                 chatDiv.appendChild(a);
             });
         })
         .catch(error => {
-            console.error('Error fetching chats:', error);
+            console.error('Error fetching courses:', error);
         });
+
+});
+
+// Pre-select the sort option based on the URL
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedSort = urlParams.get('sortBy') || 'sortRecent';
+    document.getElementById('sort-by-btn').value = selectedSort;
 });

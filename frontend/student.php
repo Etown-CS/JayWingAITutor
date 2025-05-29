@@ -7,37 +7,38 @@ if ($isUserLoggedIn) {
     $userId = $_SESSION['user_id'];
 }
 
+// Redundant -- already done in student.js
 // Handle new message submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_message') {
-    $messageContent = $_POST['message'];
-    $chatId = $_POST['chat_id'];
+// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_message') {
+//     $messageContent = $_POST['message'];
+//     $chatId = $_POST['chat_id'];
 
-    // Validate that the user is a participant of the chat before inserting the message
-    $stmt = $connection->prepare("
-        SELECT 1
-        FROM user_courses uc
-        WHERE uc.userId = ?
-        AND uc.userCoursesId = ?;
-    ");
-    $stmt->bind_param("ii", $userId, $currentChat);
-    $stmt->execute();
-    $result = $stmt->get_result();
+//     // Validate that the user is a participant of the chat before inserting the message
+//     $stmt = $connection->prepare("
+//         SELECT 1
+//         FROM user_courses uc
+//         WHERE uc.userId = ?
+//         AND uc.userCoursesId = ?;
+//     ");
+//     $stmt->bind_param("ii", $userId, $currentChat);
+//     $stmt->execute();
+//     $result = $stmt->get_result();
 
-    if ($result->num_rows === 0) {
-        // User is not part of this chat, redirect them or show an error
-        header("Location: index.php"); // Redirect to a safe page
-        exit();
-    }
+//     if ($result->num_rows === 0) {
+//         // User is not part of this chat, redirect them or show an error
+//         header("Location: index.php"); // Redirect to a safe page
+//         exit();
+//     }
 
-    // Insert the message if validation passes
-    $stmt = $connection->prepare("INSERT INTO messages (chatId, question) VALUES (?, ?)");
-    $stmt->bind_param("is", $chatId, $messageContent);
-    $stmt->execute();
-    $stmt->close();
+//     // Insert the message if validation passes
+//     $stmt = $connection->prepare("INSERT INTO messages (userCoursesId, question) VALUES (?, ?)");
+//     $stmt->bind_param("is", $chatId, $messageContent);
+//     $stmt->execute();
+//     $stmt->close();
     
-    header("Location: ?chatId=" . $chatId);
-    exit();
-}
+//     header("Location: ?chatId=" . $chatId);
+//     exit();
+// }
 
 // Executes when chat is opened
 if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) {
@@ -98,6 +99,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
     <!-- custom css -->
     <link rel="stylesheet" href="static/student.css">
+    <script>
+        const currentCourseName = <?php echo json_encode($chatCourseName); ?>;
+        const currentChatId = <?php echo json_encode($currentChat); ?>;
+    </script>
 </head>
 <body class="flex flex-col h-screen gap-0 overflow-hidden">
     <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
@@ -274,6 +279,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     
                     <!-- Message input -->
                     <form method="POST" name="messageForm" class="mt-auto w-full">
+                        <input type="hidden" name="action" value="send_message">
                         <div id="input-container" class="flex gap-2 justify-center">
                             <textarea
                                 id="student-question"

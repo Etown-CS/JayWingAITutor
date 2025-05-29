@@ -7,39 +7,6 @@ if ($isUserLoggedIn) {
     $userId = $_SESSION['user_id'];
 }
 
-// Redundant -- already done in student.js
-// Handle new message submission
-// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_message') {
-//     $messageContent = $_POST['message'];
-//     $chatId = $_POST['chat_id'];
-
-//     // Validate that the user is a participant of the chat before inserting the message
-//     $stmt = $connection->prepare("
-//         SELECT 1
-//         FROM user_courses uc
-//         WHERE uc.userId = ?
-//         AND uc.userCoursesId = ?;
-//     ");
-//     $stmt->bind_param("ii", $userId, $currentChat);
-//     $stmt->execute();
-//     $result = $stmt->get_result();
-
-//     if ($result->num_rows === 0) {
-//         // User is not part of this chat, redirect them or show an error
-//         header("Location: index.php"); // Redirect to a safe page
-//         exit();
-//     }
-
-//     // Insert the message if validation passes
-//     $stmt = $connection->prepare("INSERT INTO messages (userCoursesId, question) VALUES (?, ?)");
-//     $stmt->bind_param("is", $chatId, $messageContent);
-//     $stmt->execute();
-//     $stmt->close();
-    
-//     header("Location: ?chatId=" . $chatId);
-//     exit();
-// }
-
 // Executes when chat is opened
 if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) {
     $currentChat = (int) $_GET['chatId'];
@@ -129,7 +96,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         placeholder="🔍 Search Chats..."
                         aria-label="ChatSearch"
                         aria-describedby="basic-addon1"
-                        oninput="filterClasses()"
+                        oninput="filterChats()"
                     >
                     <button
                         type="button"

@@ -8,7 +8,32 @@ window.onload = function() {
     }
 };
 
+function filterChats() {
+    const query = document.getElementById('searchBar').value.toLowerCase();
+    const chatLinks = document.querySelectorAll('#chat-div a');
+    let anyVisible = false;
 
+    chatLinks.forEach(link => {
+        const text = link.querySelector('.font-medium')?.innerText.toLowerCase() || "";
+        if (text.includes(query)) {
+            link.style.display = 'block';
+            anyVisible = true;
+        } else {
+            link.style.display = 'none';
+        }
+    });
+
+    const noResultsMsg = document.getElementById('noResultsMsg');
+    if (!noResultsMsg && !anyVisible) {
+        const msg = document.createElement('div');
+        msg.id = 'noResultsMsg';
+        msg.className = 'text-center text-muted mt-3';
+        msg.innerText = 'No chats found.';
+        document.getElementById('chat-div').appendChild(msg);
+    } else if (noResultsMsg && anyVisible) {
+        noResultsMsg.remove();
+    }
+}
 
 // Existing question submission functionality
 // TODO: find a way to get the course from the database to fix

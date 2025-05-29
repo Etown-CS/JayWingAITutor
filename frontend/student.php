@@ -286,11 +286,11 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <!-- Message input -->
                     <form method="POST" name="messageForm" class="mt-auto w-full">
                         <input type="hidden" name="action" value="send_message">
-                        <div id="input-container" class="flex gap-2 justify-center">
+                        <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36">
                             <textarea
                                 id="student-question"
                                 name="message"
-                                class="max-w-2xl max-h-48 border rounded-lg p-2 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-auto"
+                                class="flex-1 border rounded-lg p-2 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words resize-none overflow-y-auto max-h-48"
                                 placeholder="Ask a question..."
                                 rows="1"
                                 required

@@ -1,12 +1,14 @@
 const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
 
-window.onload = function() {
+window.onload = scrollToBottom();
+
+function scrollToBottom() {
     const scrollable = document.getElementById('conversation');
     if (scrollable) {
         scrollable.scrollTop = scrollable.scrollHeight;
     }
-};
+}
 
 
 
@@ -32,7 +34,7 @@ function askQuestion(selectedCourseName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                updateConversationAi(data.response, data.sourceName);
+                updateConversationAI(data.response, data.sourceName);
             } else {
                 console.error("Error in response:", data.message);
             }
@@ -64,6 +66,8 @@ function updateConversationUser(text) {
     newMessageAlignment.appendChild(newMessageBubble);
 
     chatLocactionDiv.appendChild(newMessageAlignment);
+
+    scrollToBottom();
 }
 
 function updateConversationAI(text, sourceName) {
@@ -93,6 +97,8 @@ function updateConversationAI(text, sourceName) {
     newMessageAlignment.appendChild(newMessageBubble);
 
     chatLocactionDiv.appendChild(newMessageAlignment);
+
+    scrollToBottom();
 }
 
 // Text area expands with text when typed

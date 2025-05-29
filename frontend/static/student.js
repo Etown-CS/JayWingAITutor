@@ -2,9 +2,12 @@ const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
 
 window.onload = function() {
-      const scrollable = document.getElementById('conversation');
-      scrollable.scrollTop = scrollable.scrollHeight;
-    };
+    const scrollable = document.getElementById('conversation');
+    if (scrollable) {
+        scrollable.scrollTop = scrollable.scrollHeight;
+    }
+};
+
 
 
 // Existing question submission functionality
@@ -16,6 +19,9 @@ function askQuestion(selectedCourseName) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-User-Id': userId,
+            'X-User-Role': userRole, // defaults to 'student' in app.py
+            'X-Username': username
         },
         body: JSON.stringify({
             question: question,
@@ -49,81 +55,90 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
 
     // Global variables defined in PHP
-    console.log(currentCourseName); // Should show course name in browser console
-    console.log(currentChatId);     // Should show chatId
+    // console.log(currentCourseName); // Should show course name in browser console
+    // console.log(currentChatId);     // Should show chatId
 
+    if (textarea) {
+        function autoResizeTextarea() {
+            // Reset height to 'auto' to correctly calculate scrollHeight
+            textarea.style.height = 'auto';
+            // Set height to scrollHeight (content height)
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
 
-    function autoResizeTextarea() {
-        // Reset height to 'auto' to correctly calculate scrollHeight
-        textarea.style.height = 'auto';
-        // Set height to scrollHeight (content height)
-        textarea.style.height = textarea.scrollHeight + 'px';
+        // Adjust height on input (typing, pasting, cutting)
+        textarea.addEventListener('input', autoResizeTextarea);
+
+        // Initial resize in case there's pre-filled content
+        autoResizeTextarea();
+
+        // Enter to send, Shift+Enter for new line
+        textarea.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent default new line
+                askQuestion(currentCourseName); // Submit question to AI Tutor
+                // form.submit(); // Submit the form
+                textarea.value = ''; // Clear textarea after sending
+                autoResizeTextarea(); // Reset height
+            }
+        });
+
     }
 
-    // Adjust height on input (typing, pasting, cutting)
-    textarea.addEventListener('input', autoResizeTextarea);
-
-    // Initial resize in case there's pre-filled content
-    autoResizeTextarea();
-
-    // Enter to send, Shift+Enter for new line
-    textarea.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Prevent default new line
-            askQuestion(currentCourseName); // Submit question to AI Tutor
-            form.submit(); // Submit the form
-            textarea.value = ''; // Clear textarea after sending
-            autoResizeTextarea(); // Reset height
-        }
     });
-});
 
 // Sidebar toggle button logic
 const sidebar = document.getElementById('sidebar');
 const toggleBtn = document.getElementById('toggle-sidebar');
 const content = document.getElementById('my-content');
 
-toggleBtn.addEventListener('click', () => {
-    console.log("Toggle button clicked!");
-    sidebar.classList.toggle('collapsed');
-    content.classList.toggle('collapsed-sidebar');
-    console.log("Sidebar classes:", sidebar.classList);
-    console.log("Content classes:", content.classList);
+if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+        console.log("Toggle button clicked!");
+        sidebar.classList.toggle('collapsed');
+        content.classList.toggle('collapsed-sidebar');
+        console.log("Sidebar classes:", sidebar.classList);
+        console.log("Content classes:", content.classList);
+    });
+}
 
-});
 
 // TODO: Change the way different courses are sorted (fix and implement with new db when ready)
-document.getElementById('sort-by-btn').addEventListener('change', function () {
-    const sortBy = this.value;
-    
-    fetch(`get_sorted_chats.php?sortBy=${sortBy}`)
-        .then(response => response.json())
-        .then(data => {
-            const chatDiv = document.getElementById('chat-div');
-            chatDiv.innerHTML = ''; // Clear current list
+const sortByBtn = document.getElementById('sort-by-btn');
+if (sortByBtn) {
+    document.getElementById('sort-by-btn').addEventListener('change', function () {
+        const sortBy = this.value;
+        
+        fetch(`get_sorted_chats.php?sortBy=${sortBy}`)
+            .then(response => response.json())
+            .then(data => {
+                const chatDiv = document.getElementById('chat-div');
+                chatDiv.innerHTML = ''; // Clear current list
 
-            data.forEach(chat => {
-                const a = document.createElement('a');
-                a.href = `?chatId=${chat.chatId}`;
-                a.className = 'block p-3 rounded bg-gray-100 message-container';
+                data.forEach(chat => {
+                    const a = document.createElement('a');
+                    a.href = `?chatId=${chat.chatId}`;
+                    a.className = 'block p-3 rounded bg-gray-100 message-container';
 
-                const title = document.createElement('div');
-                title.className = 'font-medium truncate';
-                title.textContent = chat.courseName;
+                    const title = document.createElement('div');
+                    title.className = 'font-medium truncate';
+                    title.textContent = chat.courseName;
 
-                a.appendChild(title);
+                    a.appendChild(title);
 
-                if (chat.answer) {
-                    const subtitle = document.createElement('div');
-                    subtitle.className = 'text-xs text-gray-500 truncate';
-                    subtitle.textContent = chat.answer;
-                    a.appendChild(subtitle);
-                }
+                    if (chat.answer) {
+                        const subtitle = document.createElement('div');
+                        subtitle.className = 'text-xs text-gray-500 truncate';
+                        subtitle.textContent = chat.answer;
+                        a.appendChild(subtitle);
+                    }
 
-                chatDiv.appendChild(a);
+                    chatDiv.appendChild(a);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching chats:', error);
             });
-        })
-        .catch(error => {
-            console.error('Error fetching chats:', error);
-        });
-});
+    });
+
+}

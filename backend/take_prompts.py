@@ -1,8 +1,7 @@
 import os
 import openai
 from dotenv import load_dotenv
-import psycopg2
-from flask import session
+import mysql.connector
 from pinecone import Pinecone
 from langchain_openai import OpenAIEmbeddings
 
@@ -15,11 +14,13 @@ pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 # Database connection utility
 def get_db_connection():
-    conn = psycopg2.connect(
+    print("Connecting to the database...")
+    conn = mysql.connector.connect(
         host=DB_HOST,
-        dbname=DB_NAME,
+        database=DB_NAME,
         user=DB_USER,
-        password=DB_PASS
+        password=DB_PASS,
+        port=int(DB_PORT)
     )
     return conn
 
@@ -27,6 +28,7 @@ DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")
 DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
+DB_PORT = os.environ.get("DB_PORT")
 
 initial_prompt = """
 You are an expert AI tutor helping a student learn course-specific material using provided context.
@@ -48,6 +50,60 @@ Reminder: You are here to teach, not to solve. The student’s growth is your mi
 
 ai_memory = 4 # Number of messages provided to the AI for context
 chunk_count = 4 # Number of chunks to retrieve from Pinecone
+def get_recent_chat_history(user_id, course_name, memory_limit=5):
+    '''
+    Fetches the recent chat history for a student in a specific course.
+
+    Args:
+        student_id (str): The ID of the student.
+        course_name (str): The name of the course.
+        memory_limit (int): The number of recent messages to retrieve.
+
+    Returns:
+        list: A list of recent chat messages.
+    '''
+    print("Fetching recent chat history...")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT m.question, m.answer
+        FROM messages m
+        JOIN user_courses uc ON uc.userCoursesId = m.userCoursesId
+        JOIN courses c ON c.id = uc.courseId
+        WHERE uc.userId = %s AND c.name = %s
+        ORDER BY m.timestamp DESC
+        LIMIT %s;
+    """
+
+    # Get query contents and close connection
+    cursor.execute(query, (user_id, course_name, memory_limit))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    chat_history = []
+    for question, answer in reversed(rows):
+        chat_history.append({"role": "user", "content": question})
+        chat_history.append({"role": "assistant", "content": answer})
+
+    num_messages = len(chat_history)
+    print(f"Retrieved {num_messages} messages from chat history.")
+
+    # Add custom logs based on conditions
+    if num_messages == 0:
+        print("🚨 No chat history found for this user and course.")
+    elif num_messages < memory_limit * 2:  # *2 because 1 Q + 1 A per pair
+        print(f"⚠️ Chat history contains fewer than {memory_limit} Q&A pairs (i.e., fewer than {memory_limit * 2} messages).")
+
+    # Print chat_history for debugging
+    for i, message in enumerate(chat_history):
+        role = message["role"]
+        content = message["content"]
+        print(f"Message {i+1}: [{role}] {content}")
+
+    return chat_history
+
 
 def get_docs(course, question):
     '''
@@ -112,13 +168,38 @@ def printTokens(response):
     print("-" * 30)
 
 
-def update_chat_logs(student_id, course_name, user_question, tutor_response):
-    # TODO
-    pass
+def update_chat_logs(student_id, course_name, user_question, tutor_response, source_names):  
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Get userCoursesId for the student and course
+    UCIDquery = """
+        SELECT userCoursesId FROM user_courses 
+        WHERE userId = %s AND courseId = (SELECT id FROM courses WHERE name = %s);
+    """
+    cursor.execute(UCIDquery, (student_id, course_name))
+    user_courses_id = cursor.fetchone()
+
+    if user_courses_id:
+        # Create names string
+        source_names_str = ", ".join(source_names)
+        print("Source names string:", source_names_str)
+        user_courses_id = user_courses_id[0]
+        # Insert the new message into the messages table
+        insert_query = """
+            INSERT INTO messages (userCoursesId, question, answer, sourceName)
+            VALUES (%s, %s, %s, %s);
+        """
+        cursor.execute(insert_query, (user_courses_id, user_question, tutor_response, source_names_str))
+        conn.commit()
+        print("Chat logs updated successfully.")
+    else:
+        print("No userCoursesId found for the given student and course.")
+    cursor.close()
+    conn.close()
 
 
 # Function to generate GPT-4 response
-def generate_gpt_response(student_id, course_name, user_question):
+def generate_gpt_response(user_id, course_name, user_question):
     """
     Generates a response from the GPT-4 model based on the user's question and course context.
 
@@ -132,10 +213,7 @@ def generate_gpt_response(student_id, course_name, user_question):
     print("Generating GPT-4 response...")
     try:
         # Initialize session chat history
-        if "chat_history" not in session:
-            session["chat_history"] = []
-
-        chat_history = session.get("chat_history", [])
+        chat_history = get_recent_chat_history(user_id, course_name, ai_memory)
 
         # Fetch similar documents from Pinecone
         docs = get_docs(course_name, user_question)
@@ -173,23 +251,13 @@ def generate_gpt_response(student_id, course_name, user_question):
         printTokens(response)
         tutor_response = response.choices[0].message.content
 
-        # Update chat history
-        chat_history.append(question)
-        chat_history.append({"role": "assistant", "content": tutor_response})
-
-        # TODO: Also update chat logs in database
-        update_chat_logs(student_id, course_name, user_question, tutor_response)
-
-        # Trim history to the last N messages
-        session["chat_history"] = chat_history[-(ai_memory*2):]
-
-        # Save the updated context back to the database
-        # save_context(student_id, course_id, updated_context)
-        # TODO: Update database with the new context
+        # Update chat logs in database
+        update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
 
         # Append source information and return the full response
         full_response = f"{tutor_response}\n\n📄 {source_info}"
-        return (full_response, document_names)
+        print(f"\n\nGenerated response: {full_response}")
+        return (full_response, list(document_names))
 
     except Exception as e:
         return f"An error occurred: {str(e)}"

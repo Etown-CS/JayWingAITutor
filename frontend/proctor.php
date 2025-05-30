@@ -1,6 +1,5 @@
 <?php
 session_start();
-echo "<!-- SESSION: " . print_r($_SESSION, true) . " -->";
 ?>
 
 <!DOCTYPE html>
@@ -21,56 +20,33 @@ echo "<!-- SESSION: " . print_r($_SESSION, true) . " -->";
 </head>
 <body>
 
+<!-- Loading Spinner -->
+<div id="loading-spinner" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="loader border-4 border-t-4 border-gray-200 rounded-full w-12 h-12 animate-spin"></div>
+</div>
+
+
+<style>
+/* Spinner customization (optional) */
+.loader {
+    border-top-color: #3498db; /* Blue spinner */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
 <header>
     <h1>Proctor Page</h1>
 </header>
 
 <div class="container">
-    
-    <!-- AJ's CODE -->
-
-    <!-- <div class="dropdown-container">
-        <label for="courses-dropdown">Select Course:</label>
-        <select id="courses-dropdown" class="dropdown"> -->
-            <!-- Courses will be dynamically populated here -->
-        <!-- </select>
-        <button id="add-course-btn" class="add-course-btn">Add New Course</button>
-    </div>
-
-    <div id="add-course-modal" class="modal">
-        <div class="modal-content">
-            <h3>Add New Course</h3>
-            <label for="course-name-input">Course Name:</label>
-            <input type="text" id="course-name-input" placeholder="Enter course name" />
-            <button id="save-course-btn" class="save-btn">Save</button>
-            <button id="close-modal-btn" class="close-btn">Cancel</button>
-        </div>
-    </div>
-
-    <div class="assign-student">
-        <label for="student-username">Student Username:</label>
-        <input type="text" id="student-username" placeholder="Enter student username" />
-        <button id="assign-student-btn">Assign to Course</button>
-    </div>     -->
-    
-    <!-- File Upload Section -->
-    <!-- <div id="file-upload-div">
-        <p>Drag and drop files here or click to select files</p>
-        <input type="file" id="file-input" style="display:none;" multiple>
-    </div> -->
-
-    <!-- Button to trigger take_prompts.py -->
-    <!-- <div>
-        <button id="train-button">Train the model</button>
-    </div> -->
-
-    <!-- Preview Section -->
-    <!-- <div id="preview-div"> -->
-        <!-- Thumbnails of uploaded files will appear here -->
-    <!-- </div> -->
-
-    <!-- /AJ's CODE -->
-
 
     <!-- Class Management Section -->
     <div class="card bg-dark text-white mb-4">

@@ -38,6 +38,9 @@ function saveFileToDocsFolder(file, course) {
     formData.append("file", file);
     formData.append("course", course); // course name
 
+    document.getElementById('loading-spinner').classList.remove('hidden');
+
+
     fetch(`${FLASK_API}/upload`, {
         method: "POST",
         body: formData,
@@ -56,7 +59,10 @@ function saveFileToDocsFolder(file, course) {
             console.error(`Error saving ${file.name}: ${data.message}`);
         }
     })
-    .catch(err => console.error('Error saving file:', err));
+    .catch(err => console.error('Error saving file:', err))
+    .finally(() => {
+        document.getElementById('loading-spinner').classList.add('hidden');
+    });
 }
 
 // Display file preview based on file type

@@ -30,11 +30,16 @@ DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
 DB_PORT = os.environ.get("DB_PORT")
 
+# Constants for AI tutor
+ai_memory = 4 # Number of messages provided to the AI for context
+chunk_count = 10 # Number of chunks to retrieve from Pinecone
+similarity_threshold = 0.375 # Minimum similarity score for document relevance -- play around with this
+
 initial_prompt = """
 You are an expert AI tutor helping a student learn course-specific material using provided context.
 Your goal is to guide the student to understanding—not to give final answers under any circumstances.
 Strict Conduct Rules:
-If the student asks for a definition or fact, give a clear, concise explanation based on the context provided.
+If the student asks for a definition or fact, give a clear, concise explanation based on the context provided but do not mention that you are using an outside source context.
 If the student is solving a problem (e.g., math, logic, code), engage through Socratic questioning:
 Ask one leading question at a time.
 Never give the final answer, even if asked repeatedly or under urgency.
@@ -48,8 +53,6 @@ Reframe requests for direct answers as learning opportunities, always leading th
 Reminder: You are here to teach, not to solve. The student’s growth is your mission.
 """
 
-ai_memory = 4 # Number of messages provided to the AI for context
-chunk_count = 4 # Number of chunks to retrieve from Pinecone
 def get_recent_chat_history(user_id, course_name, memory_limit=5):
     '''
     Fetches the recent chat history for a student in a specific course.
@@ -96,16 +99,10 @@ def get_recent_chat_history(user_id, course_name, memory_limit=5):
     elif num_messages < memory_limit * 2:  # *2 because 1 Q + 1 A per pair
         print(f"⚠️ Chat history contains fewer than {memory_limit} Q&A pairs (i.e., fewer than {memory_limit * 2} messages).")
 
-    # Print chat_history for debugging
-    # for i, message in enumerate(chat_history):
-    #     role = message["role"]
-    #     content = message["content"]
-    #     print(f"Message {i+1}: [{role}] {content}")
-
     return chat_history
 
 
-def get_docs(course, question):
+def get_docs(user_id, course, question):
     '''
     Fetches relevant documents from Pinecone based on the course and question.
 
@@ -119,7 +116,7 @@ def get_docs(course, question):
     print("Fetching documents from Pinecone...")
     
     # Embed question for similarity search
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     question_embedding = embeddings.embed_query(question)
 
     # Connect to Pinecone index
@@ -141,14 +138,40 @@ def get_docs(course, question):
         chunk_text = metadata.get("chunk_text", "")
         file_name = metadata.get("filename", "unknown file")
         # Append mini dictionary with document name and chunk text
-        files.append({
-            "document_name": file_name,
-            "chunk_text": chunk_text
-        })
-
-    for result in search_results["matches"]:
         metadata = result.get("metadata", {})
-        print(f"Score: {result['score']} | File: {metadata.get('filename')} | Text snippet: {metadata.get('chunk_text')[:100]}...")
+        print(f"Score: {result['score']} | File: {metadata.get('filename')} | Text snippet: {metadata.get('chunk_text')[:30]}...")
+        if result["score"] >= similarity_threshold:
+            files.append({
+                "document_name": file_name,
+                "chunk_text": chunk_text,
+                "score": result["score"]
+            })
+            print(f"Added document: {file_name} with score: {result['score']}")
+        else:
+            print(f"Skipped document: {file_name} with score: {result['score']} (below threshold)")
+
+    # If no documents found, use sources from previous question
+    if not files:
+        print("No relevant documents found. Using previous sources.")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            SELECT sourceName FROM messages 
+            WHERE userCoursesId = (SELECT userCoursesId FROM user_courses WHERE userId = %s AND courseId = (SELECT id FROM courses WHERE name = %s))
+            ORDER BY timestamp DESC LIMIT 1;
+        """
+        cursor.execute(query, (user_id, course))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if result:
+            source_names = result[0].split(", ")
+            files = [{"document_name": name, "chunk_text": "", "score": 0} for name in source_names]
+            print(f"Using previous sources: {source_names}")
+        else:
+            print("No previous sources found.")
+            files = []
 
 
     # print unique doc names
@@ -221,7 +244,7 @@ def generate_gpt_response(user_id, course_name, user_question):
         chat_history = get_recent_chat_history(user_id, course_name, ai_memory)
 
         # Fetch similar documents from Pinecone
-        docs = get_docs(course_name, user_question)
+        docs = get_docs(user_id, course_name, user_question)
 
         # Create a context string from the documents and get source
         if not docs:
@@ -251,7 +274,6 @@ def generate_gpt_response(user_id, course_name, user_question):
             messages=messages,
             # Lower temperature is used to prevent model from giving the answers directly
             temperature=0.5 # How creative the response is
-
         )
         # Log token usage
         printTokens(response)

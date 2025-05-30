@@ -37,11 +37,45 @@ function filterChats() {
     }
 }
 
+function addTypingIndicator() {
+    const chatLocationDiv = document.getElementById('chat-locaction');
+
+    const typingDiv = document.createElement('div');
+    typingDiv.className = "flex py-2 justify-start";
+
+    const bubble = document.createElement('div');
+    bubble.className = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2";
+
+    const from = document.createElement('div');
+    from.className = "text-sm font-medium";
+    from.textContent = "AI Tutor";
+
+    const dotsContainer = document.createElement('div');
+    dotsContainer.className = "typing-dots mt-1"; // Class for animation
+
+    // Add 3 dots
+    for (let i = 0; i < 3; i++) {
+        const dot = document.createElement('span');
+        dotsContainer.appendChild(dot);
+    }
+
+    bubble.appendChild(from);
+    bubble.appendChild(dotsContainer);
+    typingDiv.appendChild(bubble);
+
+    chatLocationDiv.appendChild(typingDiv);
+
+    scrollToBottom();
+    return typingDiv; // Return the reference for removal
+}
+
 // Existing question submission functionality
-// TODO: find a way to get the course from the database to fix
+let typingIndicatorElement = null;
 function askQuestion(selectedCourseName) {
     const question = document.getElementById('student-question').value;
     updateConversationUser(question);
+
+    typingIndicatorElement = addTypingIndicator();
 
     fetch(`${FLASK_API}/ask-question`, {
         method: 'POST',
@@ -59,13 +93,30 @@ function askQuestion(selectedCourseName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Remove typing indicator
+                if (typingIndicatorElement) {
+                    typingIndicatorElement.remove();
+                    typingIndicatorElement = null;
+                }
+
+                // Update conversation with AI response
                 updateConversationAI(data.response, data.sourceName, selectedCourseName);
             } else {
                 console.error("Error in response:", data.message);
+                // Remove typing indicator
+                if (typingIndicatorElement) {
+                    typingIndicatorElement.remove();
+                    typingIndicatorElement = null;
+                }
             }
         })
         .catch(err => {
             console.error("Error:", err);
+            // Remove typing indicator
+            if (typingIndicatorElement) {
+                typingIndicatorElement.remove();
+                typingIndicatorElement = null;
+            }
         });
 };
 

@@ -174,7 +174,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             }
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
-                    <a href="?chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>&sortBy=<?php echo urlencode($_GET['sortBy'] ?? 'sortRecent'); ?>"
+                    <a href="?sortBy=<?php echo urlencode($_GET['sortBy'] ?? 'sortRecent'); ?>&chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>"
                         class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> message-container">
                         <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
                         <?php if ($chat['latestQuestion']): ?>
@@ -248,7 +248,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                 foreach ($sources as $index => $fileName) {
                                                     $encodedFileName = urlencode($fileName);
                                                     $encodedCourseName = urlencode($chatCourseName);
-                                                    $downloadLink = "/download?file={$encodedFileName}&course={$encodedCourseName}";
+                                                    $downloadLink = "http://localhost:5000/download?file={$encodedFileName}&course={$encodedCourseName}";
 
                                                     $htmlOutput .= '<a href="' . htmlspecialchars($downloadLink) . '" ';
                                                     $htmlOutput .= 'title="Download file" ';

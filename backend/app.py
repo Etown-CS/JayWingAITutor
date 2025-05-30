@@ -188,21 +188,32 @@ def delete_file():
 
 @app.route('/download')
 def download_file():
+    print("Download file endpoint hit")
     # Get user info from headers
-    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
-    if not user_id:
-        return jsonify(success=False, message="Unauthorized"), 401
-    
+    # user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    # if not user_id:
+    #     return jsonify(success=False, message="Unauthorized"), 401
     file_name = request.args.get('file')
     course = request.args.get('course')
-
     if not file_name or not course:
         return jsonify(success=False, message="Missing file or course"), 400
 
-    if not folder_prefix:
-        return jsonify(success=False, message="No folder prefix in session"), 400
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
-    blob_path = f"{folder_prefix}/{course}/{file_name}"
+    cursor.execute("SELECT filepath FROM courses WHERE name = %s", (course,))
+    result = cursor.fetchone()
+    conn.close()
+    if not course:
+        return jsonify(success=False, message="Course not found"), 404
+
+    filepath = result['filepath']
+    components = filepath.split('1')
+    fullpath = components[0] + '1/' + components[1]
+
+    print(f"Downloading file: {file_name} for course: {course} at file path: {fullpath}")
+
+    blob_path = f"{fullpath}{file_name}"
     blob = bucket.blob(blob_path)
 
     if not blob.exists():

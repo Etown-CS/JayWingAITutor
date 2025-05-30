@@ -75,7 +75,7 @@ function displayFilePreview(fileName, fileType, isTrained) {
     const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
     const selectedCourseName = coursesDropdownUpload.selectedOptions[0]?.text || '';
     const link = document.createElement('a');
-    link.href = `/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
+    link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
     link.title = "Download file";
     link.setAttribute('download', fileName);
 

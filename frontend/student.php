@@ -77,6 +77,32 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
         const userId = <?php echo json_encode($userId ?? null); ?>;
         const userRole = <?php echo json_encode($userRole ?? null); ?>;
     </script>
+    <style>
+    .typing-dots {
+        display: inline-block;
+    }
+
+    .typing-dots span {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin: 0 2px;
+        background-color: #3498db; /* Blue dot color */
+        border-radius: 50%;
+        opacity: 0.4;
+        animation: blink 1.4s infinite both;
+    }
+
+    .typing-dots span:nth-child(1) { animation-delay: 0s; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+        0%, 80%, 100% { opacity: 0.4; }
+        40% { opacity: 1; }
+    }
+    </style>
+
 </head>
 <body class="flex flex-col h-screen gap-0 overflow-hidden">
     <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">

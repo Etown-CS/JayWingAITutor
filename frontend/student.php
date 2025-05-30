@@ -85,7 +85,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <div id="my-content" class="flex-grow w-full mt-0 overflow-hidden">
         
         <!-- Sidebar with chats list -->
-        <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm">
+        <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
             <div class="flex justify-between items-center mb-4">
                 <!-- Chat Search Bar -->
                 <div class="px-3 pt-3 d-flex align-items-center w-full">
@@ -120,7 +120,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
             </div>
 
             <!-- List of existing chats -->
-            <div class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto sidebar-content-hide">
+            <div id="sidebar-courses" class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto overflow-x-hidden sidebar-content-hide p-sidebar-noshow">
                 <!-- TODO: implement with php -->
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
@@ -175,7 +175,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
                     <a href="?sortBy=<?php echo urlencode($_GET['sortBy'] ?? 'sortRecent'); ?>&chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>"
-                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> message-container">
+                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> message-container w-full overflow-hidden">
                         <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
                         <?php if ($chat['latestQuestion']): ?>
                             <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['latestQuestion'], ENT_QUOTES, 'UTF-8'); ?></div>
@@ -240,30 +240,32 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                             <div class="text-sm font-medium">AI Tutor</div>
                                             <div><?php echo nl2br(htmlspecialchars($message['answer'])); ?></div>
                                             <?php if (!empty($message['sourceName'])): ?>
-                                                <span class="text-xs mt-1">Source: </span>
-                                                <?php
-                                                $htmlOutput = ''; // Ensure this is initialized
+                                                <div class="text-xs mt-1">
+                                                    Source: 
+                                                    <?php
+                                                    $htmlOutput = '';
+                                                    $sources = array_filter(array_map('trim', explode(',', $message['sourceName'])));
+                                                    foreach ($sources as $index => $fileName) {
+                                                        $encodedFileName = urlencode($fileName);
+                                                        $encodedCourseName = urlencode($chatCourseName);
+                                                        $downloadLink = "http://localhost:5000/download?file={$encodedFileName}&course={$encodedCourseName}";
 
-                                                $sources = array_filter(array_map('trim', explode(',', $message['sourceName'])));
-                                                foreach ($sources as $index => $fileName) {
-                                                    $encodedFileName = urlencode($fileName);
-                                                    $encodedCourseName = urlencode($chatCourseName);
-                                                    $downloadLink = "http://localhost:5000/download?file={$encodedFileName}&course={$encodedCourseName}";
+                                                        $htmlOutput .= '<a href="' . htmlspecialchars($downloadLink) . '" ';
+                                                        $htmlOutput .= 'title="Download file" ';
+                                                        $htmlOutput .= 'download="' . htmlspecialchars($fileName) . '" ';
+                                                        $htmlOutput .= 'class="underline text-blue-600 hover:text-blue-800">';
+                                                        $htmlOutput .= htmlspecialchars($fileName);
+                                                        $htmlOutput .= '</a>';
 
-                                                    $htmlOutput .= '<a href="' . htmlspecialchars($downloadLink) . '" ';
-                                                    $htmlOutput .= 'title="Download file" ';
-                                                    $htmlOutput .= 'download="' . htmlspecialchars($fileName) . '" ';
-                                                    $htmlOutput .= 'class="text-xs mt-1 underline text-blue-600 hover:text-blue-800">';
-                                                    $htmlOutput .= htmlspecialchars($fileName);
-                                                    $htmlOutput .= '</a>';
-
-                                                    if ($index < count($sources) - 1) {
-                                                        $htmlOutput .= ', ';
+                                                        if ($index < count($sources) - 1) {
+                                                            $htmlOutput .= ', ';
+                                                        }
                                                     }
-                                                }
 
-                                                echo $htmlOutput;
-                                            endif; ?>
+                                                    echo $htmlOutput;
+                                                    ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endif; ?>
@@ -273,7 +275,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
                     
                     <!-- Message input -->
-                    <form method="POST" name="messageForm" class="mt-auto w-full">
+                    <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full p-chat-noshow">
                         <input type="hidden" name="action" value="send_message">
                         <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36">
                             <textarea

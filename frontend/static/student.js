@@ -109,35 +109,40 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
     newMessageFrom.textContent = "AI Tutor";
 
     const newMessageText = document.createElement('div');
-    newMessageText.textContent = text;
-
-    const newMessageSource = document.createElement('div');
-    newMessageSource.className = "text-xs mt-1";
-    
-    const sourceLabel = document.createElement('span');
-    sourceLabel.textContent = "Source: ";
-    newMessageSource.appendChild(sourceLabel);
-
-    const sources = sourceName.split(', ').map(s => s.trim()).filter(Boolean);
-    sources.forEach((fileName, index) => {
-        const link = document.createElement('a');
-        link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
-        link.title = "Download file";
-        link.setAttribute('download', fileName);
-        link.textContent = fileName;
-        link.className = "underline text-blue-600 hover:text-blue-800";
-
-        newMessageSource.appendChild(link);
-
-        // Add comma and space if not the last link
-        if (index < sources.length - 1) {
-            newMessageSource.appendChild(document.createTextNode(", "));
-        }
+    const lines = text.split('\n');
+    lines.forEach((line, i) => {
+    newMessageText.appendChild(document.createTextNode(line));
+    if (i < lines.length - 1) {
+        newMessageText.appendChild(document.createElement('br'));
+    }
     });
 
     newMessageBubble.appendChild(newMessageFrom);
     newMessageBubble.appendChild(newMessageText);
-    newMessageBubble.appendChild(newMessageSource);
+
+    if (sourceName !== "No sources found") {
+        const newMessageSource = document.createElement('div');
+        newMessageSource.className = "text-xs mt-1";
+        newMessageSource.textContent = "Source: ";
+        
+        const sources = sourceName.split(', ').map(s => s.trim()).filter(Boolean);
+        sources.forEach((fileName, index) => {
+            const link = document.createElement('a');
+            link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
+            link.title = "Download file";
+            link.setAttribute('download', fileName);
+            link.textContent = fileName;
+            link.className = "underline text-blue-600 hover:text-blue-800";
+
+            newMessageSource.appendChild(link);
+
+            // Add comma and space if not the last link
+            if (index < sources.length - 1) {
+                newMessageSource.appendChild(document.createTextNode(", "));
+            }
+        });
+        newMessageBubble.appendChild(newMessageSource);
+    }
 
     newMessageAlignment.appendChild(newMessageBubble);
 
@@ -197,7 +202,7 @@ if (toggleBtn) {
 }
 
 
-// TODO: Change the way different courses are sorted (fix and implement with new db when ready)
+// Change the way different courses are sorted
 document.getElementById('sort-by-btn').addEventListener('change', function () {
     const sortBy = this.value;
     const urlParams = new URLSearchParams(window.location.search);
@@ -219,3 +224,46 @@ window.addEventListener('DOMContentLoaded', () => {
     const selectedSort = urlParams.get('sortBy') || 'sortRecent';
     document.getElementById('sort-by-btn').value = selectedSort;
 });
+
+function adjustConversationPadding() {
+    const conversation = document.getElementById('conversation');
+    const messageInput = document.getElementById('message-input');
+    
+    // Check if the element is scrollable (scrollHeight > clientHeight)
+    const hasScrollbar = conversation.scrollHeight > conversation.clientHeight;
+
+    // Toggle a class or set style directly
+    if (hasScrollbar) {
+        messageInput.classList.add('p-chat-scroll');
+        messageInput.classList.remove('p-chat-noshow');
+    } else {
+        messageInput.classList.remove('p-chat-scroll');
+        messageInput.classList.add('p-chat-noshow');
+    }
+}
+
+// Run on page load
+window.addEventListener('load', adjustConversationPadding);
+// Run on resize
+window.addEventListener('resize', adjustConversationPadding);
+
+function adjustSidebarCoursesPadding() {
+    const sidebarCourses = document.getElementById('sidebar-courses');
+    
+    // Check if the element is scrollable (scrollHeight > clientHeight)
+    const hasScrollbar = sidebarCourses.scrollHeight > sidebarCourses.clientHeight;
+
+    // Toggle a class or set style directly
+    if (hasScrollbar) {
+        sidebarCourses.classList.add('p-sidebar-scroll');
+        sidebarCourses.classList.remove('p-sidebar-noshow');
+    } else {
+        sidebarCourses.classList.remove('p-sidebar-scroll');
+        sidebarCourses.classList.add('p-sidebar-noshow');
+    }
+}
+
+// Run on page load
+window.addEventListener('load', adjustSidebarCoursesPadding);
+// Run on resize
+window.addEventListener('resize', adjustSidebarCoursesPadding);

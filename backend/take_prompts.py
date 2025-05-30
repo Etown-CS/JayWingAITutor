@@ -119,7 +119,7 @@ def get_docs(course, question):
     print("Fetching documents from Pinecone...")
     
     # Embed question for similarity search
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     question_embedding = embeddings.embed_query(question)
 
     # Connect to Pinecone index

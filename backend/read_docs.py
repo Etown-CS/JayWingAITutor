@@ -5,10 +5,7 @@ import re
 from pptx import Presentation
 import json
 from PIL import Image
-import psycopg2
-#import easyocr  # Lightweight OCR for handwritten docs
 import io
-#import numpy as np
 from google.cloud import storage  # Google Cloud Storage library
 from dotenv import load_dotenv
 from uuid import uuid4

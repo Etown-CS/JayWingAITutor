@@ -208,12 +208,10 @@ def download_file():
         return jsonify(success=False, message="Course not found"), 404
 
     filepath = result['filepath']
-    components = filepath.split('1')
-    fullpath = components[0] + '1/' + components[1]
 
-    print(f"Downloading file: {file_name} for course: {course} at file path: {fullpath}")
+    print(f"Downloading file: {file_name} for course: {course} at file path: {filepath}")
 
-    blob_path = f"{fullpath}{file_name}"
+    blob_path = f"{filepath}{file_name}"
     blob = bucket.blob(blob_path)
 
     if not blob.exists():
@@ -431,7 +429,7 @@ def add_course():
     if not user_id or user_role != 1:
         return jsonify(success=False, message="Unauthorized"), 401
     
-    folder_prefix = f"{username}_{user_id}"
+    folder_prefix = f"{username}_{user_id}/"
 
     # Get the new course name from the request
     data = request.json

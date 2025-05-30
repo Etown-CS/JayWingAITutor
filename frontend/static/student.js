@@ -59,7 +59,7 @@ function askQuestion(selectedCourseName) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                updateConversationAI(data.response, data.sourceName);
+                updateConversationAI(data.response, data.sourceName, selectedCourseName);
             } else {
                 console.error("Error in response:", data.message);
             }
@@ -95,7 +95,7 @@ function updateConversationUser(text) {
     scrollToBottom();
 }
 
-function updateConversationAI(text, sourceName) {
+function updateConversationAI(text, sourceName, selectedCourseName) {
     const chatLocactionDiv = document.getElementById('chat-locaction');
 
     const newMessageAlignment = document.createElement('div');
@@ -112,8 +112,28 @@ function updateConversationAI(text, sourceName) {
     newMessageText.textContent = text;
 
     const newMessageSource = document.createElement('div');
-    newMessageSource.className = "text-xs text-gray-200 mt-1";
-    newMessageSource.textContent = "Source: " + sourceName;
+    newMessageSource.className = "text-xs mt-1";
+    
+    const sourceLabel = document.createElement('span');
+    sourceLabel.textContent = "Source: ";
+    newMessageSource.appendChild(sourceLabel);
+
+    const sources = sourceName.split(', ').map(s => s.trim()).filter(Boolean);
+    sources.forEach((fileName, index) => {
+        const link = document.createElement('a');
+        link.href = `/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
+        link.title = "Download file";
+        link.setAttribute('download', fileName);
+        link.textContent = fileName;
+        link.className = "underline text-blue-600 hover:text-blue-800";
+
+        newMessageSource.appendChild(link);
+
+        // Add comma and space if not the last link
+        if (index < sources.length - 1) {
+            newMessageSource.appendChild(document.createTextNode(", "));
+        }
+    });
 
     newMessageBubble.appendChild(newMessageFrom);
     newMessageBubble.appendChild(newMessageText);

@@ -240,8 +240,30 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                             <div class="text-sm font-medium">AI Tutor</div>
                                             <div><?php echo nl2br(htmlspecialchars($message['answer'])); ?></div>
                                             <?php if (!empty($message['sourceName'])): ?>
-                                                <div class="text-xs text-gray-200 mt-1">Source: <?php echo htmlspecialchars($message['sourceName']); ?></div>
-                                            <?php endif; ?>
+                                                <span class="text-xs mt-1">Source: </span>
+                                                <?php
+                                                $htmlOutput = ''; // Ensure this is initialized
+
+                                                $sources = array_filter(array_map('trim', explode(',', $message['sourceName'])));
+                                                foreach ($sources as $index => $fileName) {
+                                                    $encodedFileName = urlencode($fileName);
+                                                    $encodedCourseName = urlencode($chatCourseName);
+                                                    $downloadLink = "/download?file={$encodedFileName}&course={$encodedCourseName}";
+
+                                                    $htmlOutput .= '<a href="' . htmlspecialchars($downloadLink) . '" ';
+                                                    $htmlOutput .= 'title="Download file" ';
+                                                    $htmlOutput .= 'download="' . htmlspecialchars($fileName) . '" ';
+                                                    $htmlOutput .= 'class="text-xs mt-1 underline text-blue-600 hover:text-blue-800">';
+                                                    $htmlOutput .= htmlspecialchars($fileName);
+                                                    $htmlOutput .= '</a>';
+
+                                                    if ($index < count($sources) - 1) {
+                                                        $htmlOutput .= ', ';
+                                                    }
+                                                }
+
+                                                echo $htmlOutput;
+                                            endif; ?>
                                         </div>
                                     </div>
                                 <?php endif; ?>

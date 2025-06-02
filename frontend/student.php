@@ -233,7 +233,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     </div>
                     
                     <!-- Messages area -->
-                    <div id="conversation" class="flex-1 overflow-y-auto space-y-4 -mb-3 -mt-2 w-full">
+                    <div id="conversation" class="flex-1 overflow-y-auto space-y-4 -mb-3 -mt-2 w-full p-chat-noshow">
                         <div id="chat-locaction" class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
                             <?php
                             $stmt = $connection->prepare("
@@ -301,7 +301,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
                     
                     <!-- Message input -->
-                    <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full p-chat-noshow">
+                    <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full pr-4">
                         <input type="hidden" name="action" value="send_message">
                         <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36">
                             <textarea

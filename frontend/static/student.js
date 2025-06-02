@@ -278,18 +278,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function adjustConversationPadding() {
     const conversation = document.getElementById('conversation');
-    const messageInput = document.getElementById('message-input');
     
     // Check if the element is scrollable (scrollHeight > clientHeight)
     const hasScrollbar = conversation.scrollHeight > conversation.clientHeight;
 
     // Toggle a class or set style directly
     if (hasScrollbar) {
-        messageInput.classList.add('p-chat-scroll');
-        messageInput.classList.remove('p-chat-noshow');
+        conversation.classList.add('p-chat-scroll');
+        conversation.classList.remove('p-chat-noshow');
     } else {
-        messageInput.classList.remove('p-chat-scroll');
-        messageInput.classList.add('p-chat-noshow');
+        conversation.classList.remove('p-chat-scroll');
+        conversation.classList.add('p-chat-noshow');
     }
 }
 

@@ -5,10 +5,7 @@ import re
 from pptx import Presentation
 import json
 from PIL import Image
-import psycopg2
-#import easyocr  # Lightweight OCR for handwritten docs
 import io
-#import numpy as np
 from google.cloud import storage  # Google Cloud Storage library
 from dotenv import load_dotenv
 from uuid import uuid4
@@ -205,17 +202,17 @@ def to_pinecone(text_dict, course_name):
             for chunk in chunks
         ]
 
-        batch_size = 50
-        for i in range(0, len(vectors), batch_size):
-            upsert_data = [
-                {
-                    "id": f"{course_name}-{uuid4()}",
-                    "values": vectors[i + j],
-                    "metadata": metadatas[i + j]
-                }
-                for j in range(min(batch_size, len(vectors) - i))
-            ]
-            index.upsert(vectors=upsert_data, namespace=course_name)
+        for idx, (vector, metadata) in enumerate(zip(vectors, metadatas)):
+            chunk_id = f"{course_name}-{metadata['filename']}-{idx}"
+            index.upsert(
+                vectors=[{
+                    "id": chunk_id,
+                    "values": vector,
+                    "metadata": metadata
+                }],
+                namespace=course_name
+            )
+
 
     print("All chunks upserted to Pinecone.")
 
@@ -227,14 +224,32 @@ def main():
     username = sys.argv[1]
     course_name = sys.argv[2]
     proctor_id = int(sys.argv[3])
+    specific_file = sys.argv[4] if len(sys.argv) > 4 else None
 
     print(f"Training context for user: {username}, course: {course_name}, proctor ID: {proctor_id}")
-    
-    # Read course notes
-    course_notes = read_docs_from_gcs(username, course_name, proctor_id)
 
-    # Vector database storage
-    to_pinecone(course_notes, course_name)
+    if specific_file:
+        print(f"📂 Processing only file: {specific_file}")
+        folder_prefix = f"{username}_{proctor_id}/{course_name}/"
+        blob_path = folder_prefix + specific_file
+        blob = bucket.blob(blob_path)
+        file_bytes = blob.download_as_bytes()
+
+        if specific_file.endswith(".pdf"):
+            text = process_pdf(file_bytes)
+        elif specific_file.endswith(".pptx"):
+            text = extract_text_from_pptx(file_bytes)
+        else:
+            print(f"Unsupported file type: {specific_file}")
+            return
+
+        to_pinecone({specific_file: text}, course_name)
+
+    else:
+        print("⚠️ No specific file provided—processing entire folder (legacy mode)")
+        course_notes = read_docs_from_gcs(username, course_name, proctor_id)
+        to_pinecone(course_notes, course_name)
+
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,22 @@
+/* Padding Adjustments for Main Chat Area */
+.p-chat-scroll {
+    padding-right: 0rem; /* When scrollbar is visible */
+}
+
+.p-chat-noshow {
+    padding-right: 1rem; /* When scrollbar is not visible */
+}
+
+/* Padding Adjustments for Sidebar */
+.p-sidebar-scroll {
+    padding-right: 0rem; /* When scrollbar is visible */
+}
+
+.p-sidebar-noshow {
+    padding-right: 1rem; /* When scrollbar is not visible */
+}
+
+
 html, body {
     height: 100%;
     margin: 0 !important;

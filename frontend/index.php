@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <style>
-        /* Your existing CSS here */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -61,33 +60,63 @@
         <h1>Welcome to the AI Tutor System</h1>
         <div class="input-field">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username">
+            <input type="text" id="username" placeholder="Enter your username">
         </div>
         <div class="input-field">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password">
+            <input type="password" id="password" placeholder="Enter your password">
         </div>
-        <button onclick="handleLogin('student')">Go to Student Page</button>
-        <button onclick="handleLogin('proctor')">Go to Proctor Page</button>
+        <button onclick="handleLogin()">Login</button>
+        <button onclick="handleSignup()">Sign Up</button>
     </div>
 
     <script>
-        async function handleLogin(role) {
+        async function handleLogin() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("/login", {
+            try {
+                const response = await fetch("../backend/api/login.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    body: JSON.stringify({ username, password})
+                });
+
+                if (!response.ok) throw new Error("HTTP error " + response.status);
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = data.route;
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert("Login failed: " + err.message);
+            }
+        }
+
+        async function handleSignup() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("../backend/api/signup.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password, role })
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    username,
+                    password,
+                    role: "student" // default to student
+                })
             });
 
             const data = await response.json();
-
             if (data.success) {
+                sessionStorage.setItem('user_id', data.user_id);
+                sessionStorage.setItem('role', data.role);
                 window.location.href = data.route;
             } else {
-                alert(data.message);  // Display error message
+                alert(data.message);
             }
         }
     </script>

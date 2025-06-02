@@ -1,3 +1,4 @@
+const FLASK_API = "http://localhost:5000";
 const fileUploadDiv = document.getElementById('file-upload-div');
 const fileInput = document.getElementById('file-input');
 const previewDiv = document.getElementById('preview-div');
@@ -37,9 +38,18 @@ function saveFileToDocsFolder(file, course) {
     formData.append("file", file);
     formData.append("course", course); // course name
 
-    fetch("/upload", {
+    document.getElementById('loading-spinner').classList.remove('hidden');
+
+
+    fetch(`${FLASK_API}/upload`, {
         method: "POST",
-        body: formData
+        body: formData,
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
     })
     .then(response => response.json())
     .then(data => {
@@ -49,7 +59,10 @@ function saveFileToDocsFolder(file, course) {
             console.error(`Error saving ${file.name}: ${data.message}`);
         }
     })
-    .catch(err => console.error('Error saving file:', err));
+    .catch(err => console.error('Error saving file:', err))
+    .finally(() => {
+        document.getElementById('loading-spinner').classList.add('hidden');
+    });
 }
 
 // Display file preview based on file type
@@ -68,7 +81,7 @@ function displayFilePreview(fileName, fileType, isTrained) {
     const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
     const selectedCourseName = coursesDropdownUpload.selectedOptions[0]?.text || '';
     const link = document.createElement('a');
-    link.href = `/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
+    link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
     link.title = "Download file";
     link.setAttribute('download', fileName);
 
@@ -121,8 +134,14 @@ function removeFileFromDocsFolder(fileName) {
     }
     // console.log(fileName)
     // console.log(selectedCourseName)
-    fetch(`/delete?file=${fileName}&course=${selectedCourseName}`, {
-        method: "DELETE"
+    fetch(`${FLASK_API}/delete?file=${fileName}&course=${selectedCourseName}`, {
+        method: "DELETE",
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
     })
     .then(response => response.json())
     .then(data => {
@@ -155,7 +174,15 @@ function loadExistingFiles() {
         return;
     }
 
-    fetch(`/load-docs?course=${encodeURIComponent(selectedCourseName)}`)
+    fetch(`${FLASK_API}/load-docs?course=${encodeURIComponent(selectedCourseName)}`, {
+        method: "GET",
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
+    })
         .then(response => response.json())
         .then(files => {
             previewDiv.innerHTML = ''; // Clear existing previews
@@ -177,7 +204,15 @@ document.addEventListener('DOMContentLoaded', function () {
     coursesDropdownUpload.addEventListener('change', loadExistingFiles);
 
     // Fetch courses from the server
-    fetch('/get-courses')
+    fetch(`${FLASK_API}/get-courses`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
+    })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -213,14 +248,17 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Please enter a course name.');
             return;
         }
-
-        // TODO: Check if course already exists
         
-        console.log('Sending new course name:', courseName); // delete
-        fetch('/add-course', {
+        // console.log('Sending new course name:', courseName); // delete
+        // console.log("Sending headers:", userId, userRole, username);
+        fetch(`${FLASK_API}/add-course`, { 
             method: 'POST',
+            credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-User-Id': userId,
+                'X-User-Role': userRole,
+                'X-Username': username
             },
             body: JSON.stringify({ name: courseName })
         })
@@ -264,10 +302,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch('/assign-student', {
+        fetch(`${FLASK_API}/assign-student`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-User-Id': userId,
+                'X-User-Role': userRole,
+                'X-Username': username
             },
             body: JSON.stringify({ 
                 username: studentUsername, 

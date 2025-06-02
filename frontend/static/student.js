@@ -160,13 +160,8 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
     newMessageFrom.textContent = "AI Tutor";
 
     const newMessageText = document.createElement('div');
-    const lines = text.split('\n');
-    lines.forEach((line, i) => {
-    newMessageText.appendChild(document.createTextNode(line));
-    if (i < lines.length - 1) {
-        newMessageText.appendChild(document.createElement('br'));
-    }
-    });
+    newMessageText.innerHTML = text;
+    newMessageText.className = "ai-message-content";
 
     newMessageBubble.appendChild(newMessageFrom);
     newMessageBubble.appendChild(newMessageText);
@@ -187,7 +182,6 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
 
             newMessageSource.appendChild(link);
 
-            // Add comma and space if not the last link
             if (index < sources.length - 1) {
                 newMessageSource.appendChild(document.createTextNode(", "));
             }
@@ -196,7 +190,6 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
     }
 
     newMessageAlignment.appendChild(newMessageBubble);
-
     chatLocactionDiv.appendChild(newMessageAlignment);
 
     scrollToBottom();

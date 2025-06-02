@@ -264,7 +264,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                     <div class="flex py-2 justify-start">
                                         <div class="max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2">
                                             <div class="text-sm font-medium">AI Tutor</div>
-                                            <div><?php echo nl2br(htmlspecialchars($message['answer'])); ?></div>
+                                            <div class="ai-message-content">
+                                                <?php echo $message['answer']; ?>
+                                            </div>
                                             <?php if (!empty($message['sourceName'])): ?>
                                                 <div class="text-xs mt-1">
                                                     Source: 

@@ -212,3 +212,12 @@ textarea:focus {
 .mt-auto {
     margin-top: auto;
 }
+.ai-message-content ul {
+    list-style-type: disc;    /* Or circle/square */
+    margin-left: 1.5rem;      /* Add left margin for indentation */
+    padding-left: 0.5rem;     /* Optional: adjust padding */
+}
+
+.ai-message-content li {
+    margin-bottom: 0.5rem;    /* Optional: control spacing between items */
+}

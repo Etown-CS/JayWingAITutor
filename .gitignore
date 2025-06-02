@@ -4,3 +4,5 @@ context.json
 docs
 note.txt
 testCourseSQL.py
+db_config.php
+db_connect.php

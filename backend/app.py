@@ -23,6 +23,16 @@ DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
 DB_PORT = os.environ.get("DB_PORT")
 
+def get_db_connection():
+    conn = mysql.connector.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS,
+        port=int(DB_PORT)
+    )
+    return conn
+
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
@@ -472,17 +482,6 @@ def add_course():
     finally:
         cursor.close()
         conn.close()
-
-
-def get_db_connection():
-    conn = mysql.connector.connect(
-        host=DB_HOST,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        port=int(DB_PORT)
-    )
-    return conn
 
 # @app.route("/login", methods=["POST"])
 # def login():

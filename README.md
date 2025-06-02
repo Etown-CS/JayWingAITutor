@@ -35,7 +35,8 @@ The AI Tutor Platform provides a customized learning experience using AI. It all
     ```bash
     pip install -r requirements.txt
     ```
-4. Set up environment variables in a `.env` file for Python backend:
+4. Add gcloud_keys folder to backend
+5. Set up environment variables in a `.env` file for Python backend:
     ```plaintext
     OPENAI_API_KEY=your_openai_api_key
     PINECONE_API_KEY=your_pinecone_api_key
@@ -46,7 +47,7 @@ The AI Tutor Platform provides a customized learning experience using AI. It all
     DB_PASS=your_password
     DB_PORT=your_port
     ```
-5. Add db_config.php to /backend/includes/ and add environment variables for PHP frontend:
+6. Add db_config.php to /backend/includes/ and add environment variables for PHP frontend:
    ```php
     <?php
     $host = your_host;
@@ -56,7 +57,7 @@ The AI Tutor Platform provides a customized learning experience using AI. It all
     $port = your_port;
     ?>
     ```
-6. Add db_connect.php to /backend/includes/ and add database connection instructions:
+7. Add db_connect.php to /backend/includes/ and add database connection instructions:
     ```php
     <?php
     require_once "db_config.php"; 
@@ -70,12 +71,12 @@ The AI Tutor Platform provides a customized learning experience using AI. It all
     }
     ?>
     ```
-7. Turn on XAMPP's MySQL and initialize database:
+8. Turn on XAMPP's MySQL and initialize database:
     ```bash
     cd backend/database/
     python initializeTables.py
     ```
-8. (Bonus Step - Recommended) Create a proctor account:<br>
+9. (Bonus Step - Recommended) Create a proctor account:<br>
     Sign up with proctor username and password on the site and then run the following:
     ```bash
     cd backend/database/

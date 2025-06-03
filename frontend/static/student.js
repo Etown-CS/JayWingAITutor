@@ -329,7 +329,7 @@ archiveButton.addEventListener('click', () => {
                                 courseTitle.textContent = data.courseName;
 
                                 const courseDesc = document.createElement('div');
-                                courseDesc.className = 'text-xs text-gray-500';
+                                courseDesc.className = 'text-xs text-gray-500 truncate';
                                 courseDesc.textContent = data.latestMessage || "No messages yet";
 
                                 link.appendChild(courseTitle);

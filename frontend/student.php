@@ -341,15 +341,20 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     </div>
 
     <!-- Archive Modal -->
-    <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-            <h2 class="text-xl font-semibold mb-4">Archived Courses</h2>
-            <div id="archived-courses-list" class="space-y-2">
-                <!-- Dynamically populated list -->
+    <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-12 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg relative" style="height: 500px; overflow-y: auto;">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold mb-4">Archived Courses</h2>
+                <div id="archived-courses-list" class="space-y-2">
+                    <!-- Dynamically populated list -->
+                </div>
+                <button id="close-archive-modal" class="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl">
+                    &times;
+                </button>
             </div>
-            <button id="close-archive-modal" class="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl">&times;</button>
         </div>
     </div>
+
 
 
     <!-- <footer id="footer"></footer> -->

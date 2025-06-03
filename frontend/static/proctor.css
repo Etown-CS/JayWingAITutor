@@ -36,21 +36,55 @@ header, footer {
     color: white;
 } */
 
-/* Style for dropdown container */
-.dropdown-container {
-    margin: 20px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+/* Remove border and background from dropdown wrapper */
+.dropdown {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
 }
 
-/* Dropdown styling */
-.dropdown {
-    width: 200px;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.dropdown > button {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem;
+    appearance: none;
+    transition: box-shadow .15s ease-in-out;
+}
+
+/* Hide the default Bootstrap dropdown arrow for these specific buttons */
+.dropdown > button.dropdown-toggle::after {
+    display: none;
+}
+
+/* Styles for when the button is focused (e.g., clicked or tabbed to) */
+.dropdown > button:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* The blue glowing effect */
+    border-color: #dee2e6 !important;
+}
+
+/* Styles for when the button is active (e.g., held down) */
+.dropdown > button:active {
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Apply blue glow on active */
+    border-color: #dee2e6 !important;
+}
+
+/* Ensure hover does not change border color either */
+.dropdown > button:hover {
+    border-color: #dee2e6 !important;
 }
 
 /* Add Course button styling */

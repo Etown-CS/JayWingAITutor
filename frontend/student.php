@@ -126,7 +126,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     >
                     <button
                         type="button"
-                        class="block p-2 rounded bg-gray-100 hover:bg-gray-200 active:bg-gray-300"
+                        class="block p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300"
                         id="toggle-sidebar"
                         aria-label="Toggle Sidebar"
                     >≣</button>
@@ -147,7 +147,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
             <!-- List of existing chats -->
             <div id="sidebar-courses" class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto overflow-x-hidden sidebar-content-hide p-sidebar-noshow">
-                <!-- TODO: implement with php -->
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
                         // Need courseName, chatId, latestQuestion, lastInteracted
@@ -175,6 +174,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             ) latest ON latest.userCoursesId = uc.userCoursesId
                             LEFT JOIN messages m ON m.userCoursesId = uc.userCoursesId AND m.timestamp = latest.latestTimestamp
                             WHERE uc.userId = ?
+                            AND uc.archived = 0
                             $orderClause;
                         ";
 
@@ -200,18 +200,33 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             }
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
-                    <a href="?sortBy=<?php echo urlencode($_GET['sortBy'] ?? 'sortRecent'); ?>&chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>"
-                        class="block p-3 rounded bg-gray-100 <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> message-container w-full overflow-hidden">
-                        <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
-                        <?php if ($chat['latestQuestion']): ?>
-                            <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['latestQuestion'], ENT_QUOTES, 'UTF-8'); ?></div>
-                        <?php else: ?>
-                            <div class="text-xs text-gray-500">No messages yet</div>
-                        <?php endif; ?>
-                    </a>
+                    <div class="relative group bg-gray-100 p-3 rounded <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> w-full overflow-hidden hover:bg-gray-250">
+                        <a href="?sortBy=<?php echo urlencode($_GET['sortBy'] ?? 'sortRecent'); ?>&chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>"
+                            class="block w-full">
+                            <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
+                            <?php if ($chat['latestQuestion']): ?>
+                                <div class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($chat['latestQuestion'], ENT_QUOTES, 'UTF-8'); ?></div>
+                            <?php else: ?>
+                                <div class="text-xs text-gray-500">No messages yet</div>
+                            <?php endif; ?>
+                        </a>
+                        <!-- Small Archive Button -->
+                        <div 
+                            class="hover-child archive-icon-button absolute top-2 right-2 w-4 h-4 opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
+                            onclick="archiveCourse(<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>)">
+                        </div>
+                    </div>
                     <?php endwhile; ?>
                 </div>
+            </div>
+            <!-- Archive Button -->
+            <!-- Horizontal Separator -->
+            <hr class="border-t border-gray-300 mx-4 my-2">
 
+            <!-- Archive Button -->
+            <div id="archive-button" class="archive-button relative bg-gray-100 p-3 rounded mx-4 mb-4 hover:bg-gray-200 cursor-pointer flex items-center gap-2">
+                <div class="archive-icon w-6 h-6"></div>
+                <span class="text-gray-700 font-medium text-lg">Archived</span>
             </div>
         </div>
         
@@ -324,6 +339,18 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
             <?php endif; ?>
         </div>
     </div>
+
+    <!-- Archive Modal -->
+    <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+            <h2 class="text-xl font-semibold mb-4">Archived Courses</h2>
+            <div id="archived-courses-list" class="space-y-2">
+                <!-- Dynamically populated list -->
+            </div>
+            <button id="close-archive-modal" class="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl">&times;</button>
+        </div>
+    </div>
+
 
     <!-- <footer id="footer"></footer> -->
 

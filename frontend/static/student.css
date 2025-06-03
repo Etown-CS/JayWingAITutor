@@ -189,6 +189,10 @@ textarea:focus {
     padding-bottom: 0.5rem;
 }
 
+.py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
 /* Duplicate rounded-lg in original file, keeping for context but only one needed */
 .rounded-lg {
     border-radius: 0.5rem;
@@ -220,4 +224,51 @@ textarea:focus {
 
 .ai-message-content li {
     margin-bottom: 0.5rem;    /* Optional: control spacing between items */
+}
+
+.relative:hover .hover-child {
+    opacity: 1 !important;
+}
+
+.hover\:bg-gray-250:hover {
+    background-color: #d8dbe3;
+}
+
+.archive-icon {
+    background-image: url('../static/img/archive.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.archive-button:hover .archive-icon {
+    background-image: url('../static/img/open_archive.png');
+}
+
+.archive-icon:hover .archive-icon {
+    background-image: url('../static/img/open_archive.png');
+    opacity: 1;
+}
+
+/* Default: hidden */
+.archive-icon-button {
+    opacity: 0;
+    background-image: url('../static/img/archive.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Show icon when hovering over the course card */
+.group:hover .archive-icon-button {
+    opacity: 1;
+}
+
+/* Change icon when hovering directly over the icon */
+.archive-icon-button:hover {
+    background-image: url('../static/img/open_archive.png');
+}
+
+.hidden {
+    display: none !important;
 }

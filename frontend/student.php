@@ -367,14 +367,16 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             <label for="interest-input" class="text-sm text-gray-700">Your Interests</label>
                             <i
                                 class="fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-pointer"
-                                title="Used to personalize responses based on your interests."
+                                title="Used to personalize responses for this course."
                             ></i>
                         </div>
+                        <!-- Input with max chars as 100 to match database -->
                         <input
                             type="text"
                             id="interest-input"
                             class="form-control w-full mb-3"
                             placeholder="e.g. sports, tech, history"
+                            maxlength="100"
                         />
 
 

@@ -35,9 +35,90 @@ ai_memory = 4 # Number of messages provided to the AI for context
 chunk_count = 10 # Number of chunks to retrieve from Pinecone
 similarity_threshold = 0.375 # Minimum similarity score for document relevance -- play around with this
 
-initial_prompt = """
-You are an expert AI tutor helping a student learn course-specific material using provided context.
+def get_userCoursesId(user_id, course_name):
+    '''
+    Fetches the userCoursesId for a given user and course.
+    
+    Args:
+        user_id (str): The ID of the user.
+        course_name (str): The name of the course.
+    
+    Returns:
+        int: The userCoursesId if found, otherwise None.
+    '''
+    print("Fetching userCoursesId...")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT userCoursesId FROM user_courses 
+        WHERE userId = %s AND courseId = (SELECT id FROM courses WHERE name = %s);
+    """
+    
+    cursor.execute(query, (user_id, course_name))
+    result = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+
+    if result:
+        return result[0]
+    else:
+        print("No userCoursesId found for the given user and course.")
+        return None
+
+def construct_initial_prompt(userId, courseName):
+    '''
+    Constructs the initial prompt using database information.
+    Args:
+        userCoursesId (int): The ID of the user course.
+    Returns:
+        JSON: A JSON object containing the initial system prompt.
+    '''
+    print("Constructing initial prompt...")
+
+    # Get userCoursesId for the user and course
+    user_courses_id = get_userCoursesId(userId, courseName)
+    if not user_courses_id:
+        raise ValueError("No userCoursesId found for the given user and course.")
+    
+    # Fetch interaction settings
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = """
+        SELECT responseLength, interest
+        FROM user_courses
+        WHERE userCoursesId = %s;
+    """
+    cursor.execute(query, (user_courses_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not result:
+        raise ValueError("No interaction settings found for the given userCoursesId.")
+    
+    # Use extracted settings to construct the prompt
+    response_length, interest = result
+    print(f"Response Length: {response_length}, Interest: {interest}")
+
+    # Average does not modify the prompt
+    if response_length != "Average":
+        length_component = f"- Provide {response_length.lower()} responses."
+    else:
+        length_component = ""
+
+    # Check if interest exists
+    if interest:
+        interest_component = f"The user is interested in {interest}. If applicable, use {interest} to help them learn."
+    else:
+        interest_component = ""
+    
+    # Construct the initial prompt
+    initial_prompt = f"""
+You are an expert AI tutor for {courseName} helping a student learn course-specific material using provided context.
 Your goal is to guide the student to understanding—not to give final answers under any circumstances.
+{interest_component}
 
 Strict Conduct Rules:
 - If the student asks for a definition or fact, give a clear, concise explanation based on the context provided but do not mention that you are using an outside source context.
@@ -60,16 +141,19 @@ Strict Conduct Rules:
     - <em> for italic text,
     - <code> for code snippets (use for any code examples, mathematical expressions, formulas, or technical content).
 - All content must follow this HTML format, even when simple responses are given.
+{length_component}
 
 Reminder: You are here to teach, not to solve. The student's growth is your mission.
 """
+
+    return {"role": "system", "content": initial_prompt}
 
 def get_recent_chat_history(user_id, course_name, memory_limit=5):
     '''
     Fetches the recent chat history for a student in a specific course.
 
     Args:
-        student_id (str): The ID of the student.
+        user_id (str): The ID of the student.
         course_name (str): The name of the course.
         memory_limit (int): The number of recent messages to retrieve.
 
@@ -211,12 +295,7 @@ def update_chat_logs(student_id, course_name, user_question, tutor_response, sou
     conn = get_db_connection()
     cursor = conn.cursor()
     # Get userCoursesId for the student and course
-    UCIDquery = """
-        SELECT userCoursesId FROM user_courses 
-        WHERE userId = %s AND courseId = (SELECT id FROM courses WHERE name = %s);
-    """
-    cursor.execute(UCIDquery, (student_id, course_name))
-    user_courses_id = cursor.fetchone()
+    user_courses_id = get_userCoursesId(student_id, course_name)
 
     if user_courses_id:
         # Create names string
@@ -251,6 +330,9 @@ def generate_gpt_response(user_id, course_name, user_question):
     """
     print("Generating GPT-4 response...")
     try:
+        # Construct the initial prompt with user-specific context
+        initial_prompt = construct_initial_prompt(user_id, course_name)
+
         # Initialize session chat history
         chat_history = get_recent_chat_history(user_id, course_name, ai_memory)
 
@@ -273,7 +355,7 @@ def generate_gpt_response(user_id, course_name, user_question):
 
         # Prepare messages for the OpenAI API
         messages = [
-            {"role": "system", "content": initial_prompt},
+            initial_prompt,
             {"role": "system", "content": f"Here are some relevant course documents:\n\n{context}"},
             *chat_history,
             question

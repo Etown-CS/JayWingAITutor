@@ -108,9 +108,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
         Student Page
     </header>
-    <div id="my-content" class="flex-grow w-full mt-0 overflow-hidden">
+    <div id="my-content" class="right-collapsed flex flex-row flex-grow w-full mt-0 overflow-hidden">
         
-        <!-- Sidebar with chats list -->
+        <!-- Left sidebar with chats list -->
         <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
             <div class="flex justify-between items-center mb-4">
                 <!-- Chat Search Bar -->
@@ -229,10 +229,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 <span class="text-gray-700 font-medium text-lg">Archived</span>
             </div>
         </div>
-        
 
         <!-- Main chat area JAYWING -->
-        <div id="chat-container" class="flex flex-col bg-white py-2 h-full overflow-hidden">
+        <div id="chat-container" class="flex flex-col bg-white py-2 overflow-hidden">
             <?php if ($currentChat): ?>
                 <?php
                 // Get chat details
@@ -338,6 +337,55 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 </div>
             <?php endif; ?>
         </div>
+
+        <!-- Right sidebar with chat options -->
+        <div id="right-sidebar" class="collapsed d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
+            
+            <!-- Top bar: Hamburger and Title -->
+            <div class="px-3 pt-3 d-flex align-items-center w-full gap-2">
+                <!-- Hamburger -->
+                <button
+                    type="button"
+                    class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300"
+                    id="toggle-right-sidebar"
+                    aria-label="Toggle Right Sidebar"
+                >≣</button>
+
+                <!-- Title -->
+                <h2 class="text-lg font-semibold text-gray-800 mb-0 right-sidebar-content-hide">Chat Options</h2>
+            </div>
+
+
+            <?php if ($currentChat): ?>
+                <!-- Interest Input -->
+                <div class="px-3 pt-3 pb-3 right-sidebar-content-hide">
+                    <label for="interest-input" class="text-sm text-gray-700 block mb-1">Your Interests</label>
+                    <input
+                        type="text"
+                        id="interest-input"
+                        class="form-control w-full"
+                        placeholder="e.g. sports, tech, history"
+                    >
+                </div>
+
+                <!-- Response Length Selector -->
+                <div class="px-3 pb-3 right-sidebar-content-hide">
+                    <label for="response-length" class="text-sm text-gray-700 block mb-1">Response Length</label>
+                    <select id="response-length" class="form-select w-full bg-primary text-white">
+                        <option value="short">Short</option>
+                        <option value="average" selected>Average</option>
+                        <option value="detailed">Detailed</option>
+                    </select>
+                </div>
+            <?php else: ?>
+                <!-- Placeholder when no chat is selected -->
+                <div class="h-full flex items-center justify-center text-gray-500 text-center px-3 right-sidebar-content-hide">
+                    Select a chat for options
+                </div>
+            <?php endif; ?>
+        </div>
+
+        
     </div>
 
     <!-- Archive Modal -->

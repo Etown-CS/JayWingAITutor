@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Sidebar toggle button logic
+// Left sidebar toggle button logic
 const sidebar = document.getElementById('sidebar');
 const toggleBtn = document.getElementById('toggle-sidebar');
 const content = document.getElementById('my-content');
@@ -275,6 +275,22 @@ if (toggleBtn) {
         console.log("Archive button classes:", archiveButton.classList);
     });
 }
+
+// Right sidebar toggle button logic
+// Right sidebar toggle logic
+const rightSidebar = document.getElementById('right-sidebar');
+const toggleRightBtn = document.getElementById('toggle-right-sidebar');
+
+if (toggleRightBtn) {
+    toggleRightBtn.addEventListener('click', () => {
+        console.log("Right sidebar toggle clicked!");
+        rightSidebar.classList.toggle('collapsed');
+        content.classList.toggle('right-collapsed');
+        console.log("Right Sidebar classes:", rightSidebar.classList);
+        console.log("Main content layout:", content.classList);
+    });
+}
+
 
 // Archive button logic
 const archiveModal = document.getElementById('archive-modal');

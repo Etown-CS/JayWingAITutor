@@ -24,6 +24,14 @@ function archiveCourse(userCoursesId) {
             // Remove the archived course from UI
             const chatItem = document.querySelector(`[onclick="archiveCourse(${userCoursesId})"]`).closest('.relative');
             if (chatItem) chatItem.remove();
+
+            // If this was the currently selected chat, redirect to blank view
+            if (userCoursesId == currentChatId) {
+                // Redirect to the same page without the chatId
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.delete('chatId');
+                window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+            }
         } else {
             alert("Error: " + data.message);
         }

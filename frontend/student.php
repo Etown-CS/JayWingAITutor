@@ -357,8 +357,18 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
 
             <?php if ($currentChat): ?>
-                <!-- Interest Input -->
+                <!-- Response Length Selector -->
                 <div class="px-3 pt-3 pb-3 right-sidebar-content-hide">
+                    <label for="response-length" class="text-sm text-gray-700 block mb-1">Response Length</label>
+                    <select id="response-length" class="form-select w-full bg-primary text-white">
+                        <option value="short">Short</option>
+                        <option value="average" selected>Average</option>
+                        <option value="detailed">Detailed</option>
+                    </select>
+                </div>
+
+                <!-- Interest Input -->
+                <div class="px-3 pb-3 right-sidebar-content-hide">
                     <label for="interest-input" class="text-sm text-gray-700 block mb-1">Your Interests</label>
                     <input
                         type="text"
@@ -367,15 +377,15 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         placeholder="e.g. sports, tech, history"
                     >
                 </div>
-
-                <!-- Response Length Selector -->
+                <!-- Archive Button -->
                 <div class="px-3 pb-3 right-sidebar-content-hide">
-                    <label for="response-length" class="text-sm text-gray-700 block mb-1">Response Length</label>
-                    <select id="response-length" class="form-select w-full bg-primary text-white">
-                        <option value="short">Short</option>
-                        <option value="average" selected>Average</option>
-                        <option value="detailed">Detailed</option>
-                    </select>
+                    <button
+                        id="archive-chat-button"
+                        class="w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-medium py-2 px-4 rounded-lg"
+                        onclick="archiveChat(<?php echo htmlspecialchars($currentChat, ENT_QUOTES, 'UTF-8'); ?>)"
+                    >
+                        Archive Chat
+                    </button>
                 </div>
             <?php else: ?>
                 <!-- Placeholder when no chat is selected -->

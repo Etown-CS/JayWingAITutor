@@ -68,6 +68,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <!-- bootstrap css -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
+    <!-- font awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <!-- custom css -->
     <link rel="stylesheet" href="static/student.css">
     <script>
@@ -340,61 +343,67 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
         <!-- Right sidebar with chat options -->
         <div id="right-sidebar" class="collapsed d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
-            
+
             <!-- Top bar: Hamburger and Title -->
             <div class="px-3 pt-3 d-flex align-items-center w-full gap-2">
-                <!-- Hamburger -->
-                <button
-                    type="button"
-                    class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300"
-                    id="toggle-right-sidebar"
-                    aria-label="Toggle Right Sidebar"
-                >≣</button>
-
-                <!-- Title -->
+                <button type="button" class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300" id="toggle-right-sidebar" aria-label="Toggle Right Sidebar">≣</button>
                 <h2 class="text-lg font-semibold text-gray-800 mb-0 right-sidebar-content-hide">Chat Options</h2>
             </div>
 
-
             <?php if ($currentChat): ?>
-                <!-- Response Length Selector -->
-                <div class="px-3 pt-3 pb-3 right-sidebar-content-hide">
-                    <label for="response-length" class="text-sm text-gray-700 block mb-1">Response Length</label>
-                    <select id="response-length" class="form-select w-full bg-primary text-white">
-                        <option value="short">Short</option>
-                        <option value="average" selected>Average</option>
-                        <option value="detailed">Detailed</option>
-                    </select>
-                </div>
+                <!-- Main content container to allow footer-style stickiness -->
+                <div class="flex-grow d-flex flex-column justify-between">
+                    <div class="right-sidebar-content-hide px-3 pt-3">
+                        <!-- Response Length Selector -->
+                        <label for="response-length" class="text-sm text-gray-700 block mb-1">Response Length</label>
+                        <select id="response-length" class="form-select w-full bg-primary text-white mb-3">
+                            <option value="short">Short</option>
+                            <option value="average" selected>Average</option>
+                            <option value="detailed">Detailed</option>
+                        </select>
 
-                <!-- Interest Input -->
-                <div class="px-3 pb-3 right-sidebar-content-hide">
-                    <label for="interest-input" class="text-sm text-gray-700 block mb-1">Your Interests</label>
-                    <input
-                        type="text"
-                        id="interest-input"
-                        class="form-control w-full"
-                        placeholder="e.g. sports, tech, history"
-                    >
-                </div>
-                <!-- Archive Button -->
-                <div class="px-3 pb-3 right-sidebar-content-hide">
-                    <button
-                        id="archive-chat-button"
-                        class="w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-medium py-2 px-4 rounded-lg"
-                        onclick="archiveChat(<?php echo htmlspecialchars($currentChat, ENT_QUOTES, 'UTF-8'); ?>)"
-                    >
-                        Archive Chat
-                    </button>
+                        <!-- Interest Input -->
+                        <div class="flex items-center gap-1 mb-1">
+                            <label for="interest-input" class="text-sm text-gray-700">Your Interests</label>
+                            <i
+                                class="fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-pointer"
+                                title="Used to personalize responses based on your interests."
+                            ></i>
+                        </div>
+                        <input
+                            type="text"
+                            id="interest-input"
+                            class="form-control w-full mb-3"
+                            placeholder="e.g. sports, tech, history"
+                        />
+
+
+                        <!-- Save Changes Button -->
+                        <button
+                            id="save-changes-button"
+                            class="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+
+                    <!-- Archive Button Stuck to Bottom -->
+                    <div class="px-3 pb-3 right-sidebar-content-hide">
+                        <button
+                            id="archive-chat-button"
+                            class="w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-medium py-2 px-4 rounded-lg"
+                            onclick="archiveCourse(<?php echo htmlspecialchars($currentChat, ENT_QUOTES, 'UTF-8'); ?>)">
+                            Archive Chat
+                        </button>
+                    </div>
                 </div>
             <?php else: ?>
-                <!-- Placeholder when no chat is selected -->
+                <!-- Placeholder -->
                 <div class="h-full flex items-center justify-center text-gray-500 text-center px-3 right-sidebar-content-hide">
                     Select a chat for options
                 </div>
             <?php endif; ?>
         </div>
-
         
     </div>
 

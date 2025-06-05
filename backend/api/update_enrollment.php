@@ -13,12 +13,12 @@ if (!isAdmin()) {
 try {
     $data = json_decode(file_get_contents('php://input'), true);
     
-    if (!isset($data['userCoursesId']) || !isset($data['courseId']) || 
+    if (!isset($data['userCourseId']) || !isset($data['courseId']) || 
         !isset($data['userId'])) {      // || !isset($data['roleOfClass'])
         throw new Exception('Missing required fields');
     }
 
-    $stmt = $connection->prepare("UPDATE userCourses SET courseId = ?, userId = ? WHERE userCoursesId = ?");    // , roleOfClass = ?
+    $stmt = $connection->prepare("UPDATE user_courses SET courseId = ?, userId = ? WHERE userCoursesId = ?");    // , roleOfClass = ?
     
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $connection->error);
@@ -28,7 +28,7 @@ try {
         $data['courseId'],
         $data['userId'],
         // $data['roleOfClass'],
-        $data['userCoursesId']
+        $data['userCourseId']
     );
 
     if (!$stmt->execute()) {

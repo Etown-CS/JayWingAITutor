@@ -119,14 +119,14 @@ $users = $connection->query("SELECT * FROM users");
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="class_description" class="form-label">Description</label>
-                                <textarea readonly class="form-control" id="class_description" style="height: 37.6px;"></textarea>
+                                <textarea class="form-control" id="class_description" style="height: 37.6px;"></textarea>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Add Class</button>
                     </form>
                     
                     <div class="table-responsive mt-4">
-                        <table class="table">
+                        <table class="table" id="classesTableConfig">
                             <thead>
                                 <tr>
                                     <th>Class Name</th>
@@ -153,7 +153,7 @@ $users = $connection->query("SELECT * FROM users");
                                     Class Name <span class="text-danger">*</span>
                                 </label>
                                 <div class="dropdown">
-                                    <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <span id="selectedClassText">Select Class</span>
                                     </button>
                                     <div class="dropdown-menu w-100 p-2" id="classDropdown">
@@ -163,10 +163,13 @@ $users = $connection->query("SELECT * FROM users");
                                             id="classSearchInput"
                                             placeholder="Search classes..."
                                         />
-                                        <div class="class-list" style="max-height: 200px; overflow-y: auto;">
+                                        <div class="class-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
                                             <?php while($class = $classes->fetch_assoc()): ?>
                                                 <div class="dropdown-item" data-value="<?= $class['id'] ?>">
-                                                    <?= htmlspecialchars($class['name']) ?> (<?= htmlspecialchars($class['courseCode']) ?>)
+                                                    <?= htmlspecialchars($class['name']) ?> 
+                                                    <?php if (!empty($class['courseCode'])): ?>
+                                                        (<?= htmlspecialchars($class['courseCode']) ?>)
+                                                    <?php endif; ?>
                                                 </div>
                                             <?php endwhile; ?>
                                         </div>
@@ -179,14 +182,14 @@ $users = $connection->query("SELECT * FROM users");
                             <div class="col-md-4 mb-3">
                                 <label for="user_id" class="form-label">User</label>
                                 <div class="dropdown">
-                                    <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <span id="selectedUserText">Select User</span>
                                     </button>
                                     <div class="dropdown-menu w-100 p-2">
                                         <input type="text" class="form-control mb-2" id="userSearchInput" placeholder="Search users...">
-                                        <div class="user-list" style="max-height: 200px; overflow-y: auto;">
+                                        <div class="user-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
                                             <?php while($user = $users->fetch_assoc()): ?>
-                                                <div class="dropdown-item" data-value="<?= $user['userId'] ?>">
+                                                <div class="dropdown-item" data-value="<?= $user['id'] ?>">
                                                     <?= htmlspecialchars($user['username']) ?>
                                                 </div>
                                             <?php endwhile; ?>
@@ -205,11 +208,11 @@ $users = $connection->query("SELECT * FROM users");
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Add Class</button>
+                        <button type="submit" class="btn btn-primary">Add Enrollment</button>
                     </form>
                     
-                    <div class="table-responsive mt-4">
-                        <table class="table">
+                    <div class="table mt-4">
+                        <table class="table" id="enrollmentsTableConfig">
                             <thead>
                                 <tr>
                                     <th>Class Name</th>
@@ -231,7 +234,7 @@ $users = $connection->query("SELECT * FROM users");
 
                 </div>
 
-            <?php endif ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -248,34 +251,67 @@ $users = $connection->query("SELECT * FROM users");
                 <form id="editForm">
                     <input type="hidden" id="edit_enrollment_id">
                     <div class="mb-3">
-                        <label for="edit_class_id" class="form-label">Class</label>
-                        <select class="form-select bg-dark text-white" id="edit_class_id" required>
-                            <?php 
-                            $classes->data_seek(0);
-                            while($class = $classes->fetch_assoc()): 
-                            ?>
-                                <option value="<?= $class['id'] ?>">
-                                    <?= htmlspecialchars($class['courseName']) ?>
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
+                        <label for="edit_class_id" class="form-label">
+                            Class Name <span class="text-danger">*</span>
+                        </label>
+                        <div class="dropdown">
+                            <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="selectedEditClassText">Select Class</span>
+                            </button>
+                            <div class="dropdown-menu w-100 p-2" id="classEditDropdown">
+                                <input
+                                    type="text"
+                                    class="form-control mb-2"
+                                    id="classEditSearchInput"
+                                    placeholder="Search classes..."
+                                />
+                                <div class="class-edit-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                    <?php
+                                    $classes->data_seek(0);
+                                    while($class = $classes->fetch_assoc()): ?>
+                                        <div class="dropdown-item" data-value="<?= $class['id'] ?>">
+                                            <?= htmlspecialchars($class['name']) ?> 
+                                            <?php if (!empty($class['courseCode'])): ?>
+                                                (<?= htmlspecialchars($class['courseCode']) ?>)
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endwhile; ?>
+                                </div>
+                            </div>
+                            <input type="hidden" id="edit_class_id" name="edit_class_id" required>
+                        </div>
                     </div>
+
                     <div class="mb-3">
                         <label for="edit_user_id" class="form-label">User</label>
-                        <select class="form-select bg-dark text-white" id="edit_user_id" required>
-                            <?php 
-                            $users->data_seek(0);
-                            while($user = $users->fetch_assoc()): 
-                            ?>
-                                <option value="<?= $user['user_id'] ?>">
-                                    <?= htmlspecialchars($user['username']) ?>
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
+                        <div class="dropdown">
+                            <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="selectedEditUserText">Select User</span>
+                            </button>
+                            <div class="dropdown-menu w-100 p-2">
+                                <input
+                                    type="text"
+                                    class="form-control mb-2"
+                                    id="userEditSearchInput"
+                                    placeholder="Search users..."
+                                />
+                                <div class="user-edit-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                    <?php
+                                    $users->data_seek(0);
+                                    while($user = $users->fetch_assoc()): ?>
+                                        <div class="dropdown-item" data-value="<?= $user['id'] ?>">
+                                            <?= htmlspecialchars($user['username']) ?>
+                                        </div>
+                                    <?php endwhile; ?>
+                                </div>
+                            </div>
+                            <input type="hidden" id="edit_user_id" name="edit_user_id" required>
+                        </div>
                     </div>
+
                     <div class="mb-3">
                         <label for="edit_roleOfClass" class="form-label">Role</label>
-                        <select class="form-select bg-dark text-white" id="edit_roleOfClass" required>
+                        <select class="form-select" id="edit_roleOfClass" required>
                             <option value="tutor">Tutor</option>
                             <option value="tutee">Tutee</option>
                         </select>
@@ -286,6 +322,7 @@ $users = $connection->query("SELECT * FROM users");
         </div>
     </div>
 </div>
+
 
 <!-- <footer>
     <p> 2024 AI Tutor Proctor Page</p>

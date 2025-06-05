@@ -22,21 +22,6 @@ header, footer {
     padding: 20px;
 }
 
-/* File Upload Area */
-/* #file-input {
-    background-color: #3DB5E6;
-    border: 2px dashed #0A2240;
-    padding: 50px;
-    margin-bottom: 20px;
-    cursor: pointer;
-}
-
-#file-input:hover {
-    background-color: #E1261C;
-    color: white;
-} */
-
-/* Remove border and background from dropdown wrapper */
 .dropdown {
     border: none;
     background: transparent;
@@ -72,20 +57,89 @@ header, footer {
 .dropdown > button:focus {
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* The blue glowing effect */
-    border-color: #dee2e6 !important;
+    border-color: #86b7fe !important;
 }
 
 /* Styles for when the button is active (e.g., held down) */
 .dropdown > button:active {
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Apply blue glow on active */
-    border-color: #dee2e6 !important;
+    border-color: #86b7fe !important;
 }
 
-/* Ensure hover does not change border color either */
-.dropdown > button:hover {
-    border-color: #dee2e6 !important;
+.dropdown-item:hover {
+    background-color: #0b5ed7;
+    color: white;
 }
+
+/* Prevent horizontal scrolling on the dropdown-menu */
+.dropdown-menu {
+  overflow-x: hidden;
+}
+
+/* Make each item a single line, hide overflow, and show “…” */
+.dropdown-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* TABLE STYLING */
+
+/* Ensure the table honors the column widths */
+#enrollmentsTableConfig {
+    table-layout: fixed; /* This is key for precise column width control */
+    width: 100%; /* Ensure the table takes full available width */
+}
+
+#enrollmentsTableConfig th:nth-child(1),
+#enrollmentsTableConfig td:nth-child(1) {
+    width: 35%;
+}
+
+#enrollmentsTableConfig th:nth-child(2),
+#enrollmentsTableConfig td:nth-child(2) {
+    width: 30%;
+}
+
+#enrollmentsTableConfig th:nth-child(3),
+#enrollmentsTableConfig td:nth-child(3) {
+    width: 20%;
+}
+
+#enrollmentsTableConfig th:nth-child(4),
+#enrollmentsTableConfig td:nth-child(4) {
+    width: 15%;
+}
+
+
+#classesTableConfig {
+    table-layout: fixed; /* This is key for precise column width control */
+    width: 100%; /* Ensure the table takes full available width */
+}
+
+#classesTableConfig th:nth-child(1),
+#classesTableConfig td:nth-child(1) {
+    width: 30%;
+}
+
+#classesTableConfig th:nth-child(2),
+#classesTableConfig td:nth-child(2) {
+    width: 15%;
+}
+
+#classesTableConfig th:nth-child(3),
+#classesTableConfig td:nth-child(3) {
+    width: 40%;
+}
+
+#classesTableConfig th:nth-child(4),
+#classesTableConfig td:nth-child(4) {
+    width: 15%;
+}
+
+
+/* END TABLE STYLING */
 
 /* Add Course button styling */
 .add-course-btn {

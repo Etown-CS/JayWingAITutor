@@ -7,16 +7,29 @@ const docsFolder = "docs"; // Folder to store files
 const tbodyclasses = document.getElementById('classesTable');
 const tbodyenrollments = document.getElementById('enrollmentsTable');
 
+const modal = new bootstrap.Modal(document.getElementById('editModal'));
+
 // ***** General JS *****
 
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
     initializeSearchableDropdowns();
+
+    // When class-list or user-list dropdowns are closed
+    document.querySelectorAll('.dropdown').forEach(dropdownEl => {
+        dropdownEl.addEventListener('hidden.bs.dropdown', () => {
+            // Clear search input
+            const searchInput = dropdownEl.querySelector('input.form-control');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        });
+    });
     
     const coursesDropdownEnroll = document.getElementById('courses-dropdown-enroll');
     const coursesDropdownUpload = document.getElementById('courses-dropdown-upload');
     const addCourseBtn = document.getElementById('add-course-btn');
-    const modal = document.getElementById('add-course-modal');
     const courseNameInput = document.getElementById('course-name-input');
 
     const classForm = document.getElementById('classForm');
@@ -32,9 +45,9 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             
             const data = {
-                name: document.getElementById('className').value,
-                courseCode: document.getElementById('courseCode').value,
-                description: document.getElementById('classDescription').value
+                name: document.getElementById('class_name').value,
+                courseCode: document.getElementById('course_code').value,
+                description: document.getElementById('class_description').value
             };
             
             fetch('../backend/api/create_class.php', {
@@ -47,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    alert('Course added successfully!');
                     loadClasses();
                     reloadClassDropdowns();
                     this.reset();
@@ -82,6 +96,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.success) {
                     loadEnrollments();
                     this.reset();
+                    // Reset selected class text
+                    document.getElementById('selectedClassText').textContent = 'Select Class';
+                    document.getElementById('selectedUserText').textContent = 'Select User';
                 }
             });
         });
@@ -94,9 +111,9 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const data = {
                 userCourseId: document.getElementById('edit_enrollment_id').value,
-                id: document.getElementById('edit_class_id').value,
+                courseId: document.getElementById('edit_class_id').value,
                 userId: document.getElementById('edit_user_id').value,
-                // roleOfClass: document.getElementById('edit_roleOfClass').value
+                roleOfClass: document.getElementById('edit_roleOfClass').value
             };
             
             fetch('../backend/api/update_enrollment.php', {
@@ -110,13 +127,12 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (data.success) {
                     loadEnrollments();
-                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    modal.hide();
                 }
             });
         });
     }
 });
-
 // ***** Class Management JS *****
 
 function loadClasses() {
@@ -140,10 +156,10 @@ function loadClasses() {
                             <td>${classItem.courseCode || ''}</td>
                             <td>${classItem.description || ''}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary" onclick="editClass(${JSON.stringify(classItem)})">
+                                <button class="btn btn-sm btn-primary m-0" onclick="editClass(${JSON.stringify(classItem)})">
                                     Edit
                                 </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteClass(${classItem.id})">
+                                <button class="btn btn-sm btn-danger m-0" onclick="deleteClass(${classItem.id})">
                                     Delete
                                 </button>
                             </td>
@@ -170,11 +186,7 @@ function deleteClass(classId) {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                // Reset selected class text (**TODO: fix these they are in refrence to HTML elements in enrollments)
-                document.getElementById('selectedClassText').textContent = 'Select Class';
-                document.getElementById('class_id').value = '';
-                
+            if (data.success) {                
                 loadClasses();
                 reloadClassDropdowns();
                 loadEnrollments();
@@ -202,35 +214,61 @@ function loadEnrollments() {
                     userCourses.forEach(userCourse => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td>${userCourse.name}</td>
-                            <td>${userCourse.username}</td>
-                            <td>${'TODO'}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editEnrollment(${JSON.stringify(userCourse)})">
-                                    Edit
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteEnrollment(${userCourse.userCourseId})">
-                                    Delete
-                                </button>
-                            </td>
+                        <td>${userCourse.name}</td>
+                        <td>${userCourse.username}</td>
+                        <td>${'*JayWing*'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary m-0 edit-enrollment-btn"
+                                data-usercourse-id="${userCourse.userCoursesId}"
+                                data-usercourse-name="${userCourse.name}"
+                                data-usercourse-user="${userCourse.username}"
+                                data-course-id="${userCourse.courseId}"
+                                data-user-id="${userCourse.userId}">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger m-0" onclick="deleteEnrollment(${userCourse.userCoursesId})">
+                                Delete
+                            </button>
+                        </td>
                         `;
                         tbodyenrollments.appendChild(tr);
                     });
                 }
             }
+            // data-role="${userCourse.roleOfClass || ''}">
         })
         .catch(error => console.error('Error:', error));
 }
 
-function editEnrollment(userCourse) {
-    document.getElementById('edit_enrollment_id').value = userCourse.userCourseId;
-    document.getElementById('edit_class_id').value = userCourse.courseId;
-    document.getElementById('edit_user_id').value = userCourse.userId;
-    // document.getElementById('edit_roleOfClass').value = userCourse.roleOfClass;
-    
-    new bootstrap.Modal(document.getElementById('editModal')).show();
-}
+// Edit Class/Enrollment
+document.addEventListener('click', function (e) {
+    // if (e.target.classList.contains('edit-enrollment-btn')) {
+    //     const btn = e.target;
+    //     document.getElementById('edit_enrollment_id').value = btn.dataset.usercourseId;
+    //     document.getElementById('edit_class_id').value = btn.dataset.courseId;
+    //     document.getElementById('edit_user_id').value = btn.dataset.userId;
+    //     // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
 
+    //     modal.show();
+    // }
+    
+    if (e.target.classList.contains('edit-enrollment-btn')) {
+        const btn = e.target;
+        document.getElementById('edit_enrollment_id').value = btn.dataset.usercourseId;
+        document.getElementById('edit_class_id').value = btn.dataset.courseId;
+        document.getElementById('edit_user_id').value = btn.dataset.userId;
+        // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
+
+        document.getElementById('edit_class_id').value = btn.dataset.courseId;
+        document.getElementById('edit_user_id').value = btn.dataset.userId;
+        document.getElementById('selectedEditClassText').textContent = btn.dataset.usercourseName;
+        document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
+
+        modal.show();
+    }
+});
+
+// Delete Enrollment
 function deleteEnrollment(enrollmentId) {
     if (confirm('Are you sure you want to delete this enrollment?')) {
         fetch('../backend/api/delete_enrollment.php', {
@@ -238,7 +276,7 @@ function deleteEnrollment(enrollmentId) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ userCourseId: enrollmentId })
+            body: JSON.stringify({ userCoursesId: enrollmentId })
         })
         .then(response => response.json())
         .then(data => {
@@ -255,8 +293,13 @@ function initializeSearchableDropdowns() {
     // re-query these now that the DOM is ready
     const classSearchInput = document.getElementById('classSearchInput');
     const userSearchInput  = document.getElementById('userSearchInput');
+    const classEditSearchInput = document.getElementById('classEditSearchInput');
+    const userEditSearchInput  = document.getElementById('userEditSearchInput');
+
     const classListContainer = document.querySelector('.class-list');
     const userListContainer  = document.querySelector('.user-list');
+    const classEditListContainer = document.querySelector('.class-edit-list');
+    const userEditListContainer  = document.querySelector('.user-edit-list');
 
     // Prevent dropdown from closing when clicking inside the menu
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
@@ -283,27 +326,87 @@ function initializeSearchableDropdowns() {
         });
     }
 
+    // “Search” filter for editting classes
+    if (classEditSearchInput) {
+        classEditSearchInput.addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        document.querySelectorAll('.class-edit-list .dropdown-item').forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none';
+        });
+        });
+    }
+
+    // “Search” filter for editting users
+    if (userEditSearchInput) {
+        userEditSearchInput.addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        document.querySelectorAll('.user-edit-list .dropdown-item').forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none';
+        });
+        });
+    }
+
     // Delegate click inside .class-list
     if (classListContainer) {
         classListContainer.addEventListener('click', function(e) {
-        if (e.target.classList.contains('dropdown-item')) {
-            const value = e.target.dataset.value;
-            const text  = e.target.textContent;
-            document.getElementById('class_id').value = value;
-            document.getElementById('selectedClassText').textContent = text;
-        }
+            if (e.target.classList.contains('dropdown-item')) {
+                const value = e.target.dataset.value;
+                const text  = e.target.textContent;
+                document.getElementById('class_id').value = value;
+                document.getElementById('selectedClassText').textContent = text;
+
+                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
         });
     }
 
     // Delegate click inside .user-list
     if (userListContainer) {
         userListContainer.addEventListener('click', function(e) {
-        if (e.target.classList.contains('dropdown-item')) {
-            const value = e.target.dataset.value;
-            const text  = e.target.textContent;
-            document.getElementById('user_id').value = value;
-            document.getElementById('selectedUserText').textContent = text;
-        }
+            if (e.target.classList.contains('dropdown-item')) {
+                const value = e.target.dataset.value;
+                const text  = e.target.textContent;
+                document.getElementById('user_id').value = value;
+                document.getElementById('selectedUserText').textContent = text;
+
+                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();  // <-- Close dropdown here
+            }
+        });
+    }
+
+    // Delegate click inside .class-edit-list
+    if (classEditListContainer) {
+        classEditListContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('dropdown-item')) {
+                const value = e.target.dataset.value;
+                const text  = e.target.textContent;
+                document.getElementById('edit_class_id').value = value;
+                document.getElementById('selectedEditClassText').textContent = text;
+
+                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
+        });
+    }
+
+    // Delegate click inside .user-edit-list
+    if (userEditListContainer) {
+        userEditListContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('dropdown-item')) {
+                const value = e.target.dataset.value;
+                const text  = e.target.textContent;
+                document.getElementById('edit_user_id').value = value;
+                document.getElementById('selectedEditUserText').textContent = text;
+
+                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();  // <-- Close dropdown here
+            }
         });
     }
 }
@@ -328,9 +431,22 @@ function reloadClassDropdowns() {
                         const dropdownItem = document.createElement('div');
                         dropdownItem.className = 'dropdown-item text-white';
                         dropdownItem.dataset.value = classItem.id;
-                        if (classItem.courseCode === null) { dropdownItem.textContent = `${classItem.name}`; }
-                        else { dropdownItem.textContent = `${classItem.name} (${classItem.courseCode || ''})`; }
+                        dropdownItem.textContent = `${classItem.name} (${classItem.courseCode || ''})`;
                         classDropdown.appendChild(dropdownItem);
+                    });
+                }
+            }
+
+            const classEditDropdown = document.querySelector('.class-edit-list');
+            if (classEditDropdown) {
+                classEditDropdown.innerHTML = '';
+                if (Array.isArray(courses)) {
+                    courses.forEach(classItem => {
+                        const dropdownItem = document.createElement('div');
+                        dropdownItem.className = 'dropdown-item text-white';
+                        dropdownItem.dataset.value = classItem.id;
+                        dropdownItem.textContent = `${classItem.name} (${classItem.courseCode || ''})`;
+                        classEditDropdown.appendChild(dropdownItem);
                     });
                 }
             }
@@ -353,6 +469,10 @@ function reloadClassDropdowns() {
             initializeSearchableDropdowns();
         });
 }
+
+// ***** Modal Management JS *****
+
+
 
 // ***** File Management JS *****
 

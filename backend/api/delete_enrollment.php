@@ -17,13 +17,13 @@ try {
         throw new Exception('Enrollment ID is required');
     }
 
-    $stmt = $connection->prepare("DELETE FROM user_courses WHERE userCourseId = ?");
+    $stmt = $connection->prepare("DELETE FROM user_courses WHERE userCoursesId = ?");
     
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $connection->error);
     }
 
-    $stmt->bind_param("i", $data['userCourseId']);
+    $stmt->bind_param("i", $data['userCoursesId']);
 
     if (!$stmt->execute()) {
         throw new Exception("Execution failed: " . $stmt->error);

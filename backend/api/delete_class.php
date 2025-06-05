@@ -20,12 +20,12 @@ try {
     $connection->begin_transaction();
 
     // First delete related enrollments
-    $stmt1 = $connection->prepare("DELETE FROM user_courses WHERE course_id = ?");
+    $stmt1 = $connection->prepare("DELETE FROM user_courses WHERE courseId = ?");
     if (!$stmt1) {
         throw new Exception("Prepare failed for enrollment deletion: " . $connection->error);
     }
     
-    $stmt1->bind_param("i", $data['course_id']);
+    $stmt1->bind_param("i", $data['courseId']);
     if (!$stmt1->execute()) {
         throw new Exception("Failed to delete enrollments: " . $stmt1->error);
     }

@@ -251,7 +251,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     
                     <!-- Messages area -->
                     <div id="conversation" class="flex-1 overflow-y-auto space-y-4 -mb-3 -mt-2 w-full p-chat-noshow">
-                        <div id="chat-locaction" class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
+                        <div id="chat-location" class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
                             <?php
                             $stmt = $connection->prepare("
                                 SELECT m.question, m.answer, m.sourceName

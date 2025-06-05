@@ -71,7 +71,7 @@ function filterChats() {
 }
 
 function addTypingIndicator() {
-    const chatLocationDiv = document.getElementById('chat-locaction');
+    const chatLocationDiv = document.getElementById('chat-location');
 
     const typingDiv = document.createElement('div');
     typingDiv.className = "flex py-2 justify-start";
@@ -154,7 +154,7 @@ function askQuestion(selectedCourseName) {
 };
 
 function updateConversationUser(text) {
-    const chatLocactionDiv = document.getElementById('chat-locaction');
+    const chatlocationDiv = document.getElementById('chat-location');
 
     const newMessageAlignment = document.createElement('div');
     newMessageAlignment.className = "flex py-2 justify-end";
@@ -174,13 +174,14 @@ function updateConversationUser(text) {
 
     newMessageAlignment.appendChild(newMessageBubble);
 
-    chatLocactionDiv.appendChild(newMessageAlignment);
+    chatlocationDiv.appendChild(newMessageAlignment);
 
     scrollToBottom();
 }
 
 function updateConversationAI(text, sourceName, selectedCourseName) {
-    const chatLocactionDiv = document.getElementById('chat-locaction');
+    console.log("Source Name:", sourceName);
+    const chatlocationDiv = document.getElementById('chat-location');
 
     const newMessageAlignment = document.createElement('div');
     newMessageAlignment.className = "flex py-2 justify-start";
@@ -199,7 +200,7 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
     newMessageBubble.appendChild(newMessageFrom);
     newMessageBubble.appendChild(newMessageText);
 
-    if (sourceName !== "No sources found") {
+    if (sourceName !== "") {
         const newMessageSource = document.createElement('div');
         newMessageSource.className = "text-xs mt-1";
         newMessageSource.textContent = "Source: ";
@@ -223,7 +224,7 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
     }
 
     newMessageAlignment.appendChild(newMessageBubble);
-    chatLocactionDiv.appendChild(newMessageAlignment);
+    chatlocationDiv.appendChild(newMessageAlignment);
 
     scrollToBottom();
 }

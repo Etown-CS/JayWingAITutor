@@ -343,7 +343,7 @@ def ask_question():
         # Call the generate_gpt_response function
         (tutor_response, sourceNames) = generate_gpt_response(user_id, course_name, question)
         # Convert sourceNames to a string
-        sourceNames = ', '.join(sourceNames) if sourceNames else "No sources found"
+        sourceNames = ', '.join(sourceNames) if sourceNames else ""
 
         return jsonify({'success': True, 'response': tutor_response, 'sourceName': sourceNames}), 200
     except Exception as e:

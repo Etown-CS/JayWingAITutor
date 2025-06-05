@@ -341,11 +341,11 @@ def ask_question():
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Call the generate_gpt_response function
-        (tutor_response, sourceNames) = generate_gpt_response(user_id, course_name, question)
+        (tutor_response, sourceNames, messageId) = generate_gpt_response(user_id, course_name, question)
         # Convert sourceNames to a string
         sourceNames = ', '.join(sourceNames) if sourceNames else ""
 
-        return jsonify({'success': True, 'response': tutor_response, 'sourceName': sourceNames}), 200
+        return jsonify({'success': True, 'response': tutor_response, 'sourceName': sourceNames, 'messageId': messageId}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

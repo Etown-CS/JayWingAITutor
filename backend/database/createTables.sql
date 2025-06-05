@@ -41,5 +41,8 @@ CREATE TABLE messages (
     answer TEXT,
     timestamp DATETIME DEFAULT current_timestamp,
     sourceName VARCHAR(100),
+    feedbackRating ENUM('up', 'down') DEFAULT NULL,
+    feedbackExplanation TEXT,
+    feedbackTimestamp DATETIME DEFAULT NULL,
     FOREIGN KEY (userCoursesId) REFERENCES user_courses(userCoursesId) ON DELETE CASCADE
 );

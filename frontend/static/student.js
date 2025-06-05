@@ -133,7 +133,7 @@ function askQuestion(selectedCourseName) {
                 }
 
                 // Update conversation with AI response
-                updateConversationAI(data.response, data.sourceName, selectedCourseName);
+                updateConversationAI(data.response, data.sourceName, selectedCourseName, data.messageId);
             } else {
                 console.error("Error in response:", data.message);
                 // Remove typing indicator
@@ -179,8 +179,7 @@ function updateConversationUser(text) {
     scrollToBottom();
 }
 
-function updateConversationAI(text, sourceName, selectedCourseName) {
-    console.log("Source Name:", sourceName);
+function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
     const chatlocationDiv = document.getElementById('chat-location');
 
     const newMessageAlignment = document.createElement('div');
@@ -197,14 +196,16 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
     newMessageText.innerHTML = text;
     newMessageText.className = "ai-message-content";
 
+    // Append basic message content
     newMessageBubble.appendChild(newMessageFrom);
     newMessageBubble.appendChild(newMessageText);
 
+    // Optional source links
     if (sourceName !== "") {
         const newMessageSource = document.createElement('div');
         newMessageSource.className = "text-xs mt-1";
         newMessageSource.textContent = "Source: ";
-        
+
         const sources = sourceName.split(', ').map(s => s.trim()).filter(Boolean);
         sources.forEach((fileName, index) => {
             const link = document.createElement('a');
@@ -220,23 +221,208 @@ function updateConversationAI(text, sourceName, selectedCourseName) {
                 newMessageSource.appendChild(document.createTextNode(", "));
             }
         });
+
         newMessageBubble.appendChild(newMessageSource);
     }
 
+    // Button row
+    const buttonRow = document.createElement('div');
+    buttonRow.className = "flex gap-2 mt-2 text-xs text-gray-600";
+    
+    const thumbsUpBtn = document.createElement('button');
+    thumbsUpBtn.textContent = "👍";
+    thumbsUpBtn.title = "This response was helpful";
+    thumbsUpBtn.className = "px-2 py-1 text-xs rounded hover:bg-green-100 transition-colors duration-150";
+
+    const thumbsDownBtn = document.createElement('button');
+    thumbsDownBtn.textContent = "👎";
+    thumbsDownBtn.title = "This response was not helpful";
+    thumbsDownBtn.className = "px-2 py-1 text-xs rounded hover:bg-red-100 transition-colors duration-150";
+
+    const explainBtn = document.createElement('button');
+    explainBtn.textContent = "Explain";
+    explainBtn.title = "Get a deeper explanation";
+    explainBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
+
+    const examplesBtn = document.createElement('button');
+    examplesBtn.textContent = "Examples";
+    examplesBtn.title = "Get more examples";
+    examplesBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
+
+    currentChatId = new URLSearchParams(window.location.search).get('chatId');
+
+    // Button event listeners
+    thumbsUpBtn.onclick = () => {
+        const isSelected = thumbsUpBtn.classList.contains('bg-green-600');
+
+        // Reset both buttons
+        thumbsUpBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'rounded-full');
+        thumbsDownBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'rounded-full');
+        thumbsDownBtn.classList.add('hover:bg-red-100');
+
+        if (!isSelected) {
+            // Activate thumbs up
+            thumbsUpBtn.classList.add('bg-green-600', 'hover:bg-green-700', 'rounded-full');
+            thumbsUpBtn.classList.remove('hover:bg-green-100');
+
+            // Store feedback
+            storeFeedback(messageId, 'up');
+        } else {
+            // Reset hover if unselected
+            thumbsUpBtn.classList.add('hover:bg-green-100');
+
+            // Store feedback
+            storeFeedback(messageId, null);
+
+            // Set feedback banner to hidden
+            const banner = document.getElementById('feedback-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+        }
+    };
+
+    thumbsDownBtn.onclick = () => {
+        const isSelected = thumbsDownBtn.classList.contains('bg-red-600');
+
+        // Reset both buttons
+        thumbsDownBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'rounded-full');
+        thumbsUpBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'rounded-full');
+        thumbsUpBtn.classList.add('hover:bg-green-100');
+
+        if (!isSelected) {
+            // Activate thumbs down
+            thumbsDownBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'rounded-full');
+            thumbsDownBtn.classList.remove('hover:bg-red-100');
+
+            // Store feedback
+            storeFeedback(messageId, 'down');
+        } else {
+            // Reset hover if unselected
+            thumbsDownBtn.classList.add('hover:bg-red-100');
+
+            // Store feedback
+            storeFeedback(messageId, null);
+
+            // Set feedback banner to hidden
+            const banner = document.getElementById('feedback-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+        }
+    };
+
+    // Append buttons
+    buttonRow.appendChild(thumbsUpBtn);
+    buttonRow.appendChild(thumbsDownBtn);
+    buttonRow.appendChild(explainBtn);
+    buttonRow.appendChild(examplesBtn);
+    newMessageBubble.appendChild(buttonRow);
+
+    // Finalize and attach to DOM
     newMessageAlignment.appendChild(newMessageBubble);
     chatlocationDiv.appendChild(newMessageAlignment);
 
     scrollToBottom();
 }
 
+function storeFeedback(messageId, feedback=null) {
+    // Ask the user if they'd like to add a comment
+    if (feedback) {
+        showFeedbackBanner(messageId);
+        fetch('../backend/api/feedback.php', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messageId: messageId,
+                feedbackRating: feedback,
+                feedbackExplanation: null // Initially set to null, will be updated if user adds a comment
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Feedback stored successfully!");
+            } else {
+                console.error("Error storing feedback:", data.message);
+            }
+        })
+        .catch(err => {
+            console.error("Error storing feedback:", err);
+        });
+    } else {
+        // Delete feedback
+        console.log("Removing feedback for messageId:", messageId);
+        fetch('../backend/api/feedback.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messageId: messageId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Feedback removed successfully!");
+            } else {
+                console.error("Error removing feedback:", data.message);
+            }
+        })
+        .catch(err => {
+            console.error("Error removing feedback:", err);
+        });
+    }
+}
+
+function showFeedbackBanner(messageId) {
+    const banner = document.getElementById('feedback-banner');
+    const commentBtn = document.getElementById('add-comment-btn');
+
+    if (!banner || !commentBtn) return;
+
+    banner.classList.remove('hidden');
+
+    const timeout = setTimeout(() => {
+        banner.classList.add('hidden');
+    }, 10000); // 10 seconds
+
+    commentBtn.onclick = () => {
+        clearTimeout(timeout); // prevent auto-hide if clicked
+        const explanation = prompt("Enter your comment (optional):");
+        banner.classList.add('hidden');
+
+        if (explanation) {
+            fetch('../backend/api/feedback.php', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messageId: messageId,
+                    feedbackRating: null, // Do not change rating
+                    feedbackExplanation: explanation
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log("Comment saved!");
+                }
+            })
+            .catch(err => console.error("Error saving comment:", err));
+        }
+    };
+}
+
+
 // Text area expands with text when typed
 document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('student-question');
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
-
-    // Global variables defined in PHP
-    // console.log(currentCourseName); // Should show course name in browser console
-    // console.log(currentChatId);     // Should show chatId
 
     if (textarea) {
         function autoResizeTextarea() {
@@ -252,16 +438,82 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initial resize in case there's pre-filled content
         autoResizeTextarea();
 
-    // Enter to send, Shift+Enter for new line
-    textarea.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Prevent default new line
-            askQuestion(currentCourseName); // Submit question to AI Tutor
-            textarea.value = ''; // Clear textarea after sending
-            autoResizeTextarea(); // Reset height
-        }
+        // Enter to send, Shift+Enter for new line
+        textarea.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent default new line
+                askQuestion(currentCourseName); // Submit question to AI Tutor
+                textarea.value = ''; // Clear textarea after sending
+                autoResizeTextarea(); // Reset height
+            }
+        });
+    }
+
+    // Thumbs up/down button logic for each AI response
+    const thumbsUpButtons = document.querySelectorAll('.thumbs-up');
+    const thumbsDownButtons = document.querySelectorAll('.thumbs-down');
+    const chatId = new URLSearchParams(window.location.search).get('chatId');
+
+    thumbsUpButtons.forEach((thumbsUpBtn, index) => {
+        const thumbsDownBtn = thumbsDownButtons[index];
+        const messageId = thumbsUpBtn.dataset.messageId;
+
+        thumbsUpBtn.addEventListener('click', () => {
+            const isSelected = thumbsUpBtn.classList.contains('bg-green-600');
+
+            // Reset both
+            thumbsUpBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'rounded-full');
+            thumbsDownBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'rounded-full');
+            thumbsDownBtn.classList.add('hover:bg-red-100');
+
+            if (!isSelected) {
+                thumbsUpBtn.classList.add('bg-green-600', 'hover:bg-green-700', 'rounded-full');
+                thumbsUpBtn.classList.remove('hover:bg-green-100');
+
+                // Store feedback
+                storeFeedback(messageId, 'up');
+            } else {
+                thumbsUpBtn.classList.add('hover:bg-green-100');
+
+                // Store feedback
+                storeFeedback(messageId, null);
+
+                // Set feedback banner to hidden
+                const banner = document.getElementById('feedback-banner');
+                if (banner) {
+                    banner.classList.add('hidden');
+                }
+            }
+        });
+
+        thumbsDownBtn.addEventListener('click', () => {
+            const isSelected = thumbsDownBtn.classList.contains('bg-red-600');
+
+            // Reset both
+            thumbsDownBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'rounded-full');
+            thumbsUpBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'rounded-full');
+            thumbsUpBtn.classList.add('hover:bg-green-100');
+
+            if (!isSelected) {
+                thumbsDownBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'rounded-full');
+                thumbsDownBtn.classList.remove('hover:bg-red-100');
+
+                // Store feedback
+                storeFeedback(messageId, 'down');
+            } else {
+                thumbsDownBtn.classList.add('hover:bg-red-100');
+
+                // Store feedback
+                storeFeedback(messageId, null);
+
+                // Set feedback banner to hidden
+                const banner = document.getElementById('feedback-banner');
+                if (banner) {
+                    banner.classList.add('hidden');
+                }
+            }
+        });
     });
-}
 });
 
 

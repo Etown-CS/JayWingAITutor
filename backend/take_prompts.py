@@ -296,6 +296,8 @@ def printTokens(response):
 
 
 def update_chat_logs(student_id, course_name, user_question, tutor_response, source_names):  
+    message_id = None
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     # Get userCoursesId for the student and course
@@ -312,11 +314,13 @@ def update_chat_logs(student_id, course_name, user_question, tutor_response, sou
         """
         cursor.execute(insert_query, (user_courses_id, user_question, tutor_response, source_names_str))
         conn.commit()
+        message_id = cursor.lastrowid
         print("Chat logs updated successfully.")
     else:
         print("No userCoursesId found for the given student and course.")
     cursor.close()
     conn.close()
+    return message_id
 
 
 # Function to generate GPT-4 response
@@ -376,10 +380,10 @@ def generate_gpt_response(user_id, course_name, user_question):
         tutor_response = response.choices[0].message.content
 
         # Update chat logs in database
-        update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
+        message_id = update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
 
         print(f"\n\nGenerated response: {tutor_response}")
-        return (tutor_response, list(document_names))
+        return (tutor_response, list(document_names), message_id)
 
     except Exception as e:
         return f"An error occurred: {str(e)}"

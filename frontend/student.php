@@ -111,6 +111,12 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
         Student Page
     </header>
+
+    <div id="feedback-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-blue-100 text-blue-800 px-4 py-2 rounded shadow hidden z-50 text-sm">
+        Thank you for your feedback!
+        <button id="add-comment-btn" class="ml-2 underline hover:text-blue-900">Add a comment?</button>
+    </div>
+
     <div id="my-content" class="right-collapsed flex flex-row flex-grow w-full mt-0 overflow-hidden">
         
         <!-- Left sidebar with chats list -->
@@ -254,7 +260,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         <div id="chat-location" class="sm:px-3 md:px-12 lg:px-24 xl:px-36 space-y-2">
                             <?php
                             $stmt = $connection->prepare("
-                                SELECT m.question, m.answer, m.sourceName
+                                SELECT m.messageId, m.question, m.answer, m.sourceName, m.feedbackRating
                                 FROM messages m
                                 JOIN user_courses uc ON uc.userCoursesId = m.userCoursesId
                                 WHERE uc.userCoursesId = ?
@@ -284,6 +290,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                             <div class="ai-message-content">
                                                 <?php echo $message['answer']; ?>
                                             </div>
+
                                             <?php if (!empty($message['sourceName'])): ?>
                                                 <div class="text-xs mt-1">
                                                     Source: 
@@ -311,9 +318,38 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                     ?>
                                                 </div>
                                             <?php endif; ?>
+                                            <!-- Feedback button row -->
+                                            <div class="flex gap-2 mt-2 text-xs text-gray-600">
+                                                <button class="thumbs-up px-2 py-1 text-xs rounded transition-colors duration-150 <?php 
+                                                    if ($message['feedbackRating'] === 'up') {
+                                                        echo 'bg-green-600 hover:bg-green-700 rounded-full text-white';
+                                                    } else {
+                                                        echo 'hover:bg-green-100';
+                                                    }
+                                                ?>"
+                                                title="This response was helpful"
+                                                data-message-id="<?php echo $message['messageId']; ?>">👍</button>
+
+                                                <button class="thumbs-down px-2 py-1 text-xs rounded transition-colors duration-150 <?php 
+                                                    if ($message['feedbackRating'] === 'down') {
+                                                        echo 'bg-red-600 hover:bg-red-700 rounded-full text-white';
+                                                    } else {
+                                                        echo 'hover:bg-red-100';
+                                                    }
+                                                ?>"
+                                                title="This response was not helpful"
+                                                data-message-id="<?php echo $message['messageId']; ?>">👎</button>
+
+                                                <button class="explain px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                                                        title="Get a deeper explanation">Explain</button>
+
+                                                <button class="examples px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                                                        title="Get more examples">Examples</button>
+                                            </div>
                                         </div>
                                     </div>
                                 <?php endif; ?>
+
                             <?php endwhile; ?>
                         </div>
                     </div>

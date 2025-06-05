@@ -7,15 +7,16 @@ const docsFolder = "docs"; // Folder to store files
 const tbodyclasses = document.getElementById('classesTable');
 const tbodyenrollments = document.getElementById('enrollmentsTable');
 
-const modal = new bootstrap.Modal(document.getElementById('editModal'));
+const classModal = new bootstrap.Modal(document.getElementById('editClassesModal'));
+const enrollmentModal = new bootstrap.Modal(document.getElementById('editEnrollmentsModal'));
 
-// ***** General JS *****
+// --------------------- General JavaScript ------------------------
 
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
     initializeSearchableDropdowns();
 
-    // When class-list or user-list dropdowns are closed
+    // When button dropdowns are closed
     document.querySelectorAll('.dropdown').forEach(dropdownEl => {
         dropdownEl.addEventListener('hidden.bs.dropdown', () => {
             // Clear search input
@@ -34,12 +35,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const classForm = document.getElementById('classForm');
     const enrollmentForm = document.getElementById('enrollmentForm');
-    const editForm = document.getElementById('editForm');
+    const editClassForm = document.getElementById('editClassForm');
+    const editEnrollmentForm = document.getElementById('editEnrollmentForm');
 
     // // Modify loaded files when a new course is selected
     // coursesDropdownUpload.addEventListener('change', loadExistingFiles);
 
-    // Add Course Form Handler
+    // Add Class Form Handler (Create Class)
     if (classForm) {
         classForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -64,8 +66,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     loadClasses();
                     reloadClassDropdowns();
                     this.reset();
-                    // Reset selected class text
-                    document.getElementById('selectedClassText').textContent = 'Select Class';
                 }
             });
         });
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadEnrollments();
 
-    // Add Enrollment Form Handler
+    // Add Enrollment Form Handler (Create Enrollment)
     if (enrollmentForm) {
         enrollmentForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -104,9 +104,38 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Edit Form Handler
-    if (editForm) {
-        editForm.addEventListener('submit', function(e) {
+    // Edit Class Form Handler
+    if (editClassForm) {
+        editClassForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const data = {
+                courseId: document.getElementById('edit_course_id').value,
+                name: document.getElementById('edit_class_name').value,
+                courseCode: document.getElementById('edit_course_code').value,
+                description: document.getElementById('edit_class_description').value
+            };
+            
+            fetch('../backend/api/update_class.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadClasses();
+                    classModal.hide();
+                }
+            });
+        });
+    }
+
+    // Edit Enrollment Form Handler
+    if (editEnrollmentForm) {
+        editEnrollmentForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const data = {
@@ -127,14 +156,16 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (data.success) {
                     loadEnrollments();
-                    modal.hide();
+                    enrollmentModal.hide();
                 }
             });
         });
     }
 });
-// ***** Class Management JS *****
 
+// --------------------- Class and Enrollment Management JavaScript ------------------------
+
+// Load Classes
 function loadClasses() {
     fetch('../backend/api/get_all_classes.php')
         .then(response => response.json())
@@ -156,7 +187,11 @@ function loadClasses() {
                             <td>${classItem.courseCode || ''}</td>
                             <td>${classItem.description || ''}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary m-0" onclick="editClass(${JSON.stringify(classItem)})">
+                                <button class="btn btn-sm btn-primary m-0 edit-class-btn"
+                                    data-class-id="${classItem.id}"
+                                    data-class-name="${classItem.name}"
+                                    data-course-code="${classItem.courseCode || ''}"
+                                    data-class-description="${classItem.description || ''}">
                                     Edit
                                 </button>
                                 <button class="btn btn-sm btn-danger m-0" onclick="deleteClass(${classItem.id})">
@@ -175,28 +210,7 @@ function loadClasses() {
         .catch(error => console.error('Error:', error));
 }
 
-function deleteClass(classId) {
-    if (confirm('Are you sure? This will also delete all enrollments for this class.')) {
-        fetch('../backend/api/delete_class.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: classId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {                
-                loadClasses();
-                reloadClassDropdowns();
-                loadEnrollments();
-            }
-        });
-    }
-}
-
-// ***** Enrollment Management JS *****
-
+// Load Enrollments
 function loadEnrollments() {
     fetch('../backend/api/get_classes.php')
         .then(response => response.json())
@@ -213,6 +227,7 @@ function loadEnrollments() {
                 if (Array.isArray(userCourses)) {
                     userCourses.forEach(userCourse => {
                         const tr = document.createElement('tr');
+                        // data-role="${userCourse.roleOfClass || ''}"
                         tr.innerHTML = `
                         <td>${userCourse.name}</td>
                         <td>${userCourse.username}</td>
@@ -235,22 +250,21 @@ function loadEnrollments() {
                     });
                 }
             }
-            // data-role="${userCourse.roleOfClass || ''}">
         })
         .catch(error => console.error('Error:', error));
 }
 
 // Edit Class/Enrollment
 document.addEventListener('click', function (e) {
-    // if (e.target.classList.contains('edit-enrollment-btn')) {
-    //     const btn = e.target;
-    //     document.getElementById('edit_enrollment_id').value = btn.dataset.usercourseId;
-    //     document.getElementById('edit_class_id').value = btn.dataset.courseId;
-    //     document.getElementById('edit_user_id').value = btn.dataset.userId;
-    //     // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
+    if (e.target.classList.contains('edit-class-btn')) {
+        const btn = e.target;
+        document.getElementById('edit_course_id').value = btn.dataset.classId;
+        document.getElementById('edit_class_name').value = btn.dataset.className;
+        document.getElementById('edit_course_code').value = btn.dataset.courseCode || '';
+        document.getElementById('edit_class_description').value = btn.dataset.classDescription || '';
 
-    //     modal.show();
-    // }
+        classModal.show();
+    }
     
     if (e.target.classList.contains('edit-enrollment-btn')) {
         const btn = e.target;
@@ -259,14 +273,33 @@ document.addEventListener('click', function (e) {
         document.getElementById('edit_user_id').value = btn.dataset.userId;
         // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
 
-        document.getElementById('edit_class_id').value = btn.dataset.courseId;
-        document.getElementById('edit_user_id').value = btn.dataset.userId;
         document.getElementById('selectedEditClassText').textContent = btn.dataset.usercourseName;
         document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
 
-        modal.show();
+        enrollmentModal.show();
     }
 });
+
+// Delete Class
+function deleteClass(classId) {
+    if (confirm('Are you sure? This will also delete all enrollments for this class.')) {
+        fetch('../backend/api/delete_class.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: classId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {                
+                loadClasses();
+                reloadClassDropdowns();
+                loadEnrollments();
+            }
+        });
+    }
+}
 
 // Delete Enrollment
 function deleteEnrollment(enrollmentId) {
@@ -287,7 +320,7 @@ function deleteEnrollment(enrollmentId) {
     }
 }
 
-// ***** Dropdown Management JS *****
+// --------------------- Dropdown Management JavaScript ------------------------
 
 function initializeSearchableDropdowns() {
     // re-query these now that the DOM is ready
@@ -411,6 +444,7 @@ function initializeSearchableDropdowns() {
     }
 }
 
+// Reload Class Dropdowns
 function reloadClassDropdowns() {
     fetch('../backend/api/get_all_classes.php')
         .then(response => response.json())
@@ -437,6 +471,7 @@ function reloadClassDropdowns() {
                 }
             }
 
+            // Update dropdown menus
             const classEditDropdown = document.querySelector('.class-edit-list');
             if (classEditDropdown) {
                 classEditDropdown.innerHTML = '';
@@ -470,11 +505,8 @@ function reloadClassDropdowns() {
         });
 }
 
-// ***** Modal Management JS *****
 
-
-
-// ***** File Management JS *****
+// --------------------- File Management JavaScript ------------------------
 
 // // Handle file input
 // fileInput.addEventListener('change', handleFiles);

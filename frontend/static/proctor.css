@@ -1,4 +1,4 @@
-/* Body and Global Settings */
+/*--------------------- Body and Global Settings ------------------------*/
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -22,6 +22,7 @@ header, footer {
     padding: 20px;
 }
 
+/*--------------------- Button Dropdown Settings ------------------------*/
 .dropdown {
     border: none;
     background: transparent;
@@ -48,25 +49,35 @@ header, footer {
     transition: box-shadow .15s ease-in-out;
 }
 
-/* Hide the default Bootstrap dropdown arrow for these specific buttons */
+/* Trim ends of text in Dropdown Button span */
+.dropdown > button span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 90%;
+}
+
+/* Hide default Bootstrap dropdown arrow for Dropdown Buttons */
 .dropdown > button.dropdown-toggle::after {
     display: none;
 }
 
-/* Styles for when the button is focused (e.g., clicked or tabbed to) */
+/* Dropdown Button Focus Style */
 .dropdown > button:focus {
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* The blue glowing effect */
     border-color: #86b7fe !important;
 }
 
-/* Styles for when the button is active (e.g., held down) */
+/* Dropdown Button Active Style */
 .dropdown > button:active {
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Apply blue glow on active */
     border-color: #86b7fe !important;
 }
 
+/* Dropdown Button Hover Style */
 .dropdown-item:hover {
     background-color: #0b5ed7;
     color: white;
@@ -77,19 +88,18 @@ header, footer {
   overflow-x: hidden;
 }
 
-/* Make each item a single line, hide overflow, and show “…” */
+/* Trim ends of text in Dropdown Button dropdown */
 .dropdown-item {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* TABLE STYLING */
-
+/*--------------------- Table Settings ------------------------*/
 /* Ensure the table honors the column widths */
 #enrollmentsTableConfig {
-    table-layout: fixed; /* This is key for precise column width control */
-    width: 100%; /* Ensure the table takes full available width */
+    table-layout: fixed;
+    width: 100%;
 }
 
 #enrollmentsTableConfig th:nth-child(1),
@@ -114,8 +124,8 @@ header, footer {
 
 
 #classesTableConfig {
-    table-layout: fixed; /* This is key for precise column width control */
-    width: 100%; /* Ensure the table takes full available width */
+    table-layout: fixed; 
+    width: 100%;
 }
 
 #classesTableConfig th:nth-child(1),
@@ -139,8 +149,7 @@ header, footer {
 }
 
 
-/* END TABLE STYLING */
-
+/*--------------------- Other Settings ------------------------*/
 /* Add Course button styling */
 .add-course-btn {
     padding: 8px 12px;

@@ -102,9 +102,13 @@ def construct_initial_prompt(userId, courseName):
     response_length, interest = result
     print(f"Response Length: {response_length}, Interest: {interest}")
 
+    # Make sure both response_length and interest are lowercase
+    response_length = response_length.lower() if response_length else "average"
+    interest = interest.lower() if interest else None
+
     # Average does not modify the prompt
-    if response_length != "Average":
-        length_component = f"- Provide {response_length.lower()} responses."
+    if response_length != "average":
+        length_component = f"- The student has requested that you provide {response_length.lower()} responses to help them learn."
     else:
         length_component = ""
 
@@ -301,7 +305,6 @@ def update_chat_logs(student_id, course_name, user_question, tutor_response, sou
         # Create names string
         source_names_str = ", ".join(source_names)
         print("Source names string:", source_names_str)
-        user_courses_id = user_courses_id[0]
         # Insert the new message into the messages table
         insert_query = """
             INSERT INTO messages (userCoursesId, question, answer, sourceName)

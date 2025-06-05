@@ -284,22 +284,6 @@ if (toggleBtn) {
     });
 }
 
-// Right sidebar toggle button logic
-// Right sidebar toggle logic
-const rightSidebar = document.getElementById('right-sidebar');
-const toggleRightBtn = document.getElementById('toggle-right-sidebar');
-
-if (toggleRightBtn) {
-    toggleRightBtn.addEventListener('click', () => {
-        console.log("Right sidebar toggle clicked!");
-        rightSidebar.classList.toggle('collapsed');
-        content.classList.toggle('right-collapsed');
-        console.log("Right Sidebar classes:", rightSidebar.classList);
-        console.log("Main content layout:", content.classList);
-    });
-}
-
-
 // Archive button logic
 const archiveModal = document.getElementById('archive-modal');
 const closeModalBtn = document.getElementById('close-archive-modal');
@@ -404,6 +388,56 @@ archiveModal.addEventListener('click', (e) => {
     }
 });
 
+// Right sidebar toggle logic
+const rightSidebar = document.getElementById('right-sidebar');
+const toggleRightBtn = document.getElementById('toggle-right-sidebar');
+
+if (toggleRightBtn) {
+    toggleRightBtn.addEventListener('click', () => {
+        console.log("Right sidebar toggle clicked!");
+        rightSidebar.classList.toggle('collapsed');
+        content.classList.toggle('right-collapsed');
+        console.log("Right Sidebar classes:", rightSidebar.classList);
+        console.log("Main content layout:", content.classList);
+    });
+}
+
+// Right sidebar save button logic
+saveBtn = document.getElementById('save-changes-button');
+responseLength = document.getElementById('response-length');
+interestInput = document.getElementById('interest-input');
+
+if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+        console.log("Save button clicked!");
+        console.log("Response Length:", responseLength.value);
+        console.log("Interest Input:", interestInput.value);
+        urlParams = new URLSearchParams(window.location.search);
+        fetch('../backend/api/settings.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'saveSettings',
+                responseLength: responseLength.value,
+                interestInput: interestInput.value,
+                chatId: urlParams.get('chatId') // Get chatId from URL
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Settings saved successfully!");
+            } else {
+                alert("Error saving settings: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An unexpected error occurred while saving settings.");
+        });
+    });
+}
+
 
 // Change the way different courses are sorted
 document.getElementById('sort-by-btn').addEventListener('change', function () {
@@ -426,6 +460,36 @@ window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const selectedSort = urlParams.get('sortBy') || 'sortRecent';
     document.getElementById('sort-by-btn').value = selectedSort;
+
+    const chatId = new URLSearchParams(window.location.search).get('chatId');
+    if (!chatId) return;
+
+    fetch('../backend/api/settings.php?action=getSettings&chatId=' + encodeURIComponent(chatId), {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.settings) {
+            const { responseLength, interest } = data.settings;
+
+            const responseSelect = document.getElementById('response-length');
+            const interestField = document.getElementById('interest-input');
+
+            if (responseSelect && responseLength) {
+                responseSelect.value = responseLength;
+            } else if (responseSelect) {
+                responseSelect.value = 'Average'; // Default value if not set
+            }
+
+            if (interestField && interest !== null) {
+                interestField.value = interest;
+            }
+        }
+    })
+    .catch(err => {
+        console.error("Failed to load settings:", err);
+    });
 });
 
 function adjustConversationPadding() {

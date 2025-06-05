@@ -357,9 +357,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         <!-- Response Length Selector -->
                         <label for="response-length" class="text-sm text-gray-700 block mb-1">Response Length</label>
                         <select id="response-length" class="form-select w-full bg-primary text-white mb-3">
-                            <option value="short">Short</option>
-                            <option value="average" selected>Average</option>
-                            <option value="detailed">Detailed</option>
+                            <option value="Short">Short</option>
+                            <option value="Average" selected>Average</option>
+                            <option value="Detailed">Detailed</option>
                         </select>
 
                         <!-- Interest Input -->
@@ -378,7 +378,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             placeholder="e.g. sports, tech, history"
                             maxlength="100"
                         />
-
 
                         <!-- Save Changes Button -->
                         <button

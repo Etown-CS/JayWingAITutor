@@ -340,13 +340,18 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                 title="This response was not helpful"
                                                 data-message-id="<?php echo $message['messageId']; ?>">👎</button>
 
-                                                <button class="explain px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                                                        title="Get a deeper explanation"
-                                                        data-message-id="<?php echo $message['messageId']; ?>">Explain</button>
+                                                <button class="simplify px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                                                        title="Simplify this response"
+                                                        data-message-id="<?php echo $message['messageId']; ?>">Simplify</button>
 
                                                 <button class="examples px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
                                                         title="Get more examples"
                                                         data-message-id="<?php echo $message['messageId']; ?>">Examples</button>
+                                                
+                                                <button class="explain px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                                                        title="Get a deeper explanation"
+                                                        data-message-id="<?php echo $message['messageId']; ?>">Explain</button>
+                                                
                                             </div>
                                         </div>
                                     </div>

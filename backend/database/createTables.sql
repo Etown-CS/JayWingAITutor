@@ -17,7 +17,7 @@ CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     filepath VARCHAR(100),
-    courseCode VARCHAR(6),
+    courseCode VARCHAR(6) UNIQUE,
     description TEXT
 );
 

@@ -3,8 +3,9 @@ const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
 
 // Predetermined prompts
-const explainPrompt = "Could you explain your answer to the following question in more detail: ";
-const examplesPrompt = "Could you provide more examples related to the following question: ";
+const simplifyPrompt = "Explain this in simpler terms so a beginner can understand. Avoid jargon and break it down step by step if needed: ";
+const explainPrompt = "Explain this in more depth, going beyond the surface level details. Explore the reasoning behind this: ";
+const examplesPrompt = "Give two or three clear, concise examples to illustrate this concept. Use simple language and varied scenarios if possible. Make the examples real-world relevant and related to my interests (if available): ";
 
 window.onload = scrollToBottom();
 
@@ -314,15 +315,20 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
     thumbsDownBtn.title = "This response was not helpful";
     thumbsDownBtn.className = "px-2 py-1 text-xs rounded hover:bg-red-100 transition-colors duration-150";
 
-    const explainBtn = document.createElement('button');
-    explainBtn.textContent = "Explain";
-    explainBtn.title = "Get a deeper explanation";
-    explainBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
+    const simplifyBtn = document.createElement('button');
+    simplifyBtn.textContent = "Simplify";
+    simplifyBtn.title = "Simplify this response";
+    simplifyBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
 
     const examplesBtn = document.createElement('button');
     examplesBtn.textContent = "Examples";
     examplesBtn.title = "Get more examples";
     examplesBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
+
+    const explainBtn = document.createElement('button');
+    explainBtn.textContent = "Explain";
+    explainBtn.title = "Get a deeper explanation";
+    explainBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
 
     // Button event listeners
     thumbsUpBtn.onclick = () => {
@@ -385,26 +391,28 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
         }
     };
 
-    // TODO: Test the .js created explain button works properly
-    explainBtn.onclick = async () => {
+    simplifyBtn.onclick = async () => {
         try {
             const messageData = await getMessageContent(messageId);
             [, , question, answer] = messageData;
-            
-            // Check if this question is the result of a previous explain request
-            if (question.startsWith(explainPrompt)) {
+            // Check if this question is the result of a previous simplify request
+            if (question.startsWith(simplifyPrompt)) {
                 // If it is, extract the original question
-                const originalQuestion = question.slice(explainPrompt.length);
-                question = originalQuestion; // Use the original question for the explain request
+                const originalQuestion = question.slice(simplifyPrompt.length);
+                question = originalQuestion; // Use the original question for the simplify request
             } else if (question.startsWith(examplesPrompt)) {
                 // If it is, extract the original question
                 const originalQuestion = question.slice(examplesPrompt.length);
-                question = originalQuestion; // Use the original question for the explain request
+                question = originalQuestion; // Use the original question for the simplify request
+            } else if (question.startsWith(explainPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(explainPrompt.length);
+                question = originalQuestion; // Use the original question for the simplify request
             }
-            const explainQuestion = explainPrompt + question;
-            askPresetQuestion(selectedCourseName, explainQuestion, answer);
+            const simplifyQuestion = simplifyPrompt + question;
+            askPresetQuestion(selectedCourseName, simplifyQuestion, answer);
         } catch (error) {
-            console.error("Error handling explain click:", error);
+            console.error("Error handling simplify click:", error);
         }
     };
 
@@ -421,6 +429,10 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
                 // If it is, extract the original question
                 const originalQuestion = question.slice(explainPrompt.length);
                 question = originalQuestion; // Use the original question for the examples request
+            } else if (question.startsWith(simplifyPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(simplifyPrompt.length);
+                question = originalQuestion; // Use the original question for the examples request
             }
             const examplesQuestion = examplesPrompt + question;
             askPresetQuestion(selectedCourseName, examplesQuestion, answer);
@@ -429,12 +441,39 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
         }
     };
 
+    explainBtn.onclick = async () => {
+        try {
+            const messageData = await getMessageContent(messageId);
+            [, , question, answer] = messageData;
+            
+            // Check if this question is the result of a previous explain request
+            if (question.startsWith(explainPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(explainPrompt.length);
+                question = originalQuestion; // Use the original question for the explain request
+            } else if (question.startsWith(examplesPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(examplesPrompt.length);
+                question = originalQuestion; // Use the original question for the explain request
+            } else if (question.startsWith(simplifyPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(simplifyPrompt.length);
+                question = originalQuestion; // Use the original question for the explain request
+            }
+            const explainQuestion = explainPrompt + question;
+            askPresetQuestion(selectedCourseName, explainQuestion, answer);
+        } catch (error) {
+            console.error("Error handling explain click:", error);
+        }
+    };
+
 
     // Append buttons
     buttonRow.appendChild(thumbsUpBtn);
     buttonRow.appendChild(thumbsDownBtn);
-    buttonRow.appendChild(explainBtn);
+    buttonRow.appendChild(simplifyBtn);
     buttonRow.appendChild(examplesBtn);
+    buttonRow.appendChild(explainBtn);
     newMessageBubble.appendChild(buttonRow);
 
     // Finalize and attach to DOM
@@ -635,32 +674,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Explain button logic
-    const explainButtons = document.querySelectorAll('.explain');
-    explainButtons.forEach(button => {
+    // Simplify button logic
+    const simplifyButtons = document.querySelectorAll('.simplify');
+    simplifyButtons.forEach(button => {
         button.addEventListener('click', async () => {
             const messageId = button.dataset.messageId;
-
             try {
                 const messageData = await getMessageContent(messageId);
                 [, , question, answer] = messageData;
-                
-
-                // Check if this question is the result of a previous predetermined prompt request
-                if (question.startsWith(explainPrompt)) {
+                // Check if this question is the result of a previous simplify request
+                if (question.startsWith(simplifyPrompt)) {
                     // If it is, extract the original question
-                    const originalQuestion = question.slice(explainPrompt.length);
-                    question = originalQuestion; // Use the original question for the explain request
+                    const originalQuestion = question.slice(simplifyPrompt.length);
+                    question = originalQuestion; // Use the original question for the simplify request
                 } else if (question.startsWith(examplesPrompt)) {
                     // If it is, extract the original question
                     const originalQuestion = question.slice(examplesPrompt.length);
-                    question = originalQuestion; // Use the original question for the explain request
+                    question = originalQuestion; // Use the original question for the simplify request
+                } else if (question.startsWith(explainPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(explainPrompt.length);
+                    question = originalQuestion; // Use the original question for the simplify request
                 }
-
-                const explainQuestion = explainPrompt + question;
-                askPresetQuestion(currentCourseName, explainQuestion, answer);
+                const simplifyQuestion = simplifyPrompt + question;
+                askPresetQuestion(currentCourseName, simplifyQuestion, answer);
             } catch (error) {
-                console.error("Error handling explain click:", error);
+                console.error("Error handling simplify click:", error);
             }
         });
     });
@@ -684,6 +723,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // If it is, extract the original question
                     const originalQuestion = question.slice(explainPrompt.length);
                     question = originalQuestion; // Use the original question for the examples request
+                } else if (question.startsWith(simplifyPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(simplifyPrompt.length);
+                    question = originalQuestion; // Use the original question for the examples request
                 }
 
                 const examplesQuestion = examplesPrompt + question;
@@ -693,6 +736,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Explain button logic
+    const explainButtons = document.querySelectorAll('.explain');
+    explainButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const messageId = button.dataset.messageId;
+
+            try {
+                const messageData = await getMessageContent(messageId);
+                [, , question, answer] = messageData;
+                
+                // Check if this question is the result of a previous predetermined prompt request
+                if (question.startsWith(explainPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(explainPrompt.length);
+                    question = originalQuestion; // Use the original question for the explain request
+                } else if (question.startsWith(examplesPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(examplesPrompt.length);
+                    question = originalQuestion; // Use the original question for the explain request
+                } else if (question.startsWith(simplifyPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(simplifyPrompt.length);
+                    question = originalQuestion; // Use the original question for the explain request
+                }
+
+                const explainQuestion = explainPrompt + question;
+                askPresetQuestion(currentCourseName, explainQuestion, answer);
+            } catch (error) {
+                console.error("Error handling explain click:", error);
+            }
+        });
+    });
+
 });
 
 async function getMessageContent(messageId) {

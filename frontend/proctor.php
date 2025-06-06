@@ -69,7 +69,7 @@ $users = $connection->query("SELECT * FROM users");
 
     <div class="flex flex-grow w-full mt-0 overflow-hidden">
 
-        <!-- Sidebar with Proctor Management Links -->
+<!-- Sidebar with Proctor Management Links -->
         <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full max-w-xs w-full overflow-hidden">
             <div id="sidebar-options" class="space-y-2 flex-grow p-3 overflow-y-auto overflow-x-hidden sidebar-content-hide p-sidebar-noshow">
                 <div id="chat-div" class="d-grid gap-2">
@@ -102,7 +102,7 @@ $users = $connection->query("SELECT * FROM users");
                         <!-- TODO: Dashboard Page -->
                     </div>
 
-                <!-- Class Management Section -->
+<!-- Class Management Section -->
                 <?php elseif($currentPage == "Manage Classes") : ?>
                     <div class="m-4">
                         <form id="classForm">
@@ -146,7 +146,7 @@ $users = $connection->query("SELECT * FROM users");
                         </div>
                     </div>
 
-                <!-- Enrollment Management Section -->
+<!-- Enrollment Management Section -->
                 <?php elseif($currentPage == "Manage Enrollments") : ?>
                     <div class="m-4">
                         <form id="enrollmentForm">
@@ -183,7 +183,9 @@ $users = $connection->query("SELECT * FROM users");
                                 </div>
                                 <!-- User Dropdown -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="user_id" class="form-label">User</label>
+                                    <label for="user_id" class="form-label">
+                                        User <span class="text-danger">*</span>
+                                    </label>
                                     <div class="dropdown">
                                         <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             <span id="selectedUserText">Select User</span>
@@ -203,7 +205,9 @@ $users = $connection->query("SELECT * FROM users");
                                 </div>
                                 <!-- Class Role Dropdown -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="roleOfClass" class="form-label">Role (JayWing)</label>
+                                    <label for="roleOfClass" class="form-label">
+                                        Role (JayWing)
+                                    </label>
                                     <select class="form-select" id="roleOfClass" name="roleOfClass" required>
                                         <option value="tutor">Tutor</option>
                                         <option value="tutee">Tutee</option>
@@ -231,16 +235,68 @@ $users = $connection->query("SELECT * FROM users");
                         </div>
                     </div>
 
-                <!-- Proctor Note Management Section -->
+<!-- Proctor Note Management Section -->
                 <?php elseif($currentPage == "Manage Proctor Notes") : ?>
-                    <div>
-                        <!-- TODO: Proctor Notes -->
+                    <div class="m-4">
+                        <form id="proctorForm">
+                            <div class="row">
+                                <!-- Class dropdown -->
+                                <!-- <div class="col-md-4 mb-3">
+                                    <label for="courses-dropdown-upload" class="form-label">Select Course:</label>
+                                    <select class="form-select bg-dark text-white" id="courses-dropdown-upload">
+                                    </select>
+                                </div> -->
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="notes_class_id" class="form-label">
+                                        Class Name <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="dropdown">
+                                        <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span id="selectedNotesClassText">Select Class</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" id="classNotesDropdown">
+                                            <input
+                                                type="text"
+                                                class="form-control mb-2"
+                                                id="classNotesSearchInput"
+                                                placeholder="Search classes..."
+                                            />
+                                            <div class="class-notes-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                                <?php while($class = $classes->fetch_assoc()): ?>
+                                                    <div class="dropdown-item" data-value="<?= $class['id'] ?>">
+                                                        <?= htmlspecialchars($class['name']) ?> 
+                                                        <?php if (!empty($class['courseCode'])): ?>
+                                                            (<?= htmlspecialchars($class['courseCode']) ?>)
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endwhile; ?>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="notes_class_id" name="notes_class_id" required>
+                                    </div>
+                                </div>
+
+                                <!-- User input -->
+                                <div class="col-md-4 mb-3" id="file-upload-div">
+                                    <label class="form-label" for="file-input">Upload Documents</label>
+                                    <input type="file" class="form-control-file" id="file-input" multiple>
+                                </div>
+                            </div>
+
+                            <!-- Preview Section -->
+                            <div id="preview-div">
+                                <!-- Thumbnails of uploaded files will appear here -->
+                            </div>
+                        </form>
                     </div>
 
                 <?php endif; ?>
             </div>
         </div>
     </div>
+
+<!-- Modals -->
 
     <!-- Edit Classes Modal -->
     <div class="modal fade" id="editClassesModal" tabindex="-1">
@@ -359,7 +415,6 @@ $users = $connection->query("SELECT * FROM users");
             </div>
         </div>
     </div>
-
 
     <!-- <footer>
         <p> 2024 AI Tutor Proctor Page</p>

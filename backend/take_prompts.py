@@ -336,7 +336,7 @@ def generate_gpt_response(user_id, course_name, user_question, originalAnswer=No
     Returns:
         tuple: A tuple containing the document names and the full response.
     """
-    print("Generating GPT-4 response...")
+    print("Generating GPT response...")
     try:
         # Construct the initial prompt with user-specific context
         initial_prompt = construct_initial_prompt(user_id, course_name)
@@ -344,8 +344,26 @@ def generate_gpt_response(user_id, course_name, user_question, originalAnswer=No
         # Initialize session chat history
         chat_history = get_recent_chat_history(user_id, course_name, ai_memory)
 
-        # Fetch similar documents from Pinecone
-        docs = get_docs(user_id, course_name, user_question)
+        # Check type of question --> Could be explain/examples button press
+        final_user_question = user_question
+        if originalAnswer:
+            # This implies that the user pressed a predetermined prompt button (e.g., "Explain" or "Examples")
+            print("Original answer provided, appending to question.")
+            final_user_question = f"{user_question} (Your original answer: {originalAnswer})"
+            
+            # Extract question components
+            questionComponents = user_question.split(":", 1)
+            questionType = questionComponents[0].strip() # Could potentially be used to determine which button was pressed without passing more information
+            originalQuestion = questionComponents[1].strip()
+            print(f"Predetermined prompt: {questionType}")
+            print(f"Original question: '{originalQuestion}'")
+
+            # Re-fetch similar documents from Pinecone using the original question
+            docs = get_docs(user_id, course_name, originalQuestion)
+        else:
+            # Normal user question --> No button press
+            # Fetch similar documents from Pinecone
+            docs = get_docs(user_id, course_name, user_question)
 
         # Create a context string from the documents and get source
         if not docs:
@@ -359,12 +377,9 @@ def generate_gpt_response(user_id, course_name, user_question, originalAnswer=No
             document_names = set(doc["document_name"] for doc in docs)
             source_info = f"Relevant documents: {', '.join(document_names)}"
 
-        final_user_question = user_question
-        if originalAnswer:
-            print("Original answer provided, appending to question.")
-            final_user_question = f"{user_question} (Your riginal answer: {originalAnswer})"
-        question = {"role": "user", "content": final_user_question}
 
+        question = {"role": "user", "content": final_user_question}
+        
         # Prepare messages for the OpenAI API
         messages = [
             initial_prompt,
@@ -387,7 +402,7 @@ def generate_gpt_response(user_id, course_name, user_question, originalAnswer=No
         # Update chat logs in database
         message_id = update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
 
-        print(f"\n\nGenerated response: {tutor_response}")
+        # print(f"\n\nGenerated response: {tutor_response}") # Uncomment for debugging
         return (tutor_response, list(document_names), message_id)
 
     except Exception as e:

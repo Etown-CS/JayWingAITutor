@@ -2,6 +2,10 @@
 const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
 
+// Predetermined prompts
+const explainPrompt = "Could you explain your answer to the following question in more detail: ";
+const examplesPrompt = "Could you provide more examples related to the following question: ";
+
 window.onload = scrollToBottom();
 
 function scrollToBottom() {
@@ -156,6 +160,23 @@ function askQuestion(selectedCourseName) {
 // Ask a preset question
 function askPresetQuestion(selectedCourseName, question, answer) {
     console.log("Asking preset question:", question);
+
+    // TODO: Formatting the question - Make the second part italic
+    // This is commented out because I was afraid of breaking more imporant functionality
+    // Split question on the first ":"
+    // const parts = question.split(/:(.+)/); // Regex to split on the first colon
+    // // Trim whitespace from both parts
+    // parts[0] = parts[0].trim();
+    // parts[1] = parts[1] ? parts[1].trim() : ""; // Handle case where there's no second part
+    // console.log("Part 1:", parts[0]);
+
+    // // Make second part italic
+    // if (parts[1]) {
+    //     parts[1] = `<em>${parts[1]}</em>`;
+    // }
+    // console.log("Part 2:", parts[1]);
+    // // Join parts back together
+    // question = parts.join(": ");
     updateConversationUser(question);
 
     typingIndicatorElement = addTypingIndicator();
@@ -206,6 +227,8 @@ function askPresetQuestion(selectedCourseName, question, answer) {
 
 
 function updateConversationUser(text) {
+    // Check for preset question
+
     const chatlocationDiv = document.getElementById('chat-location');
 
     const newMessageAlignment = document.createElement('div');
@@ -361,6 +384,51 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
             }
         }
     };
+
+    // TODO: Test the .js created explain button works properly
+    explainBtn.onclick = async () => {
+        try {
+            const messageData = await getMessageContent(messageId);
+            [, , question, answer] = messageData;
+            
+            // Check if this question is the result of a previous explain request
+            if (question.startsWith(explainPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(explainPrompt.length);
+                question = originalQuestion; // Use the original question for the explain request
+            } else if (question.startsWith(examplesPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(examplesPrompt.length);
+                question = originalQuestion; // Use the original question for the explain request
+            }
+            const explainQuestion = explainPrompt + question;
+            askPresetQuestion(selectedCourseName, explainQuestion, answer);
+        } catch (error) {
+            console.error("Error handling explain click:", error);
+        }
+    };
+
+    examplesBtn.onclick = async () => {
+        try {
+            const messageData = await getMessageContent(messageId);
+            [, , question, answer] = messageData;
+            // Check if this question is the result of a previous predetermined prompt request
+            if (question.startsWith(examplesPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(examplesPrompt.length);
+                question = originalQuestion; // Use the original question for the examples request
+            } else if (question.startsWith(explainPrompt)) {
+                // If it is, extract the original question
+                const originalQuestion = question.slice(explainPrompt.length);
+                question = originalQuestion; // Use the original question for the examples request
+            }
+            const examplesQuestion = examplesPrompt + question;
+            askPresetQuestion(selectedCourseName, examplesQuestion, answer);
+        } catch (error) {
+            console.error("Error handling examples click:", error);
+        }
+    };
+
 
     // Append buttons
     buttonRow.appendChild(thumbsUpBtn);
@@ -575,12 +643,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const messageData = await getMessageContent(messageId);
-                const [, , question, answer] = messageData;
+                [, , question, answer] = messageData;
+                
 
-                const explainQuestion = "Could you explain your answer to the following question in more detail: " + question;
+                // Check if this question is the result of a previous predetermined prompt request
+                if (question.startsWith(explainPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(explainPrompt.length);
+                    question = originalQuestion; // Use the original question for the explain request
+                } else if (question.startsWith(examplesPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(examplesPrompt.length);
+                    question = originalQuestion; // Use the original question for the explain request
+                }
+
+                const explainQuestion = explainPrompt + question;
                 askPresetQuestion(currentCourseName, explainQuestion, answer);
             } catch (error) {
                 console.error("Error handling explain click:", error);
+            }
+        });
+    });
+
+    // Examples button logic
+    const examplesButtons = document.querySelectorAll('.examples');
+    examplesButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const messageId = button.dataset.messageId;
+
+            try {
+                const messageData = await getMessageContent(messageId);
+                [, , question, answer] = messageData;
+
+                // Check if this question is the result of a previous examples request
+                if (question.startsWith(examplesPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(examplesPrompt.length);
+                    question = originalQuestion; // Use the original question for the examples request
+                } else if (question.startsWith(explainPrompt)) {
+                    // If it is, extract the original question
+                    const originalQuestion = question.slice(explainPrompt.length);
+                    question = originalQuestion; // Use the original question for the examples request
+                }
+
+                const examplesQuestion = examplesPrompt + question;
+                askPresetQuestion(currentCourseName, examplesQuestion, answer);
+            } catch (error) {
+                console.error("Error handling examples click:", error);
             }
         });
     });

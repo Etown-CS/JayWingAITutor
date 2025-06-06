@@ -222,13 +222,13 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         <!-- Small Archive Button -->
                         <div 
                             class="hover-child archive-icon-button absolute top-2 right-2 w-4 h-4 opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
+                            title="Archive this course"
                             onclick="archiveCourse(<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>)">
                         </div>
                     </div>
                     <?php endwhile; ?>
                 </div>
             </div>
-            <!-- Archive Button -->
             <!-- Horizontal Separator -->
             <hr class="border-t border-gray-300 mx-4 my-2">
 
@@ -341,10 +341,12 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                 data-message-id="<?php echo $message['messageId']; ?>">👎</button>
 
                                                 <button class="explain px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                                                        title="Get a deeper explanation">Explain</button>
+                                                        title="Get a deeper explanation"
+                                                        data-message-id="<?php echo $message['messageId']; ?>">Explain</button>
 
                                                 <button class="examples px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                                                        title="Get more examples">Examples</button>
+                                                        title="Get more examples"
+                                                        data-message-id="<?php echo $message['messageId']; ?>">Examples</button>
                                             </div>
                                         </div>
                                     </div>
@@ -403,7 +405,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             <label for="interest-input" class="text-sm text-gray-700">Your Interests</label>
                             <i
                                 class="fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-pointer"
-                                title="Used to personalize responses for this course."
+                                title="Used to personalize responses for this course. Consider entering your major, hobbies, or specific topics you enjoy."
                             ></i>
                         </div>
                         <!-- Input with max chars as 100 to match database -->

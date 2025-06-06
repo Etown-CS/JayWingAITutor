@@ -324,7 +324,7 @@ def update_chat_logs(student_id, course_name, user_question, tutor_response, sou
 
 
 # Function to generate GPT-4 response
-def generate_gpt_response(user_id, course_name, user_question):
+def generate_gpt_response(user_id, course_name, user_question, originalAnswer=None):
     """
     Generates a response from the GPT-4 model based on the user's question and course context.
 
@@ -332,6 +332,7 @@ def generate_gpt_response(user_id, course_name, user_question):
         student_id (str): The ID of the student.
         course_name (str): The name of the course.
         user_question (str): The user's question.
+        originalAnswer (str, optional): The original answer provided by the AI previously - only occurs if the user asks for a deeper explanation.
     Returns:
         tuple: A tuple containing the document names and the full response.
     """
@@ -358,7 +359,11 @@ def generate_gpt_response(user_id, course_name, user_question):
             document_names = set(doc["document_name"] for doc in docs)
             source_info = f"Relevant documents: {', '.join(document_names)}"
 
-        question = {"role": "user", "content": user_question}
+        final_user_question = user_question
+        if originalAnswer:
+            print("Original answer provided, appending to question.")
+            final_user_question = f"{user_question} (Your riginal answer: {originalAnswer})"
+        question = {"role": "user", "content": final_user_question}
 
         # Prepare messages for the OpenAI API
         messages = [

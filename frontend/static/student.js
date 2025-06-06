@@ -1,3 +1,4 @@
+// currentChatId is set in the HTML template - easy access here
 const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
 
@@ -102,7 +103,6 @@ function addTypingIndicator() {
     return typingDiv; // Return the reference for removal
 }
 
-// Existing question submission functionality
 let typingIndicatorElement = null;
 function askQuestion(selectedCourseName) {
     const question = document.getElementById('student-question').value;
@@ -152,6 +152,58 @@ function askQuestion(selectedCourseName) {
             }
         });
 };
+
+// Ask a preset question
+function askPresetQuestion(selectedCourseName, question, answer) {
+    console.log("Asking preset question:", question);
+    updateConversationUser(question);
+
+    typingIndicatorElement = addTypingIndicator();
+
+    fetch(`${FLASK_API}/ask-question`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': userId,
+            'X-User-Role': userRole, // defaults to 'student' in app.py
+            'X-Username': username
+        },
+        body: JSON.stringify({
+            question: question,
+            answer: answer,
+            courseName: selectedCourseName
+        }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove typing indicator
+                if (typingIndicatorElement) {
+                    typingIndicatorElement.remove();
+                    typingIndicatorElement = null;
+                }
+
+                // Update conversation with AI response
+                updateConversationAI(data.response, data.sourceName, selectedCourseName, data.messageId);
+            } else {
+                console.error("Error in response:", data.message);
+                // Remove typing indicator
+                if (typingIndicatorElement) {
+                    typingIndicatorElement.remove();
+                    typingIndicatorElement = null;
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            // Remove typing indicator
+            if (typingIndicatorElement) {
+                typingIndicatorElement.remove();
+                typingIndicatorElement = null;
+            }
+        });
+};
+
 
 function updateConversationUser(text) {
     const chatlocationDiv = document.getElementById('chat-location');
@@ -248,8 +300,6 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
     examplesBtn.textContent = "Examples";
     examplesBtn.title = "Get more examples";
     examplesBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
-
-    currentChatId = new URLSearchParams(window.location.search).get('chatId');
 
     // Button event listeners
     thumbsUpBtn.onclick = () => {
@@ -419,11 +469,12 @@ function showFeedbackBanner(messageId) {
 }
 
 
-// Text area expands with text when typed
+
 document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('student-question');
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
 
+    // Text area expands with text when typed
     if (textarea) {
         function autoResizeTextarea() {
             // Reset height to 'auto' to correctly calculate scrollHeight
@@ -449,6 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Response Buttons Row Logic
     // Thumbs up/down button logic for each AI response
     const thumbsUpButtons = document.querySelectorAll('.thumbs-up');
     const thumbsDownButtons = document.querySelectorAll('.thumbs-down');
@@ -514,7 +566,49 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Explain button logic
+    const explainButtons = document.querySelectorAll('.explain');
+    explainButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const messageId = button.dataset.messageId;
+
+            try {
+                const messageData = await getMessageContent(messageId);
+                const [, , question, answer] = messageData;
+
+                const explainQuestion = "Could you explain your answer to the following question in more detail: " + question;
+                askPresetQuestion(currentCourseName, explainQuestion, answer);
+            } catch (error) {
+                console.error("Error handling explain click:", error);
+            }
+        });
+    });
 });
+
+async function getMessageContent(messageId) {
+    try {
+        const response = await fetch(`../backend/api/messages.php?messageId=${encodeURIComponent(messageId)}`, {
+            method: 'getMessages',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const { userCoursesId, question, answer, timestamp, sourceName, feedbackRating, feedbackExplanation, feedbackTimestamp } = data.message;
+            return [messageId, userCoursesId, question, answer, timestamp, sourceName, feedbackRating, feedbackExplanation, feedbackTimestamp];
+        } else {
+            throw new Error(data.message || "Message fetch unsuccessful");
+        }
+    } catch (err) {
+        console.error("Error fetching message content:", err);
+        throw err;
+    }
+}
+
 
 
 

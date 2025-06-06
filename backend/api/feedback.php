@@ -118,3 +118,4 @@ switch ($method) {
         http_response_code(405);
         echo json_encode(['success' => false, 'message' => 'Method not allowed']);
 }
+?>

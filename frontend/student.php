@@ -374,6 +374,17 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                 rows="1"
                                 required
                             ></textarea>
+                            <!-- Send Button -->
+                            <button id="send-button" type="submit"
+                                class="p-0 m-0 bg-transparent transition-opacity duration-150"
+                            >
+                                <div class="w-10 h-10 flex items-center justify-center rounded-full
+                                            bg-white border-2 border-gray-800 text-gray-800 shadow-md
+                                            hover:bg-gray-800 hover:text-white hover:border-gray-800
+                                            transition-colors duration-200">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                            </button>
                         </div>
                         <div class="text-xs text-center text-gray-500 pb-2">AI Tutor can make mistakes. Chat is logged and viewable by teachers.</div>
                     </form>

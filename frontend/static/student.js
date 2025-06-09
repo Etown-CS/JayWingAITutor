@@ -48,19 +48,58 @@ function archiveCourse(userCoursesId) {
     });
 }
 
+function levenshtein(a, b) {
+    const matrix = Array.from({ length: a.length + 1 }, () =>
+        Array(b.length + 1).fill(0)
+    );
+
+    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,      // deletion
+                matrix[i][j - 1] + 1,      // insertion
+                matrix[i - 1][j - 1] + cost // substitution
+            );
+        }
+    }
+
+    return matrix[a.length][b.length];
+}
+
+function fuzzyIncludes(full, input) {
+    full = full.toLowerCase();
+    input = input.toLowerCase();
+
+    // If exact substring match, return true immediately
+    if (full.includes(input)) return true;
+
+    // Slide input window across full text
+    for (let i = 0; i <= full.length - input.length; i++) {
+        const chunk = full.slice(i, i + input.length);
+        const dist = levenshtein(chunk, input);
+        if (dist <= 1) return true; // Controls amount of typos allowed
+    }
+
+    return false;
+}
+
 
 function filterChats() {
     const query = document.getElementById('searchBar').value.toLowerCase();
-    const chatLinks = document.querySelectorAll('#chat-div a');
+    const chatCards = document.querySelectorAll('#chat-div .group');
     let anyVisible = false;
 
-    chatLinks.forEach(link => {
-        const text = link.querySelector('.font-medium')?.innerText.toLowerCase() || "";
-        if (text.includes(query)) {
-            link.style.display = 'block';
+    chatCards.forEach(card => {
+        const text = card.querySelector('.font-medium')?.innerText.toLowerCase() || "";
+        if (fuzzyIncludes(text, query)) {
+            card.style.display = 'block';
             anyVisible = true;
         } else {
-            link.style.display = 'none';
+            card.style.display = 'none';
         }
     });
 
@@ -580,6 +619,13 @@ function showFeedbackBanner(messageId) {
 document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('student-question');
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
+    const sendButton = document.getElementById('send-button');
+
+
+    // Prevent page refresh on form submission
+    document.getElementById('message-input').addEventListener('submit', (e) => {
+        e.preventDefault();
+    });
 
     // Text area expands with text when typed
     if (textarea) {
@@ -606,6 +652,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    sendButton.addEventListener('click', (event) => {
+        if (!textarea || textarea.value.trim() === '') {
+            return; // Do not send empty messages
+        }
+        event.preventDefault(); // Prevent default form submission
+        askQuestion(currentCourseName); // Submit question to AI Tutor
+        textarea.value = ''; // Clear textarea after sending
+        autoResizeTextarea(); // Reset height
+    });
 
     // Response Buttons Row Logic
     // Thumbs up/down button logic for each AI response

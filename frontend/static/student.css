@@ -294,3 +294,15 @@ textarea:focus {
 .hidden {
     display: none !important;
 }
+
+#send-button div {
+  background-color: white !important;
+  color: #1f2937 !important; /* Tailwind's gray-800 */
+  border-color: #1f2937 !important;
+}
+
+#send-button:hover div {
+  background-color: #1f2937 !important; /* Tailwind's gray-800 */
+  color: white !important;
+  border-color: #1f2937 !important;
+}

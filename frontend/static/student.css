@@ -54,7 +54,7 @@ body {
 #my-content {
     display: grid;
     /* Define initial grid columns explicitly here, instead of relying on Tailwind's grid-cols-4 */
-    grid-template-columns: 1fr 3fr; /* Sidebar (1 part) and Chat (3 parts) */
+    grid-template-columns: 350px 1fr 250px; /* Sidebar (1 part) and Chat (3 parts) */
     flex-grow: 1; /* Allows #my-content to take up all available vertical space */
     width: 100%; /* Ensures it spans the full width */
     margin-top: 0; /* Remove any top margin that might be causing a gap */
@@ -80,7 +80,7 @@ body {
 
 #my-content.collapsed-sidebar {
     /* When collapsed, set the grid to a fixed width for the sidebar and 1fr for chat */
-    grid-template-columns: 60px 1fr !important; /* Force sidebar to 60px */
+    grid-template-columns: 60px 1fr 250px !important; /* Force sidebar to 60px */
 }
 
 #sidebar.collapsed {
@@ -109,6 +109,28 @@ body {
     padding-right: 0;
     justify-content: center; /* Center content (the button) in the collapsed state */
 }
+
+/* Right Sidebar (added later) */
+/* When right sidebar is collapsed */
+#right-sidebar.collapsed {
+    width: 60px !important;
+}
+
+/* When right sidebar is collapsed, reduce the grid layout */
+#my-content.right-collapsed {
+    grid-template-columns: 350px 1fr 60px !important;
+}
+
+/* Hide content inside the right sidebar */
+#right-sidebar.collapsed .right-sidebar-content-hide {
+    display: none !important;
+}
+
+/* When both sidebars are collapsed */
+#my-content.collapsed-sidebar.right-collapsed {
+    grid-template-columns: 60px 1fr 60px !important;
+}
+
 
 /* --- Existing Styles (keep as is) --- */
 textarea {
@@ -189,6 +211,10 @@ textarea:focus {
     padding-bottom: 0.5rem;
 }
 
+.py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
 /* Duplicate rounded-lg in original file, keeping for context but only one needed */
 .rounded-lg {
     border-radius: 0.5rem;
@@ -211,4 +237,72 @@ textarea:focus {
 }
 .mt-auto {
     margin-top: auto;
+}
+.ai-message-content ul {
+    list-style-type: disc;    /* Or circle/square */
+    margin-left: 1.5rem;      /* Add left margin for indentation */
+    padding-left: 0.5rem;     /* Optional: adjust padding */
+}
+
+.ai-message-content li {
+    margin-bottom: 0.5rem;    /* Optional: control spacing between items */
+}
+
+.relative:hover .hover-child {
+    opacity: 1 !important;
+}
+
+.hover\:bg-gray-250:hover {
+    background-color: #d8dbe3;
+}
+
+.archive-icon {
+    background-image: url('../static/img/archive.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.archive-button:hover .archive-icon {
+    background-image: url('../static/img/open_archive.png');
+}
+
+.archive-icon:hover .archive-icon {
+    background-image: url('../static/img/open_archive.png');
+    opacity: 1;
+}
+
+/* Default: hidden */
+.archive-icon-button {
+    opacity: 0;
+    background-image: url('../static/img/archive.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Show icon when hovering over the course card */
+.group:hover .archive-icon-button {
+    opacity: 1;
+}
+
+/* Change icon when hovering directly over the icon */
+.archive-icon-button:hover {
+    background-image: url('../static/img/open_archive.png');
+}
+
+.hidden {
+    display: none !important;
+}
+
+#send-button div {
+  background-color: white !important;
+  color: #1f2937 !important; /* Tailwind's gray-800 */
+  border-color: #1f2937 !important;
+}
+
+#send-button:hover div {
+  background-color: #1f2937 !important; /* Tailwind's gray-800 */
+  color: white !important;
+  border-color: #1f2937 !important;
 }

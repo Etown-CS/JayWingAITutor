@@ -17,7 +17,7 @@ CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     filepath VARCHAR(100),
-    courseCode VARCHAR(6),
+    courseCode VARCHAR(6) UNIQUE,
     description TEXT
 );
 
@@ -26,6 +26,9 @@ CREATE TABLE user_courses (
     userCoursesId INT AUTO_INCREMENT PRIMARY KEY,
     userId INT NOT NULL,
     courseId INT NOT NULL,
+    interest VARCHAR(100) DEFAULT NULL,
+    responseLength VARCHAR(20) DEFAULT 'Average',
+    archived TINYINT(1) NOT NULL DEFAULT 0,
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
 );
@@ -38,5 +41,8 @@ CREATE TABLE messages (
     answer TEXT,
     timestamp DATETIME DEFAULT current_timestamp,
     sourceName VARCHAR(100),
+    feedbackRating ENUM('up', 'down') DEFAULT NULL,
+    feedbackExplanation TEXT,
+    feedbackTimestamp DATETIME DEFAULT NULL,
     FOREIGN KEY (userCoursesId) REFERENCES user_courses(userCoursesId) ON DELETE CASCADE
 );

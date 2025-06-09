@@ -336,16 +336,20 @@ def ask_question():
         data = request.get_json()
         course_name = data.get('courseName')
         question = data.get('question')
+        answer = None  # Initialize answer to None
+        # If answer is provided, get it
+        if data.get('answer'):
+            answer = data.get('answer')
 
         if not (user_id and course_name and question):
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Call the generate_gpt_response function
-        (tutor_response, sourceNames) = generate_gpt_response(user_id, course_name, question)
+        (tutor_response, sourceNames, messageId) = generate_gpt_response(user_id, course_name, question, answer)
         # Convert sourceNames to a string
-        sourceNames = ', '.join(sourceNames) if sourceNames else "No sources found"
+        sourceNames = ', '.join(sourceNames) if sourceNames else ""
 
-        return jsonify({'success': True, 'response': tutor_response, 'sourceName': sourceNames}), 200
+        return jsonify({'success': True, 'response': tutor_response, 'sourceName': sourceNames, 'messageId': messageId}), 200
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

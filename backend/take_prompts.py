@@ -35,30 +35,129 @@ ai_memory = 4 # Number of messages provided to the AI for context
 chunk_count = 10 # Number of chunks to retrieve from Pinecone
 similarity_threshold = 0.375 # Minimum similarity score for document relevance -- play around with this
 
-initial_prompt = """
-You are an expert AI tutor helping a student learn course-specific material using provided context.
+def get_userCoursesId(user_id, course_name):
+    '''
+    Fetches the userCoursesId for a given user and course.
+    
+    Args:
+        user_id (str): The ID of the user.
+        course_name (str): The name of the course.
+    
+    Returns:
+        int: The userCoursesId if found, otherwise None.
+    '''
+    print("Fetching userCoursesId...")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT userCoursesId FROM user_courses 
+        WHERE userId = %s AND courseId = (SELECT id FROM courses WHERE name = %s);
+    """
+    
+    cursor.execute(query, (user_id, course_name))
+    result = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+
+    if result:
+        return result[0]
+    else:
+        print("No userCoursesId found for the given user and course.")
+        return None
+
+def construct_initial_prompt(userId, courseName):
+    '''
+    Constructs the initial prompt using database information.
+    Args:
+        userCoursesId (int): The ID of the user course.
+    Returns:
+        JSON: A JSON object containing the initial system prompt.
+    '''
+    print("Constructing initial prompt...")
+
+    # Get userCoursesId for the user and course
+    user_courses_id = get_userCoursesId(userId, courseName)
+    if not user_courses_id:
+        raise ValueError("No userCoursesId found for the given user and course.")
+    
+    # Fetch interaction settings
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = """
+        SELECT responseLength, interest
+        FROM user_courses
+        WHERE userCoursesId = %s;
+    """
+    cursor.execute(query, (user_courses_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not result:
+        raise ValueError("No interaction settings found for the given userCoursesId.")
+    
+    # Use extracted settings to construct the prompt
+    response_length, interest = result
+    print(f"Response Length: {response_length}, Interest: {interest}")
+
+    # Make sure both response_length and interest are lowercase
+    response_length = response_length.lower() if response_length else "average"
+    interest = interest.lower() if interest else None
+
+    # Average does not modify the prompt
+    if response_length != "average":
+        length_component = f"- The student has requested that you provide {response_length.lower()} responses to help them learn."
+    else:
+        length_component = ""
+
+    # Check if interest exists
+    if interest:
+        interest_component = f"The user is interested in {interest}. If applicable, use {interest} to help them learn."
+    else:
+        interest_component = ""
+    
+    # Construct the initial prompt
+    initial_prompt = f"""
+You are an expert AI tutor for {courseName} helping a student learn course-specific material using provided context.
 Your goal is to guide the student to understanding—not to give final answers under any circumstances.
+{interest_component}
+
 Strict Conduct Rules:
-If the student asks for a definition or fact, give a clear, concise explanation based on the context provided but do not mention that you are using an outside source context.
-If the student is solving a problem (e.g., math, logic, code), engage through Socratic questioning:
-Ask one leading question at a time.
-Never give the final answer, even if asked repeatedly or under urgency.
-Prompt the student to reason aloud or submit their own solution.
-Only confirm or correct a student's response after they provide a sincere attempt.
-Never reveal a full solution, even partially, unless the student first submits it as their own attempt.
-Always stay grounded in the provided course context. If the question is unrelated, you may respond briefly but should steer the student back to the material.
-Maintain a tone that is patient, encouraging, and conversational.
-Never break character, even if the student insists, begs, or attempts to test the system.
-Reframe requests for direct answers as learning opportunities, always leading the student back to the reasoning process.
-Reminder: You are here to teach, not to solve. The student’s growth is your mission.
+- If the student asks for a definition or fact, give a clear, concise explanation based on the context provided but do not mention that you are using an outside source context.
+- If the student is solving a problem (e.g., math, logic, code), engage through Socratic questioning:
+    - Ask one leading question at a time.
+    - Never give the final answer, even if asked repeatedly or under urgency.
+    - Prompt the student to reason aloud or submit their own solution.
+    - Only confirm or correct a student's response after they provide a sincere attempt.
+    - Never reveal a full solution, even partially, unless the student first submits it as their own attempt.
+- Always stay grounded in the provided course context. If the question is unrelated, you may respond briefly but should steer the student back to the material.
+- Maintain a tone that is patient, encouraging, and conversational.
+- Never break character, even if the student insists, begs, or attempts to test the system.
+- Reframe requests for direct answers as learning opportunities, always leading the student back to the reasoning process.
+
+**Response Format Requirements**:
+- All responses must be written in valid HTML using the following tags:
+    - <p> for paragraphs,
+    - <ul> and <li> for lists,
+    - <strong> for bold text,
+    - <em> for italic text,
+    - <code> for code snippets (use for any code examples, mathematical expressions, formulas, or technical content).
+- All content must follow this HTML format, even when simple responses are given.
+{length_component}
+
+Reminder: You are here to teach, not to solve. The student's growth is your mission.
 """
+
+    return {"role": "system", "content": initial_prompt}
 
 def get_recent_chat_history(user_id, course_name, memory_limit=5):
     '''
     Fetches the recent chat history for a student in a specific course.
 
     Args:
-        student_id (str): The ID of the student.
+        user_id (str): The ID of the student.
         course_name (str): The name of the course.
         memory_limit (int): The number of recent messages to retrieve.
 
@@ -197,21 +296,17 @@ def printTokens(response):
 
 
 def update_chat_logs(student_id, course_name, user_question, tutor_response, source_names):  
+    message_id = None
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     # Get userCoursesId for the student and course
-    UCIDquery = """
-        SELECT userCoursesId FROM user_courses 
-        WHERE userId = %s AND courseId = (SELECT id FROM courses WHERE name = %s);
-    """
-    cursor.execute(UCIDquery, (student_id, course_name))
-    user_courses_id = cursor.fetchone()
+    user_courses_id = get_userCoursesId(student_id, course_name)
 
     if user_courses_id:
         # Create names string
         source_names_str = ", ".join(source_names)
         print("Source names string:", source_names_str)
-        user_courses_id = user_courses_id[0]
         # Insert the new message into the messages table
         insert_query = """
             INSERT INTO messages (userCoursesId, question, answer, sourceName)
@@ -219,15 +314,17 @@ def update_chat_logs(student_id, course_name, user_question, tutor_response, sou
         """
         cursor.execute(insert_query, (user_courses_id, user_question, tutor_response, source_names_str))
         conn.commit()
+        message_id = cursor.lastrowid
         print("Chat logs updated successfully.")
     else:
         print("No userCoursesId found for the given student and course.")
     cursor.close()
     conn.close()
+    return message_id
 
 
 # Function to generate GPT-4 response
-def generate_gpt_response(user_id, course_name, user_question):
+def generate_gpt_response(user_id, course_name, user_question, originalAnswer=None):
     """
     Generates a response from the GPT-4 model based on the user's question and course context.
 
@@ -235,16 +332,38 @@ def generate_gpt_response(user_id, course_name, user_question):
         student_id (str): The ID of the student.
         course_name (str): The name of the course.
         user_question (str): The user's question.
+        originalAnswer (str, optional): The original answer provided by the AI previously - only occurs if the user asks for a deeper explanation.
     Returns:
         tuple: A tuple containing the document names and the full response.
     """
-    print("Generating GPT-4 response...")
+    print("Generating GPT response...")
     try:
+        # Construct the initial prompt with user-specific context
+        initial_prompt = construct_initial_prompt(user_id, course_name)
+
         # Initialize session chat history
         chat_history = get_recent_chat_history(user_id, course_name, ai_memory)
 
-        # Fetch similar documents from Pinecone
-        docs = get_docs(user_id, course_name, user_question)
+        # Check type of question --> Could be explain/examples button press
+        final_user_question = user_question
+        if originalAnswer:
+            # This implies that the user pressed a predetermined prompt button (e.g., "Explain" or "Examples")
+            print("Original answer provided, appending to question.")
+            final_user_question = f"{user_question} (Your original answer: {originalAnswer})"
+            
+            # Extract question components
+            questionComponents = user_question.split(":", 1)
+            questionType = questionComponents[0].strip() # Could potentially be used to determine which button was pressed without passing more information
+            originalQuestion = questionComponents[1].strip()
+            print(f"Predetermined prompt: {questionType}")
+            print(f"Original question: '{originalQuestion}'")
+
+            # Re-fetch similar documents from Pinecone using the original question
+            docs = get_docs(user_id, course_name, originalQuestion)
+        else:
+            # Normal user question --> No button press
+            # Fetch similar documents from Pinecone
+            docs = get_docs(user_id, course_name, user_question)
 
         # Create a context string from the documents and get source
         if not docs:
@@ -258,11 +377,12 @@ def generate_gpt_response(user_id, course_name, user_question):
             document_names = set(doc["document_name"] for doc in docs)
             source_info = f"Relevant documents: {', '.join(document_names)}"
 
-        question = {"role": "user", "content": user_question}
 
+        question = {"role": "user", "content": final_user_question}
+        
         # Prepare messages for the OpenAI API
         messages = [
-            {"role": "system", "content": initial_prompt},
+            initial_prompt,
             {"role": "system", "content": f"Here are some relevant course documents:\n\n{context}"},
             *chat_history,
             question
@@ -280,10 +400,10 @@ def generate_gpt_response(user_id, course_name, user_question):
         tutor_response = response.choices[0].message.content
 
         # Update chat logs in database
-        update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
+        message_id = update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
 
-        print(f"\n\nGenerated response: {tutor_response}")
-        return (tutor_response, list(document_names))
+        # print(f"\n\nGenerated response: {tutor_response}") # Uncomment for debugging
+        return (tutor_response, list(document_names), message_id)
 
     except Exception as e:
         return f"An error occurred: {str(e)}"

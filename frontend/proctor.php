@@ -7,6 +7,11 @@ if (!isAdmin()) {
     exit();
 }
 
+$isUserLoggedIn = isLoggedIn();
+if ($isUserLoggedIn) {
+    $userId = $_SESSION['user_id'];
+}
+
 // Default
 $currentPage = "Dashboard";
 
@@ -133,10 +138,56 @@ $users = $connection->query("SELECT * FROM users");
                             <table class="table" id="classesTableConfig">
                                 <thead>
                                     <tr>
-                                        <th>Class Name</th>
-                                        <th>Course Code</th>
-                                        <th>Description</th>
-                                        <th>Actions</th>
+                                        <th>
+                                            Class Name
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="classNameTableInput"
+                                                placeholder="Search..."
+                                            />
+                                        </th>
+                                        <th>
+                                            Course Code
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="courseCodeTableInput"
+                                                placeholder="Search..."
+                                            />
+                                        </th>
+                                        <th>
+                                            Description
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="classDescriptionTableInput"
+                                                placeholder="Search..."
+                                            />
+                                        </th>
+                                        <th>
+                                            Actions
+                                            <select class="form-select bg-primary text-white" id="filter-by-btn" name="filterBy" onchange="filterCourses(this.value)">
+                                                <option value="allCourses">Filter: All</option>
+                                                <?php
+                                                    $query = "
+                                                        SELECT DISTINCT
+                                                            REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
+                                                        FROM courses
+                                                        WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
+                                                        ORDER BY discipline ASC
+                                                    ";
+
+                                                    $stmt = $connection->prepare($query);
+                                                    $stmt->execute();
+                                                    $disciplines = $stmt->get_result();
+
+                                                    while ($discipline = $disciplines->fetch_assoc()):
+                                                ?>
+                                                    <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
+                                                <?php endwhile; ?>
+                                            </select>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="classesTable">
@@ -222,10 +273,56 @@ $users = $connection->query("SELECT * FROM users");
                             <table class="table" id="enrollmentsTableConfig">
                                 <thead>
                                     <tr>
-                                        <th>Class Name</th>
-                                        <th>User</th>
-                                        <th>Role</th>
-                                        <th>Actions</th>
+                                        <th>
+                                            Class Name
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="classNamesTableInput"
+                                                placeholder="Search..."
+                                            />
+                                        </th>
+                                        <th>
+                                            User
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="userTableInput"
+                                                placeholder="Search..."
+                                            />
+                                        </th>
+                                        <th>
+                                            Role (JayWing)
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="roleTableInput"
+                                                placeholder="Search..."
+                                            />
+                                        </th>
+                                        <th>
+                                            Actions
+                                            <select class="form-select bg-primary text-white" id="filter-by-btn-2" name="filterBy" onchange="filterEnrollments(this.value)">
+                                                <option value="allCourses">Filter: All</option>
+                                                <?php
+                                                    $query = "
+                                                        SELECT DISTINCT
+                                                            REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
+                                                        FROM courses
+                                                        WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
+                                                        ORDER BY discipline ASC
+                                                    ";
+
+                                                    $stmt = $connection->prepare($query);
+                                                    $stmt->execute();
+                                                    $disciplines = $stmt->get_result();
+
+                                                    while ($discipline = $disciplines->fetch_assoc()):
+                                                ?>
+                                                    <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
+                                                <?php endwhile; ?>
+                                            </select>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="enrollmentsTable">
@@ -278,9 +375,9 @@ $users = $connection->query("SELECT * FROM users");
                                 </div>
 
                                 <!-- User input -->
-                                <div class="col-md-4 mb-3" id="file-upload-div">
+                                <div class="col mb-3" id="file-upload-div">
                                     <label class="form-label" for="file-input">Upload Documents</label>
-                                    <input type="file" class="form-control-file" id="file-input" multiple>
+                                    <input type="file" class="form-control" id="file-input" multiple>
                                 </div>
                             </div>
 
@@ -326,7 +423,7 @@ $users = $connection->query("SELECT * FROM users");
                             <label for="edit_class_description" class="form-label">Description</label>
                             <textarea class="form-control" id="edit_class_description"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary w-full mb-0">Save Changes</button>
                     </form>
                 </div>
             </div>
@@ -409,7 +506,7 @@ $users = $connection->query("SELECT * FROM users");
                                 <option value="tutee">Tutee</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary w-full mb-0">Save Changes</button>
                     </form>
                 </div>
             </div>

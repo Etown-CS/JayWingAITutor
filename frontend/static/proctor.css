@@ -149,36 +149,8 @@ header, footer {
 }
 
 
-/*--------------------- Other Settings ------------------------*/
-/* Add Course button styling */
-.add-course-btn {
-    padding: 8px 12px;
-    background-color: #004B98;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.add-course-btn:hover {
-    background-color: #003366;
-}
-
-/* Button Styles */
-button {
-    background-color: #0A2240;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 20px;
-}
-
-button:hover {
-    background-color: #004B98;
-}
-
-/* Preview Section */
+/*--------------------- File Preview Settings ------------------------*/
+/* Preview Styles */
 #preview-div {
     display: flex;
     gap: 10px;
@@ -189,8 +161,7 @@ button:hover {
     width: 100px;
     height: 150px;
     text-align: center;
-    background-color: #C8C8C8;
-    border: 1px solid #0A2240;
+    border: 0px;
     display: flex;
     justify-content: flex-start;
     /* align-items: center; */
@@ -239,34 +210,6 @@ button:hover {
     cursor: pointer;
 }
 
-.assign-student {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.assign-student label {
-    font-weight: bold;
-}
-
-.assign-student input {
-    margin-right: 10px;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-}
-
-.assign-student button {
+.delete-icon:hover {
     background-color: #004B98;
-    color: white;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-.assign-student button:hover {
-    background-color: #00396e;
 }

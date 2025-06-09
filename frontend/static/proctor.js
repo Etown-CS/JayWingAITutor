@@ -18,6 +18,8 @@ const enrollmentModal = new bootstrap.Modal(document.getElementById('editEnrollm
 
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
+    initializeSearchableClassTable();
+    initializeSearchableEnrollmentTable();
     initializeSearchableDropdowns();
 
     if (classNotesId) {
@@ -84,6 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         alert("Course added successfully!");
                         loadClasses();
                         reloadClassDropdowns();
+                        initializeSearchableClassTable();
+                        reloadFilterDropdowns();
                         this.reset();
                     } else {
                         alert(`Error: ${data.message}`);
@@ -121,6 +125,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.success) {
                     alert("Enrollment added successfully!");
                     loadEnrollments();
+                    initializeSearchableEnrollmentTable();
+                    reloadFilterDropdowns();
                     this.reset();
                     // Reset selected class text
                     document.getElementById('selectedClassText').textContent = 'Select Class';
@@ -158,6 +164,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (data.success) {
                     loadClasses();
+                    reloadFilterDropdowns();
+                    initializeSearchableClassTable();
                     classModal.hide();
                 }
             });
@@ -187,6 +195,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (data.success) {
                     loadEnrollments();
+                    initializeSearchableEnrollmentTable();
+                    reloadFilterDropdowns();
                     enrollmentModal.hide();
                 }
             });
@@ -199,6 +209,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 // Load Classes
+let allClasses = []; // Store full class list globally
+
 function loadClasses() {
     fetch('../backend/api/get_all_classes.php')
         .then(response => response.json())
@@ -207,43 +219,90 @@ function loadClasses() {
                 console.error('Error loading classes:', result.message);
                 return;
             }
-            
-            const classes = result.data; // Access the data array from response
-            if (tbodyclasses) {
-                tbodyclasses.innerHTML = '';
-                
-                if (Array.isArray(classes)) {
-                    classes.forEach(classItem => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${classItem.name}</td>
-                            <td>${classItem.courseCode || ''}</td>
-                            <td>${classItem.description || ''}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary m-0 edit-class-btn"
-                                    data-class-id="${classItem.id}"
-                                    data-class-name="${classItem.name}"
-                                    data-course-code="${classItem.courseCode || ''}"
-                                    data-class-description="${classItem.description || ''}">
-                                    Edit
-                                </button>
-                                <button class="btn btn-sm btn-danger m-0" onclick="deleteClass(${classItem.id})">
-                                    Delete
-                                </button>
-                            </td>
-                        `;
-                        tbodyclasses.appendChild(tr);
-                    });
-                }
-                // Reload enrollment dropdowns
-                reloadClassDropdowns();
-                loadEnrollments();
-            }
+
+            allClasses = result.data; // Save full list globally
+            renderClassTable(allClasses); // Render all initially
         })
         .catch(error => console.error('Error:', error));
 }
 
+function renderClassTable(classList) {
+    const tbodyclasses = document.getElementById('classesTable');
+    if (tbodyclasses) {
+        tbodyclasses.innerHTML = '';
+
+        classList.forEach(classItem => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${classItem.name}</td>
+                <td>${classItem.courseCode || ''}</td>
+                <td>${classItem.description || ''}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary m-0 edit-class-btn"
+                        data-class-id="${classItem.id}"
+                        data-class-name="${classItem.name}"
+                        data-course-code="${classItem.courseCode || ''}"
+                        data-class-description="${classItem.description || ''}">
+                        Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger m-0" onclick="deleteClass(${classItem.id})">
+                        Delete
+                    </button>
+                </td>
+            `;
+            tbodyclasses.appendChild(tr);
+        });
+
+        reloadClassDropdowns(); // Assuming this is needed
+        loadEnrollments();      // Assuming this is needed
+    }
+}
+
+function filterCourses(discipline) {
+    if (discipline === 'allCourses') {
+        renderClassTable(allClasses);
+    } else {
+        const filtered = allClasses.filter(cls => 
+            cls.courseCode && cls.courseCode.startsWith(discipline)
+        );
+        renderClassTable(filtered);
+    }
+}
+
+function initializeSearchableClassTable() {
+    const classNameTableInput = document.getElementById('classNameTableInput');
+    const courseCodeTableInput = document.getElementById('courseCodeTableInput');
+    const classDescriptionTableInput = document.getElementById('classDescriptionTableInput');
+
+    const filterTable = () => {
+        const nameFilter = classNameTableInput?.value.toLowerCase() || '';
+        const codeFilter = courseCodeTableInput?.value.toLowerCase() || '';
+        const descFilter = classDescriptionTableInput?.value.toLowerCase() || '';
+
+        const rows = document.querySelectorAll('#classesTable tr');
+
+        rows.forEach(row => {
+            const name = row.children[0]?.textContent.toLowerCase() || '';
+            const code = row.children[1]?.textContent.toLowerCase() || '';
+            const desc = row.children[2]?.textContent.toLowerCase() || '';
+
+            const matches =
+                name.includes(nameFilter) &&
+                code.includes(codeFilter) &&
+                desc.includes(descFilter);
+
+            row.style.display = matches ? 'table-row' : 'none';
+        });
+    };
+
+    [classNameTableInput, courseCodeTableInput, classDescriptionTableInput].forEach(input => {
+        if (input) input.addEventListener('input', filterTable);
+    });
+}
+
 // Load Enrollments
+let allEnrollments = []; // Store full enrollment list globally
+
 function loadEnrollments() {
     fetch('../backend/api/get_classes.php')
         .then(response => response.json())
@@ -253,39 +312,86 @@ function loadEnrollments() {
                 return;
             }
 
-            const userCourses = result.data; // Access the data array from response
-            if (tbodyenrollments) {
-                tbodyenrollments.innerHTML = '';
-                
-                if (Array.isArray(userCourses)) {
-                    userCourses.forEach(userCourse => {
-                        const tr = document.createElement('tr');
-                        // data-role="${userCourse.roleOfClass || ''}"
-                        tr.innerHTML = `
-                        <td>${userCourse.name}</td>
-                        <td>${userCourse.username}</td>
-                        <td>${'*JayWing*'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary m-0 edit-enrollment-btn"
-                                data-usercourse-id="${userCourse.userCoursesId}"
-                                data-usercourse-name="${userCourse.name}"
-                                data-usercourse-user="${userCourse.username}"
-                                data-course-id="${userCourse.courseId}"
-                                data-user-id="${userCourse.userId}">
-                                Edit
-                            </button>
-                            <button class="btn btn-sm btn-danger m-0" onclick="deleteEnrollment(${userCourse.userCoursesId})">
-                                Delete
-                            </button>
-                        </td>
-                        `;
-                        tbodyenrollments.appendChild(tr);
-                    });
-                }
-            }
+            allEnrollments = result.data; // Save full list globally
+            renderEnrollmentTable(allEnrollments); // Render all initially
         })
         .catch(error => console.error('Error:', error));
 }
+
+function renderEnrollmentTable(userCourses) {
+    const tbodyenrollments = document.getElementById('enrollmentsTable');
+    if (tbodyenrollments) {
+        tbodyenrollments.innerHTML = '';
+
+        userCourses.forEach(userCourse => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${userCourse.name}</td>
+                <td>${userCourse.username}</td>
+                <td>${userCourse.role}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary m-0 edit-enrollment-btn"
+                        data-usercourse-id="${userCourse.userCoursesId}"
+                        data-usercourse-name="${userCourse.name}"
+                        data-usercourse-user="${userCourse.username}"
+                        data-course-id="${userCourse.courseId}"
+                        data-user-id="${userCourse.userId}">
+                        Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger m-0" onclick="deleteEnrollment(${userCourse.userCoursesId})">
+                        Delete
+                    </button>
+                </td>
+            `;
+            tbodyenrollments.appendChild(tr);
+        });
+
+        reloadClassDropdowns(); // Assuming this is needed
+    }
+}
+
+function filterEnrollments(discipline) {
+    if (discipline === 'allCourses') {
+        renderEnrollmentTable(allEnrollments);
+    } else {
+        const filtered = allEnrollments.filter(cls => 
+            cls.courseCode && cls.courseCode.startsWith(discipline)
+        );
+        renderEnrollmentTable(filtered);
+    }
+}
+
+function initializeSearchableEnrollmentTable() {
+    const classNamesTableInput = document.getElementById('classNamesTableInput');
+    const userTableInput = document.getElementById('userTableInput');
+    const roleTableInput = document.getElementById('roleTableInput');
+
+    const filterTable = () => {
+        const namesFilter = classNamesTableInput?.value.toLowerCase() || '';
+        const userFilter = userTableInput?.value.toLowerCase() || '';
+        const roleFilter = roleTableInput?.value.toLowerCase() || '';
+
+        const rows = document.querySelectorAll('#enrollmentsTable tr');
+
+        rows.forEach(row => {
+            const name = row.children[0]?.textContent.toLowerCase() || '';
+            const user = row.children[1]?.textContent.toLowerCase() || '';
+            const role = row.children[2]?.textContent.toLowerCase() || '';
+
+            const matches =
+                name.includes(namesFilter) &&
+                user.includes(userFilter) &&
+                role.includes(roleFilter);
+
+            row.style.display = matches ? 'table-row' : 'none';
+        });
+    };
+
+    [classNamesTableInput, userTableInput, roleTableInput].forEach(input => {
+        if (input) input.addEventListener('input', filterTable);
+    });
+}
+
 
 // Edit Class/Enrollment
 document.addEventListener('click', function (e) {
@@ -328,6 +434,8 @@ function deleteClass(classId) {
             if (data.success) {                
                 loadClasses();
                 reloadClassDropdowns();
+                reloadFilterDropdowns();
+                initializeSearchableClassTable();
                 loadEnrollments();
             }
         });
@@ -347,6 +455,8 @@ function deleteEnrollment(enrollmentId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                initializeSearchableEnrollmentTable();
+                reloadFilterDropdowns();
                 loadEnrollments();
             }
         });
@@ -521,7 +631,7 @@ function reloadClassDropdowns() {
             }
 
             const courses = result.data;
-            
+
             // Update dropdown menus
             const classDropdown = document.querySelector('.class-list');
             if (classDropdown) {
@@ -584,6 +694,53 @@ function reloadClassDropdowns() {
             // Reinitialize search functionality
             initializeSearchableDropdowns();
         });
+}
+
+// Reload Filter Dropdowns
+function reloadFilterDropdowns() {
+    fetch('../backend/api/get_disciplines.php')
+        .then(response => response.json())
+        .then(result => {
+            if (!result.success) {
+                console.error('Error loading disciplines:', result.message);
+                return;
+            }
+
+            const dropdown = document.getElementById('filter-by-btn');
+            dropdown.innerHTML = '';
+
+            // Add "All" option
+            const allOption = document.createElement('option');
+            allOption.value = 'allCourses';
+            allOption.textContent = 'All';
+            dropdown.appendChild(allOption);
+
+            // Add discipline options
+            result.data.forEach(discipline => {
+                const option = document.createElement('option');
+                option.value = discipline;
+                option.textContent = discipline;
+                dropdown.appendChild(option);
+            });
+
+            const dropdown2 = document.getElementById('filter-by-btn-2');
+            dropdown2.innerHTML = '';
+
+            // Add "All" option
+            const allOption2 = document.createElement('option');
+            allOption2.value = 'allCourses';
+            allOption2.textContent = 'All';
+            dropdown2.appendChild(allOption2);
+
+            // Add discipline options
+            result.data.forEach(discipline => {
+                const option = document.createElement('option');
+                option.value = discipline;
+                option.textContent = discipline;
+                dropdown2.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching disciplines:', error));
 }
 
 
@@ -657,14 +814,14 @@ function saveFileToDocsFolder(file, course) {
 // Display file preview based on file type
 function displayFilePreview(fileName, fileType, isTrained) {
     const preview = document.createElement('div');
-    preview.className = 'file-preview flex flex-col items-center gap-1 p-0 rounded bg-gray-800 text-white shadow-sm w-40';
+    preview.className = 'file-preview flex flex-col items-center gap-1 p-0 rounded bg-gray-200 text-white w-40';
 
     if (!isTrained) {
         preview.classList.add('border', 'border-yellow-500');
     }
 
     // Extract short name
-    const abbreviatedFileName = fileName.split("/").pop().split(".")[0];
+    const abbreviatedFileName = fileName.split("/").pop().split(".")[0].replace(/_/g, " ");
 
     // Create download link
     const coursesDropdownUpload = document.getElementById('notes_class_id');

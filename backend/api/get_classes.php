@@ -11,8 +11,7 @@ if (!isAdmin()) {
 }
 
 try {
-    $query = "SELECT uc.userCoursesId, uc.courseId, uc.userId, 
-              c.name, u.username
+    $query = "SELECT uc.userCoursesId, uc.courseId, uc.userId, c.name, c.courseCode, u.username, u.role
               FROM user_courses uc
               JOIN courses c ON uc.courseId = c.id
               JOIN users u ON uc.userId = u.id";

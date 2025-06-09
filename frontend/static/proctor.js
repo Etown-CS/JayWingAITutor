@@ -297,9 +297,9 @@ function initializeSearchableClassTable() {
             const desc = row.children[2]?.textContent.toLowerCase() || '';
 
             const matches =
-                name.includes(nameFilter) &&
-                code.includes(codeFilter) &&
-                desc.includes(descFilter);
+                fuzzyIncludes(name, namesFilter) &&
+                fuzzyIncludes(code, codeFilter) &&
+                desc.includes(descFilter); // TODO: Algorithm for this needs updated
 
             row.style.display = matches ? 'table-row' : 'none';
         });
@@ -389,9 +389,9 @@ function initializeSearchableEnrollmentTable() {
             const role = row.children[2]?.textContent.toLowerCase() || '';
 
             const matches =
-                name.includes(namesFilter) &&
-                user.includes(userFilter) &&
-                role.includes(roleFilter);
+                fuzzyIncludes(name, namesFilter) &&
+                fuzzyIncludes(user, userFilter) &&
+                role.includes(roleFilter); // No point to fuzzy match roles - allowing for a one character typo prevents any filtering at all
 
             row.style.display = matches ? 'table-row' : 'none';
         });
@@ -501,7 +501,7 @@ function initializeSearchableDropdowns() {
         classSearchInput.addEventListener('input', function(e) {
         const searchText = e.target.value.toLowerCase();
         document.querySelectorAll('.class-list .dropdown-item').forEach(item => {
-            item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none';
+            item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
         });
         });
     }
@@ -509,10 +509,10 @@ function initializeSearchableDropdowns() {
     // “Search” filter for users
     if (userSearchInput) {
         userSearchInput.addEventListener('input', function(e) {
-        const searchText = e.target.value.toLowerCase();
-        document.querySelectorAll('.user-list .dropdown-item').forEach(item => {
-            item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none';
-        });
+            const searchText = e.target.value.toLowerCase();
+            document.querySelectorAll('.user-list .dropdown-item').forEach(item => {
+                item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
+            });
         });
     }
 
@@ -521,7 +521,8 @@ function initializeSearchableDropdowns() {
         classEditSearchInput.addEventListener('input', function(e) {
         const searchText = e.target.value.toLowerCase();
         document.querySelectorAll('.class-edit-list .dropdown-item').forEach(item => {
-            item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none';
+            // item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none'; // Original method - no typos allowed
+            item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none'; // Allow typos
         });
         });
     }
@@ -531,7 +532,7 @@ function initializeSearchableDropdowns() {
         userEditSearchInput.addEventListener('input', function(e) {
         const searchText = e.target.value.toLowerCase();
         document.querySelectorAll('.user-edit-list .dropdown-item').forEach(item => {
-            item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none';
+            item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
         });
         });
     }
@@ -541,7 +542,7 @@ function initializeSearchableDropdowns() {
         classNotesSearchInput.addEventListener('input', function(e) {
         const searchText = e.target.value.toLowerCase();
         document.querySelectorAll('.class-notes-list .dropdown-item').forEach(item => {
-            item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none';
+            item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
         });
         });
     }

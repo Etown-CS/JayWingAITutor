@@ -122,7 +122,7 @@ $users = $connection->query("SELECT * FROM users");
                                 <!-- Course Code -->
                                 <div class="col-md-4 mb-3">
                                     <label for="course_code" class="form-label">Course Code</label>
-                                    <input type="text" class="form-control" id="course_code" maxlength="7">
+                                    <input type="text" class="form-control" id="course_code" maxlength="20">
                                 </div>
                                 <!-- Class Description -->
                                 <div class="col-md-4 mb-3">

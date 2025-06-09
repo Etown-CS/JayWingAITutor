@@ -148,9 +148,32 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <option value="sortRecent">Sort by: Recent</option>
                     <option value="sortAlphabetical">Sort by: Alphabetical</option>
                 </select>
-                <select class="form-select bg-primary text-white w-25" id="filter-by-btn" name="filterBy">
+                <select class="form-select bg-primary text-white w-25" id="filter-by-button" name="filterBy">
                     <option value="allCourses">All</option>
                     <!-- List disciplines -->
+                    <?php
+                        $stmt = $connection->prepare("SELECT DISTINCT courseCode FROM courses ORDER BY courseCode ASC");
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                        while ($row = $result->fetch_assoc()):
+                            // Exclude empty course codes
+                            if (empty($row['courseCode'])) {
+                                continue;
+                            }
+                            // Escape course code for HTML output
+                            $courseCode = htmlspecialchars($row['courseCode'], ENT_QUOTES, 'UTF-8');
+                            // Extract discipline from course code
+                            if (preg_match('/^([A-Z]{2,3})(\d{3})$/i', $courseCode, $matches)) {
+                                $discipline = $matches[1]; // "CSC"
+                                $courseNumber = $matches[2]; // "101"
+                                echo "Letters: $letters\n";
+                                echo "Numbers: $numbers\n";
+                            } else {
+                                echo "Invalid course code format.";
+                            }
+                    ?>
+                    <option value="<?php echo $discipline; ?>"><?php echo $discipline; ?></option>
+                    <?php endwhile; ?>
                 </select>
             </div>
 
@@ -159,6 +182,17 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
                         // Need courseName, chatId, latestQuestion, lastInteracted
+                        // Getting discipline filter
+                        $filterBy = $_GET['filterBy'] ?? 'allCourses';
+                        if ($filterBy !== 'allCourses') {
+                            // Escape filter value for SQL query
+                            $filterBy = $connection->real_escape_string($filterBy);
+                            $filterClause = "AND c.courseCode LIKE '$filterBy%'";
+                        } else {
+                            $filterClause = '';
+                        }
+                        
+                        // Getting sort
                         $sortBy = $_GET['sortBy'] ?? 'sortRecent';
 
                         $orderClause = match($sortBy) {
@@ -184,6 +218,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             LEFT JOIN messages m ON m.userCoursesId = uc.userCoursesId AND m.timestamp = latest.latestTimestamp
                             WHERE uc.userId = ?
                             AND uc.archived = 0
+                            $filterClause
                             $orderClause;
                         ";
 

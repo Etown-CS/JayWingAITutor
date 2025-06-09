@@ -1032,23 +1032,60 @@ if (saveBtn) {
 document.getElementById('sort-by-btn').addEventListener('change', function () {
     const sortBy = this.value;
     const urlParams = new URLSearchParams(window.location.search);
-    
-    // Preserve current chatId if it exists
+
     const chatId = urlParams.get('chatId');
+    const filterBy = urlParams.get('filterBy');
+
     let newUrl = '?sortBy=' + encodeURIComponent(sortBy);
+
+    if (filterBy) {
+        newUrl += '&filterBy=' + encodeURIComponent(filterBy);
+    }
     if (chatId) {
         newUrl += '&chatId=' + encodeURIComponent(chatId);
     }
 
-    window.location.href = newUrl; // Force reload with new sorting
+    window.location.href = newUrl;
 });
+
+
+// Filter by discipline
+filterByButton = document.getElementById('filter-by-button');
+if (filterByButton) {
+    filterByButton.addEventListener('change', function () {
+        console.log("Filter by discipline changed to:", this.value);
+        const filterBy = this.value;
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Preserve existing query params
+        const chatId = urlParams.get('chatId');
+        const sortBy = urlParams.get('sortBy');
+
+        let newUrl = '?filterBy=' + encodeURIComponent(filterBy);
+
+        if (sortBy) {
+            newUrl += '&sortBy=' + encodeURIComponent(sortBy);
+        }
+        if (chatId) {
+            newUrl += '&chatId=' + encodeURIComponent(chatId);
+        }
+
+        window.location.href = newUrl; // Reload page with new filter
+    });
+} else {
+    console.warn("Filter by button not found. Ensure the element with ID 'filter-by-button' exists in your HTML.");
+}
+
 
 
 // Pre-select the sort option based on the URL
 window.addEventListener('DOMContentLoaded', () => {
+    // Get the current URL parameters and update the sort and filter buttons accordingly
     const urlParams = new URLSearchParams(window.location.search);
     const selectedSort = urlParams.get('sortBy') || 'sortRecent';
+    const selectedFilter = urlParams.get('filterBy') || 'allCourses';
     document.getElementById('sort-by-btn').value = selectedSort;
+    document.getElementById('filter-by-button').value = selectedFilter;
 
     const chatId = new URLSearchParams(window.location.search).get('chatId');
     if (!chatId) return;

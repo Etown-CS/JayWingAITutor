@@ -67,10 +67,15 @@ document.addEventListener('DOMContentLoaded', function () {
         classForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
+            courseCode = document.getElementById('course_code').value
+            classDescription = document.getElementById('class_description').value
+            if (courseCode === '') { courseCode = null}
+            if (classDescription === '') { classDescription = null}
+
             const data = {
                 name: document.getElementById('class_name').value,
-                courseCode: document.getElementById('course_code').value,
-                description: document.getElementById('class_description').value
+                courseCode: courseCode,
+                description: classDescription
             };
 
             fetch('../backend/api/create_class.php', {
@@ -145,12 +150,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (editClassForm) {
         editClassForm.addEventListener('submit', function(e) {
             e.preventDefault();
+
+            courseCodeGet = document.getElementById('edit_course_code').value
+            classDescription = document.getElementById('edit_class_description').value
+            if (courseCodeGet === '') { courseCodeGet = null}
+            if (classDescription === '') { classDescription = null}
             
             const data = {
                 courseId: document.getElementById('edit_course_id').value,
                 name: document.getElementById('edit_class_name').value,
-                courseCode: document.getElementById('edit_course_code').value,
-                description: document.getElementById('edit_class_description').value
+                courseCode: courseCodeGet,
+                description: classDescription
             };
             
             fetch('../backend/api/update_class.php', {
@@ -741,6 +751,49 @@ function reloadFilterDropdowns() {
             });
         })
         .catch(error => console.error('Error fetching disciplines:', error));
+}
+
+
+// --------------------- Filter Management JavaScript ------------------------
+
+
+function fuzzyIncludes(full, input) {
+    full = full.toLowerCase();
+    input = input.toLowerCase();
+
+    // If exact substring match, return true immediately
+    if (full.includes(input)) return true;
+
+    // Slide input window across full text
+    for (let i = 0; i <= full.length - input.length; i++) {
+        const chunk = full.slice(i, i + input.length);
+        const dist = levenshtein(chunk, input);
+        if (dist <= 1) return true; // Controls amount of typos allowed
+    }
+
+    return false;
+}
+
+function levenshtein(a, b) {
+    const matrix = Array.from({ length: a.length + 1 }, () =>
+        Array(b.length + 1).fill(0)
+    );
+
+    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,      // deletion
+                matrix[i][j - 1] + 1,      // insertion
+                matrix[i - 1][j - 1] + cost // substitution
+            );
+        }
+    }
+
+    return matrix[a.length][b.length];
 }
 
 

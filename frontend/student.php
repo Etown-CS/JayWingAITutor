@@ -74,11 +74,14 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <!-- custom css -->
     <link rel="stylesheet" href="static/student.css">
     <script>
-        const currentCourseName = <?php echo json_encode($chatCourseName); ?>;
-        const currentChatId = <?php echo json_encode($currentChat); ?>;
-        const username = <?php echo json_encode($username ?? null); ?>;
-        const userId = <?php echo json_encode($userId ?? null); ?>;
-        const userRole = <?php echo json_encode($userRole ?? null); ?>;
+        // Global variables for JS - must have current chat defined
+        <?php if ($currentChat) : ?>
+            const currentCourseName = <?php echo json_encode($chatCourseName); ?>;
+            const currentChatId = <?php echo json_encode($currentChat); ?>;
+            const username = <?php echo json_encode($username ?? null); ?>;
+            const userId = <?php echo json_encode($userId ?? null); ?>;
+            const userRole = <?php echo json_encode($userRole ?? null); ?>;
+        <?php endif; ?>
     </script>
     <style>
     .typing-dots {

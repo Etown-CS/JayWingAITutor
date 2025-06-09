@@ -623,9 +623,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Prevent page refresh on form submission
-    document.getElementById('message-input').addEventListener('submit', (e) => {
-        e.preventDefault();
-    });
+    messageInput = document.getElementById('message-input')
+    if (messageInput) {
+        messageInput.addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
+    }
 
     // Text area expands with text when typed
     if (textarea) {
@@ -653,7 +656,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    sendButton.addEventListener('click', (event) => {
+    if (sendButton) {
+        sendButton.addEventListener('click', (event) => {
         if (!textarea || textarea.value.trim() === '') {
             return; // Do not send empty messages
         }
@@ -663,6 +667,8 @@ document.addEventListener('DOMContentLoaded', () => {
         autoResizeTextarea(); // Reset height
     });
 
+    }
+    
     // Response Buttons Row Logic
     // Thumbs up/down button logic for each AI response
     const thumbsUpButtons = document.querySelectorAll('.thumbs-up');
@@ -1122,6 +1128,11 @@ function adjustConversationPadding() {
     const conversation = document.getElementById('conversation');
     
     // Check if the element is scrollable (scrollHeight > clientHeight)
+    if (!conversation) {
+        console.warn("Conversation element not found. No chat selected.");
+        return;
+    }
+    // Check if the conversation has a scrollbar
     const hasScrollbar = conversation.scrollHeight > conversation.clientHeight;
 
     // Toggle a class or set style directly

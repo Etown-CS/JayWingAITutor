@@ -734,20 +734,22 @@ function reloadFilterDropdowns() {
             });
 
             const dropdown2 = document.getElementById('filter-by-btn-2');
-            dropdown2.innerHTML = '';
+            if (dropdown2) dropdown2.innerHTML = '';
+            
+            
 
             // Add "All" option
             const allOption2 = document.createElement('option');
             allOption2.value = 'allCourses';
             allOption2.textContent = 'All';
-            dropdown2.appendChild(allOption2);
+            if (dropdown2) dropdown2.appendChild(allOption2);
 
             // Add discipline options
             result.data.forEach(discipline => {
                 const option = document.createElement('option');
                 option.value = discipline;
                 option.textContent = discipline;
-                dropdown2.appendChild(option);
+                if (dropdown2) dropdown2.appendChild(option);
             });
         })
         .catch(error => console.error('Error fetching disciplines:', error));

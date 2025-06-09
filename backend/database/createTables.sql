@@ -17,7 +17,7 @@ CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     filepath VARCHAR(100),
-    courseCode VARCHAR(6) UNIQUE,
+    courseCode VARCHAR(20) UNIQUE, -- Size increased to handle "EGR/CS222" -- 20 characters should be more than enough
     description TEXT
 );
 

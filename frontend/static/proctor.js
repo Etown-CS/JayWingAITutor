@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
         classForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            courseCode = document.getElementById('course_code').value
+            courseCode = document.getElementById('course_code').value.toUpperCase()
             classDescription = document.getElementById('class_description').value
             if (courseCode === '') { courseCode = null}
             if (classDescription === '') { classDescription = null}
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
         editClassForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            courseCodeGet = document.getElementById('edit_course_code').value
+            courseCodeGet = document.getElementById('edit_course_code').value.toUpperCase()
             classDescription = document.getElementById('edit_class_description').value
             if (courseCodeGet === '') { courseCodeGet = null}
             if (classDescription === '') { classDescription = null}
@@ -650,9 +650,15 @@ function reloadClassDropdowns() {
                 if (Array.isArray(courses)) {
                     courses.forEach(classItem => {
                         const dropdownItem = document.createElement('div');
-                        dropdownItem.className = 'dropdown-item text-white';
+                        dropdownItem.className = 'dropdown-item';
                         dropdownItem.dataset.value = classItem.id;
-                        dropdownItem.textContent = `${classItem.name} (${classItem.courseCode || ''})`;
+
+                        let displayText = classItem.name;
+                        if (classItem.courseCode) {
+                            displayText += ` (${classItem.courseCode})`;
+                        }
+                        
+                        dropdownItem.textContent = displayText;
                         classDropdown.appendChild(dropdownItem);
                     });
                 }
@@ -665,9 +671,14 @@ function reloadClassDropdowns() {
                 if (Array.isArray(courses)) {
                     courses.forEach(classItem => {
                         const dropdownItem = document.createElement('div');
-                        dropdownItem.className = 'dropdown-item text-white';
+                        dropdownItem.className = 'dropdown-item';
                         dropdownItem.dataset.value = classItem.id;
-                        dropdownItem.textContent = `${classItem.name} (${classItem.courseCode || ''})`;
+
+                        let displayText = classItem.name;
+                        if (classItem.courseCode) {
+                            displayText += ` (${classItem.courseCode})`;
+                        }
+                        dropdownItem.textContent = displayText;
                         classEditDropdown.appendChild(dropdownItem);
                     });
                 }

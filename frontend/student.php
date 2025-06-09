@@ -155,9 +155,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <option value="allCourses">All</option>
                     <!-- List disciplines -->
                     <?php
-                        $stmt = $connection->prepare("SELECT DISTINCT courseCode FROM courses ORDER BY courseCode ASC");
+                        $stmt = $connection->prepare("SELECT courseCode FROM courses ORDER BY courseCode ASC");
                         $stmt->execute();
                         $result = $stmt->get_result();
+                        $uniqueDisciplines = [];
                         while ($row = $result->fetch_assoc()):
                             // Exclude empty course codes
                             if (empty($row['courseCode'])) {
@@ -174,6 +175,11 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             } else {
                                 echo "Invalid course code format.";
                             }
+                            
+                            if (in_array($discipline, $uniqueDisciplines)) {
+                                continue; // Skip if discipline already added
+                            }
+                            $uniqueDisciplines[] = $discipline;
                     ?>
                     <option value="<?php echo $discipline; ?>"><?php echo $discipline; ?></option>
                     <?php endwhile; ?>

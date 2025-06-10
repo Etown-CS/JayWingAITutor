@@ -44,13 +44,6 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(mes
 storage_client = storage.Client()
 bucket = storage_client.bucket(bucket_name)
 
-# Ensure the "admin" folder exists in the bucket
-# Can potentially be deleted - not currently used
-# def ensure_user_folder_exists():
-#     blob = bucket.blob(session.get('folder_prefix')+'/')
-#     if not blob.exists():
-#         blob.upload_from_string("", content_type="application/x-www-form-urlencoded")
-
 # Check if a file has an allowed extension
 ALLOWED_EXTENSIONS = {'pdf', 'pptx'}
 
@@ -83,7 +76,7 @@ def upload_file():
     if 'file' not in request.files:
         return jsonify(success=False, message="No file part")
     
-    course = request.form.get('course')  # Get course from form data
+    course = request.form.get('courseId')  # Get course from form data
     if not course:
         return jsonify(success=False, message="No course specified")
 
@@ -91,10 +84,20 @@ def upload_file():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         # Construct the file path with course included
-        file_path = f"{folder_prefix}/{course}/{filename}"
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT filepath FROM courses WHERE id = %s", (course,))
+        result = cursor.fetchone()
+        conn.close()
+        if not course:
+            return jsonify(success=False, message="Course not found"), 404
+
+        filepath = result['filepath']
+        filepath = f"{filepath}{filename}"
 
         # Upload the file to the bucket
-        blob = bucket.blob(file_path)
+        blob = bucket.blob(filepath)
         blob.upload_from_file(file)
 
         # Upload the file to Pinecone
@@ -121,19 +124,29 @@ def load_docs():
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
 
-    course_name = request.args.get('course')  # <-- get selected course
+    courseId = request.args.get('courseId')  # <-- get selected course
 
-    if not folder_prefix or not course_name:
+    if not folder_prefix or not courseId:
         return jsonify({'error': 'Missing folder prefix or course name'}), 400
 
     # Combine to target specific course folder
-    course_path_prefix = f"{folder_prefix}/{course_name}/"
-    blobs = bucket.list_blobs(prefix=course_path_prefix)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT filepath FROM courses WHERE id = %s", (courseId,))
+    result = cursor.fetchone()
+    conn.close()
+    if not courseId:
+        return jsonify(success=False, message="Course not found"), 404
+
+    filepath = result['filepath']
+
+    blobs = bucket.list_blobs(prefix=filepath)
 
     valid_extensions = ['pdf', 'pptx']
     file_list = [
         {
-            'name': blob.name.replace(course_path_prefix, ''),  # remove folder path
+            'name': blob.name.replace(filepath, ''),  # remove folder path
             'type': 'pdf' if blob.name.endswith('.pdf') else 'pptx'
         }
         for blob in blobs
@@ -169,8 +182,18 @@ def delete_file():
     if not course:
         return jsonify(success=False, message="No course specified")
 
-    file_path = f"{folder_prefix}/{course}/{file_name}"
-    blob = bucket.blob(file_path)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT filepath FROM courses WHERE name = %s", (course,))
+    result = cursor.fetchone()
+    conn.close()
+    if not course:
+        return jsonify(success=False, message="Course not found"), 404
+
+    filepath = result['filepath']
+    filepath = f"{filepath}{file_name}"
+    blob = bucket.blob(filepath)
 
     gcs_deleted = False
     pinecone_deleted = False
@@ -195,6 +218,62 @@ def delete_file():
         return jsonify(success=False, message=f"GCS deleted: {gcs_deleted}, but error deleting from Pinecone: {str(e)}")
 
     return jsonify(success=True, message=f"GCS deleted: {gcs_deleted}, Pinecone deleted: {pinecone_deleted}")
+
+@app.route('/delete-course', methods=['DELETE'])
+def delete_course():
+    print("Delete course endpoint hit")
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
+        return jsonify(success=False, message="Unauthorized"), 401
+    
+    data = request.get_json()
+    courseId = int(data['courseId'])
+    print(f"Course ID: {courseId}")
+    if not courseId:
+        return jsonify(success=False, message="No course specified")
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT filepath FROM courses WHERE id = %s", (courseId,))
+        result = cursor.fetchone()
+        filepath = result['filepath'] if result else None
+        print(f"Filepath: {filepath}")
+        conn.close()
+
+        # Delete the course folder in the bucket
+        bucket = storage_client.bucket(bucket_name)
+        blobs = bucket.list_blobs(prefix=filepath)
+        
+        for blob in blobs:
+            blob.delete()
+
+        # Delete the namespace in Pinecone
+        index_name = "ai-tutor-index"
+        index = pc.Index(index_name)
+
+        # Extract namespace from filepath
+        filepath_parts = filepath.split('/')
+        namespace = filepath_parts[1] 
+
+        # Get all stats (includes existing namespaces)
+        stats = index.describe_index_stats()
+        existing_namespaces = stats.get('namespaces', {})
+
+        # Delete the namespace if it exists
+        if namespace in existing_namespaces:
+            print(f"Deleting Pinecone namespace: {namespace}")
+            index.delete(namespace=namespace)
+        else:
+            print(f"Namespace '{namespace}' does not exist in Pinecone. Skipping deletion.")
+
+        return jsonify(success=True, message="Course deleted successfully")
+    
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
 
 @app.route('/download')
 def download_file():

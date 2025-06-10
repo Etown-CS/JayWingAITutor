@@ -15,7 +15,8 @@ CREATE TABLE users (
 -- Create 'courses' table
 CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL, -- Each professor can only have one course with the same name but the same course can be taught by multiple professors
+    createdBy INT NOT NULL,
     filepath VARCHAR(100),
     courseCode VARCHAR(20) UNIQUE, -- Size increased to handle "EGR/CS222" -- 20 characters should be more than enough
     description TEXT

@@ -49,23 +49,34 @@ try {
     $stmt->close();
     $username = $user['username'];
 
-    // Create filepath
-    $filepath = "" . $username . "_" . $userId . "/" . $name . "/";
-
-    $stmt = $connection->prepare("INSERT INTO courses (name, filepath, courseCode, description) VALUES (?, ?, ?, ?)"); // TODO: Add filepath
+    $stmt = $connection->prepare("INSERT INTO courses (name, courseCode, description, createdBy) VALUES (?, ?, ?, ?)");
     
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $connection->error);
     }
 
     // Bind using variables
-    $stmt->bind_param("ssss", $name, $filepath, $courseCode, $description);
+    $stmt->bind_param("sssi", $name, $courseCode, $description, $userId);
 
     if (!$stmt->execute()) {
         throw new Exception("Execution failed: " . $stmt->error);
     }
 
+    $stmt->close();
+
+    // Update the file path to include the course ID
     $newId = $connection->insert_id;
+    // Create filepath
+    $filepath = "" . $username . "_" . $userId . "/" . $name . "_" . $newId . "/";
+    $stmt = $connection->prepare("UPDATE courses SET filepath = ? WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $connection->error);
+    }
+    $stmt->bind_param("si", $filepath, $newId);
+    if (!$stmt->execute()) {
+        throw new Exception("Execution failed: " . $stmt->error);
+    }
+    $stmt->close();
 
     // Enroll the professor in the newly created class
     $stmt = $connection->prepare("INSERT INTO user_courses (courseId, userId) VALUES (?, ?)");

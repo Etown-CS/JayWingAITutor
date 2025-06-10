@@ -14,9 +14,12 @@ $loggedInUserId = $_SESSION['user_id'];
 
 try {
     $stmt = $connection->prepare("
-        SELECT c.*
+        SELECT 
+            c.*, 
+            u.username AS createdByUsername 
         FROM courses c
         JOIN user_courses uc ON c.id = uc.courseId
+        JOIN users u ON c.createdBy = u.id
         WHERE uc.userId = ?
     ");
     $stmt->bind_param("i", $loggedInUserId);

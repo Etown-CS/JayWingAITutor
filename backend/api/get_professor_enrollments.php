@@ -21,17 +21,19 @@ try {
             c.name, 
             c.courseCode, 
             u.username, 
-            u.role
+            u.role,
+            creator_user.username AS createdByUsername 
         FROM user_courses uc
         JOIN courses c ON uc.courseId = c.id
         JOIN users u ON uc.userId = u.id
+        LEFT JOIN users creator_user ON c.createdBy = creator_user.id
         WHERE 
             uc.courseId IN (
                 SELECT courseId 
                 FROM user_courses 
                 WHERE userId = ? 
             )
-            AND uc.userId != ? -- Exclude the professor themselves
+            AND uc.userId != ?
     ";
 
     $stmt = $connection->prepare($query);

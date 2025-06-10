@@ -24,7 +24,7 @@ if (isset($_GET['manageclasses'])) {
     $currentPage = "Manage Proctor Notes";
 }
 
-$classes = $connection->query("SELECT * FROM courses");
+$classes = $connection->query("SELECT c.*, u.username AS created_by_username FROM courses c JOIN users u ON c.createdBy = u.id");
 
 // users
 $isUserLoggedIn = isLoggedIn();
@@ -232,14 +232,7 @@ if ($currentUserId) {
                                                 placeholder="Search classes..."
                                             />
                                             <div class="class-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <?php while($class = $classes->fetch_assoc()): ?>
-                                                    <div class="dropdown-item" data-value="<?= $class['id'] ?>">
-                                                        <?= htmlspecialchars($class['name']) ?> 
-                                                        <?php if (!empty($class['courseCode'])): ?>
-                                                            (<?= htmlspecialchars($class['courseCode']) ?>)
-                                                        <?php endif; ?>
-                                                    </div>
-                                                <?php endwhile; ?>
+                                                <!-- JavaScript -->
                                             </div>
                                         </div>
                                         <input type="hidden" id="class_id" name="class_id" required>
@@ -257,11 +250,7 @@ if ($currentUserId) {
                                         <div class="dropdown-menu w-100 p-2">
                                             <input type="text" class="form-control mb-2" id="userSearchInput" placeholder="Search users...">
                                             <div class="user-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <?php while($user = $users->fetch_assoc()): ?>
-                                                    <div class="dropdown-item" data-value="<?= $user['id'] ?>">
-                                                        <?= htmlspecialchars($user['username']) ?>
-                                                    </div>
-                                                <?php endwhile; ?>
+                                                <!-- JavaScript -->
                                             </div>
                                         </div>
                                         <input type="hidden" id="user_id" name="user_id" required>
@@ -350,13 +339,6 @@ if ($currentUserId) {
                     <div class="m-4">
                         <form id="proctorForm">
                             <div class="row">
-                                <!-- Class dropdown -->
-                                <!-- <div class="col-md-4 mb-3">
-                                    <label for="courses-dropdown-upload" class="form-label">Select Course:</label>
-                                    <select class="form-select bg-dark text-white" id="courses-dropdown-upload">
-                                    </select>
-                                </div> -->
-
                                 <div class="col-md-4 mb-3">
                                     <label for="notes_class_id" class="form-label">
                                         Class Name <span class="text-danger">*</span>
@@ -375,8 +357,13 @@ if ($currentUserId) {
                                             <div class="class-notes-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
                                                 <?php while($class = $classes->fetch_assoc()): ?>
                                                     <div class="dropdown-item" data-value="<?= $class['id'] ?>">
+                                                        <div class="main-line">
                                                         <?= htmlspecialchars($class['name']) ?> 
-                                                    </div>
+                                                        <?php if (!empty($class['courseCode'])): ?>
+                                                            (<?= htmlspecialchars($class['courseCode']) ?>)
+                                                        <?php endif; ?>
+                                                        </div>
+                                                        <div class="subheader-line">Created by: <?= htmlspecialchars($class['created_by_username']) ?></div>                                                    </div>
                                                 <?php endwhile; ?>
                                             </div>
                                         </div>
@@ -466,16 +453,7 @@ if ($currentUserId) {
                                         placeholder="Search classes..."
                                     />
                                     <div class="class-edit-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                        <?php
-                                        $classes->data_seek(0);
-                                        while($class = $classes->fetch_assoc()): ?>
-                                            <div class="dropdown-item" data-value="<?= $class['id'] ?>">
-                                                <?= htmlspecialchars($class['name']) ?> 
-                                                <?php if (!empty($class['courseCode'])): ?>
-                                                    (<?= htmlspecialchars($class['courseCode']) ?>)
-                                                <?php endif; ?>
-                                            </div>
-                                        <?php endwhile; ?>
+                                        <!-- JavaScript -->
                                     </div>
                                 </div>
                                 <input type="hidden" id="edit_class_id" name="edit_class_id" required>
@@ -496,13 +474,7 @@ if ($currentUserId) {
                                         placeholder="Search users..."
                                     />
                                     <div class="user-edit-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                        <?php
-                                        $users->data_seek(0);
-                                        while($user = $users->fetch_assoc()): ?>
-                                            <div class="dropdown-item" data-value="<?= $user['id'] ?>">
-                                                <?= htmlspecialchars($user['username']) ?>
-                                            </div>
-                                        <?php endwhile; ?>
+                                        <!-- JavaScript -->
                                     </div>
                                 </div>
                                 <input type="hidden" id="edit_user_id" name="edit_user_id" required>

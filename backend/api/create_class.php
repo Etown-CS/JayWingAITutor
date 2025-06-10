@@ -52,14 +52,16 @@ try {
     // Create filepath
     $filepath = "" . $username . "_" . $userId . "/" . $name . "/";
 
-    $stmt = $connection->prepare("INSERT INTO courses (name, filepath, courseCode, description) VALUES (?, ?, ?, ?)"); // TODO: Add filepath
+    // Get user id
+
+    $stmt = $connection->prepare("INSERT INTO courses (name, filepath, courseCode, description, createdBy) VALUES (?, ?, ?, ?, ?)"); // TODO: Add filepath
     
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $connection->error);
     }
 
     // Bind using variables
-    $stmt->bind_param("ssss", $name, $filepath, $courseCode, $description);
+    $stmt->bind_param("ssssi", $name, $filepath, $courseCode, $description, $userId);
 
     if (!$stmt->execute()) {
         throw new Exception("Execution failed: " . $stmt->error);

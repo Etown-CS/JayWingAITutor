@@ -248,7 +248,14 @@ function renderClassTable(classList) {
         classList.forEach(classItem => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${classItem.name}</td>
+                <td>
+                    <div class="main-line">
+                        ${classItem.name}
+                    </div>
+                    <div class="subheader-line">
+                        Created by: ${classItem.createdByUsername}
+                    </div>
+                </td>
                 <td>${classItem.courseCode || ''}</td>
                 <td>${classItem.description || ''}</td>
                 <td>
@@ -256,7 +263,8 @@ function renderClassTable(classList) {
                         data-class-id="${classItem.id}"
                         data-class-name="${classItem.name}"
                         data-course-code="${classItem.courseCode || ''}"
-                        data-class-description="${classItem.description || ''}">
+                        data-class-description="${classItem.description || ''}"
+                        data-created-by-username="${classItem.createdByUsername}">
                         Edit
                     </button>
                     <button class="btn btn-sm btn-danger m-0" onclick="deleteClass(${classItem.id})">
@@ -341,7 +349,14 @@ function renderEnrollmentTable(userCourses) {
             const tr = document.createElement('tr');
             const courseCodeDisplay = userCourse.courseCode ? ` (${userCourse.courseCode})` : '';
             tr.innerHTML = `
-                <td>${userCourse.name}${courseCodeDisplay}</td>
+                <td>
+                    <div class="main-line">
+                        ${userCourse.name}${courseCodeDisplay}
+                    </div>
+                    <div class="subheader-line">
+                        Created by: ${userCourse.createdByUsername}
+                    </div>
+                </td>
                 <td>${userCourse.username}</td>
                 <td>${userCourse.role}</td>
                 <td>
@@ -350,7 +365,8 @@ function renderEnrollmentTable(userCourses) {
                         data-usercourse-name="${userCourse.name}"
                         data-usercourse-user="${userCourse.username}"
                         data-course-id="${userCourse.courseId}"
-                        data-user-id="${userCourse.userId}">
+                        data-user-id="${userCourse.userId}"
+                        data-created-by-username="${userCourse.createdByUsername}">
                         Edit
                     </button>
                     <button class="btn btn-sm btn-danger m-0" onclick="deleteEnrollment(${userCourse.userCoursesId})">
@@ -427,7 +443,9 @@ document.addEventListener('click', function (e) {
         document.getElementById('edit_user_id').value = btn.dataset.userId;
         // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
 
-        document.getElementById('selectedEditClassText').textContent = btn.dataset.usercourseName;
+        let mainDisplayText = btn.dataset.usercourseName + ' ';
+        if (btn.dataset.courseCode) { mainDisplayText += (btn.dataset.courseCode) + ' '}
+        document.getElementById('selectedEditClassText').textContent = mainDisplayText + 'Created by: ' + btn.dataset.createdByUsername;
         document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
 
         enrollmentModal.show();
@@ -555,13 +573,14 @@ function initializeSearchableDropdowns() {
     // Delegate click inside .class-list
     if (classListContainer) {
         classListContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('dropdown-item')) {
-                const value = e.target.dataset.value;
-                const text  = e.target.textContent;
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem && classListContainer.contains(dropdownItem)) {
+                const value = dropdownItem.dataset.value;
+                const text  = dropdownItem.textContent;
                 document.getElementById('class_id').value = value;
                 document.getElementById('selectedClassText').textContent = text;
 
-                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
                 if (dropdownInstance) dropdownInstance.hide();
             }
@@ -571,15 +590,16 @@ function initializeSearchableDropdowns() {
     // Delegate click inside .user-list
     if (userListContainer) {
         userListContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('dropdown-item')) {
-                const value = e.target.dataset.value;
-                const text  = e.target.textContent;
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem && userListContainer.contains(dropdownItem)) {
+                const value = dropdownItem.dataset.value;
+                const text  = dropdownItem.textContent;
                 document.getElementById('user_id').value = value;
                 document.getElementById('selectedUserText').textContent = text;
 
-                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
-                if (dropdownInstance) dropdownInstance.hide();  // <-- Close dropdown here
+                if (dropdownInstance) dropdownInstance.hide();
             }
         });
     }
@@ -587,13 +607,14 @@ function initializeSearchableDropdowns() {
     // Delegate click inside .class-edit-list
     if (classEditListContainer) {
         classEditListContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('dropdown-item')) {
-                const value = e.target.dataset.value;
-                const text  = e.target.textContent;
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem && classEditListContainer.contains(dropdownItem)) {
+                const value = dropdownItem.dataset.value;
+                const text  = dropdownItem.textContent;
                 document.getElementById('edit_class_id').value = value;
                 document.getElementById('selectedEditClassText').textContent = text;
 
-                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
                 if (dropdownInstance) dropdownInstance.hide();
             }
@@ -603,34 +624,34 @@ function initializeSearchableDropdowns() {
     // Delegate click inside .user-edit-list
     if (userEditListContainer) {
         userEditListContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('dropdown-item')) {
-                const value = e.target.dataset.value;
-                const text  = e.target.textContent;
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem && userEditListContainer.contains(dropdownItem)) {
+                const value = dropdownItem.dataset.value;
+                const text  = dropdownItem.textContent;
                 document.getElementById('edit_user_id').value = value;
                 document.getElementById('selectedEditUserText').textContent = text;
 
-                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
-                if (dropdownInstance) dropdownInstance.hide();  // <-- Close dropdown here
+                if (dropdownInstance) dropdownInstance.hide();
             }
         });
     }
 
+
     // Delegate click inside .class-notes-list
     if (classNotesListContainer) {
         classNotesListContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('dropdown-item')) {
-                const value = e.target.dataset.value;
-                const text  = e.target.textContent;
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem && classNotesListContainer.contains(dropdownItem)) {
+                const value = dropdownItem.dataset.value;
+                const text  = dropdownItem.textContent;
                 document.getElementById('notes_class_id').value = value;
                 document.getElementById('selectedNotesClassText').textContent = text;
 
-                const dropdownToggle = e.target.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
                 if (dropdownInstance) dropdownInstance.hide();
-
-                previewDiv.innerHTML = '';
-                loadExistingFiles();
             }
         });
     }
@@ -657,11 +678,23 @@ function reloadClassDropdowns() {
                         const dropdownItem = document.createElement('div');
                         dropdownItem.className = 'dropdown-item';
                         dropdownItem.dataset.value = classItem.id;
-                        let displayText = classItem.name;
+
+                        const mainLineDiv = document.createElement('div');
+                        mainLineDiv.className = 'main-line';
+
+                        let mainDisplayText = classItem.name + ' ';
                         if (classItem.courseCode) {
-                            displayText += ` (${classItem.courseCode})`;
+                            mainDisplayText += `(${classItem.courseCode}) `;
                         }
-                        dropdownItem.textContent = displayText;
+                        mainLineDiv.textContent = mainDisplayText;
+
+                        const subheaderLineDiv = document.createElement('div');
+                        subheaderLineDiv.className = 'subheader-line';
+                        subheaderLineDiv.textContent = 'Created by: ' + classItem.createdByUsername;
+
+                        dropdownItem.appendChild(mainLineDiv);
+                        dropdownItem.appendChild(subheaderLineDiv);
+
                         classDropdown.appendChild(dropdownItem);
                     });
                 }
@@ -676,11 +709,23 @@ function reloadClassDropdowns() {
                         const dropdownItem = document.createElement('div');
                         dropdownItem.className = 'dropdown-item';
                         dropdownItem.dataset.value = classItem.id;
-                        let displayText = classItem.name;
+
+                        const mainLineDiv = document.createElement('div');
+                        mainLineDiv.className = 'main-line';
+
+                        let mainDisplayText = classItem.name + ' ';
                         if (classItem.courseCode) {
-                            displayText += ` (${classItem.courseCode})`;
+                            mainDisplayText += `(${classItem.courseCode}) `;
                         }
-                        dropdownItem.textContent = displayText;
+                        mainLineDiv.textContent = mainDisplayText;
+
+                        const subheaderLineDiv = document.createElement('div');
+                        subheaderLineDiv.className = 'subheader-line';
+                        subheaderLineDiv.textContent = 'Created by: ' + classItem.createdByUsername;
+
+                        dropdownItem.appendChild(mainLineDiv);
+                        dropdownItem.appendChild(subheaderLineDiv);
+
                         classEditDropdown.appendChild(dropdownItem);
                     });
                 }
@@ -695,11 +740,23 @@ function reloadClassDropdowns() {
                         const dropdownItem = document.createElement('div');
                         dropdownItem.className = 'dropdown-item';
                         dropdownItem.dataset.value = classItem.id;
-                        let displayText = classItem.name;
+
+                        const mainLineDiv = document.createElement('div');
+                        mainLineDiv.className = 'main-line';
+
+                        let mainDisplayText = classItem.name + ' ';
                         if (classItem.courseCode) {
-                            displayText += ` (${classItem.courseCode})`;
+                            mainDisplayText += `(${classItem.courseCode})`;
                         }
-                        dropdownItem.textContent = displayText;
+                        mainLineDiv.textContent = mainDisplayText;
+
+                        const subheaderLineDiv = document.createElement('div');
+                        subheaderLineDiv.className = 'subheader-line';
+                        subheaderLineDiv.textContent = 'Created by: ' + classItem.createdByUsername;
+
+                        dropdownItem.appendChild(mainLineDiv);
+                        dropdownItem.appendChild(subheaderLineDiv);
+
                         classNotesDropdown.appendChild(dropdownItem);
                     });
                 }

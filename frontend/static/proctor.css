@@ -81,6 +81,7 @@ header, footer {
 .dropdown-item:hover {
     background-color: #0b5ed7;
     color: white;
+    cursor: default;
 }
 
 /* Prevent horizontal scrolling on the dropdown-menu */
@@ -93,6 +94,22 @@ header, footer {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.main-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.subheader-line {
+  font-size: 1rem;
+  color: #adb5bd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
 }
 
 /*--------------------- Table Settings ------------------------*/

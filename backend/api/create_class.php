@@ -4,15 +4,27 @@ require_once '../includes/db_connect.php';
 
 header('Content-Type: application/json');
 
-if (!isAdmin()) {
+// Ensure the user is logged in and is an admin (professor)
+if (!isLoggedIn() || !isAdmin()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Not authorized']);
     exit();
 }
 
+// Get the logged-in user's ID (professor's ID)
+// This assumes your session_handler.php or similar mechanism makes $_SESSION['user_id'] available.
+$professorId = $_SESSION['user_id'] ?? null;
+
+if ($professorId === null) {
+    http_response_code(401); // Unauthorized if user_id is not in session
+    echo json_encode(['success' => false, 'message' => 'User ID not found in session. Please log in again.']);
+    exit();
+}
+
+
 try {
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     if (!isset($data['name'])) {
         throw new Exception('Class name is required');
     }
@@ -57,18 +69,20 @@ try {
     
     echo json_encode([
         'success' => true,
-        'message' => 'Class created successfully',
-        'id' => $newId
+        'message' => 'Class created and professor enrolled successfully!',
+        'id' => $newCourseId
     ]);
 
-    $stmt->close();
-
 } catch (Exception $e) {
+    // Rollback transaction on error
+    $connection->rollback();
     http_response_code(500);
+    error_log("Error creating class and enrolling professor: " . $e->getMessage()); // Log error for debugging
     echo json_encode([
         'success' => false,
-        'message' => 'Error creating class: ' . $e->getMessage()
+        'message' => 'Error creating class and enrolling professor: ' . $e->getMessage()
     ]);
 } finally {
     $connection->close();
 }
+?>

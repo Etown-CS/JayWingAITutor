@@ -335,8 +335,9 @@ function renderEnrollmentTable(userCourses) {
 
         userCourses.forEach(userCourse => {
             const tr = document.createElement('tr');
+            const courseCodeDisplay = userCourse.courseCode ? ` (${userCourse.courseCode})` : '';
             tr.innerHTML = `
-                <td>${userCourse.name}</td>
+                <td>${userCourse.name}${courseCodeDisplay}</td>
                 <td>${userCourse.username}</td>
                 <td>${userCourse.role}</td>
                 <td>

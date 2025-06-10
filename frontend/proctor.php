@@ -232,14 +232,7 @@ if ($currentUserId) {
                                                 placeholder="Search classes..."
                                             />
                                             <div class="class-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <?php while($class = $classes->fetch_assoc()): ?>
-                                                    <div class="dropdown-item" data-value="<?= $class['id'] ?>">
-                                                        <?= htmlspecialchars($class['name']) ?> 
-                                                        <?php if (!empty($class['courseCode'])): ?>
-                                                            (<?= htmlspecialchars($class['courseCode']) ?>)
-                                                        <?php endif; ?>
-                                                    </div>
-                                                <?php endwhile; ?>
+                                                <!-- Dynamically Populated List -->
                                             </div>
                                         </div>
                                         <input type="hidden" id="class_id" name="class_id" required>

@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
 let allClasses = []; // Store full class list globally
 
 function loadClasses() {
-    fetch('../backend/api/get_all_classes.php')
+    fetch('../backend/api/get_professor_classes.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {
@@ -318,7 +318,7 @@ function initializeSearchableClassTable() {
 let allEnrollments = []; // Store full enrollment list globally
 
 function loadEnrollments() {
-    fetch('../backend/api/get_classes.php')
+    fetch('../backend/api/get_professor_enrollments.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {
@@ -638,7 +638,7 @@ function initializeSearchableDropdowns() {
 
 // Reload Class Dropdowns
 function reloadClassDropdowns() {
-    fetch('../backend/api/get_all_classes.php')
+    fetch('../backend/api/get_professor_classes.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {

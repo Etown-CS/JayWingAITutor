@@ -25,7 +25,20 @@ if (isset($_GET['manageclasses'])) {
 }
 
 $classes = $connection->query("SELECT * FROM courses");
-$users = $connection->query("SELECT * FROM users");
+
+// users
+$isUserLoggedIn = isLoggedIn();
+$currentUserId = null;
+if ($isUserLoggedIn) {
+    $currentUserId = $_SESSION['user_id'];
+}
+
+// Modify the query to exclude the current user if logged in
+if ($currentUserId) {
+    $users = $connection->query("SELECT * FROM users WHERE id != " . (int)$currentUserId);
+} else {
+    $users = $connection->query("SELECT * FROM users");
+}
 ?>
 
 <!DOCTYPE html>

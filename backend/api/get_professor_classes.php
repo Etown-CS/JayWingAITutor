@@ -10,11 +10,21 @@ if (!isAdmin()) {
     exit();
 }
 
+$loggedInUserId = $_SESSION['user_id'];
+
 try {
-    $result = $connection->query("SELECT * FROM courses");
+    $stmt = $connection->prepare("
+        SELECT c.*
+        FROM courses c
+        JOIN user_courses uc ON c.id = uc.courseId
+        WHERE uc.userId = ?
+    ");
+    $stmt->bind_param("i", $loggedInUserId);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
     if (!$result) {
-        throw new Exception("Query failed: " . $connection->error);
+        throw new Exception("Query failed: " . $stmt->error);
     }
 
     $classes = [];
@@ -27,7 +37,7 @@ try {
         'data' => $classes
     ]);
 
-    $result->close();
+    $stmt->close();
 
 } catch (Exception $e) {
     http_response_code(500);
@@ -36,5 +46,8 @@ try {
         'message' => 'Error fetching classes: ' . $e->getMessage()
     ]);
 } finally {
-    $connection->close();
+    if (isset($connection)) {
+        $connection->close();
+    }
 }
+?>

@@ -66,11 +66,23 @@ try {
     }
 
     $newId = $connection->insert_id;
+
+    // Enroll the professor in the newly created class
+    $stmt = $connection->prepare("INSERT INTO user_courses (courseId, userId) VALUES (?, ?)");
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $connection->error);
+    }
+    $stmt->bind_param("ii", $newId, $professorId);
+    if (!$stmt->execute()) {
+        throw new Exception("Execution failed: " . $stmt->error);
+    }
+    $stmt->close();
+
     
     echo json_encode([
         'success' => true,
         'message' => 'Class created and professor enrolled successfully!',
-        'id' => $newCourseId
+        'id' => $newId
     ]);
 
 } catch (Exception $e) {

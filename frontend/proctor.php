@@ -363,9 +363,6 @@ $users = $connection->query("SELECT * FROM users");
                                                 <?php while($class = $classes->fetch_assoc()): ?>
                                                     <div class="dropdown-item" data-value="<?= $class['id'] ?>">
                                                         <?= htmlspecialchars($class['name']) ?> 
-                                                        <?php if (!empty($class['courseCode'])): ?>
-                                                            (<?= htmlspecialchars($class['courseCode']) ?>)
-                                                        <?php endif; ?>
                                                     </div>
                                                 <?php endwhile; ?>
                                             </div>
@@ -416,7 +413,7 @@ $users = $connection->query("SELECT * FROM users");
                         <!-- Edit Course Code -->
                         <div class="mb-3">
                             <label for="edit_course_code" class="form-label">Course Code</label>
-                            <input type="text" class="form-control" id="edit_course_code" maxlength="7">
+                            <input type="text" class="form-control" id="edit_course_code" maxlength="20">
                         </div>
                         <!-- Edit Class Description -->
                         <div class="mb-3">

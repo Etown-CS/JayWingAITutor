@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (classDescription === '') { classDescription = null}
 
             const data = {
+                userId: userId,
                 name: document.getElementById('class_name').value,
                 courseCode: courseCode,
                 description: classDescription

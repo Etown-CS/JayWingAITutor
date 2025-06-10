@@ -29,6 +29,8 @@ CREATE TABLE user_courses (
     interest VARCHAR(100) DEFAULT NULL,
     responseLength VARCHAR(20) DEFAULT 'Average',
     archived TINYINT(1) NOT NULL DEFAULT 0,
+    -- enforce one enrollment per user per course:
+    UNIQUE KEY unique_course_user (courseId, userId),
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
 );

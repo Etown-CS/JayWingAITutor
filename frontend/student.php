@@ -159,6 +159,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         $stmt->execute();
                         $result = $stmt->get_result();
                         $uniqueDisciplines = [];
+                        $discipline = '';
                         while ($row = $result->fetch_assoc()):
                             // Exclude empty course codes
                             if (empty($row['courseCode'])) {
@@ -170,16 +171,17 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             if (preg_match('/^([A-Z]{2,3})(\d{3})$/i', $courseCode, $matches)) {
                                 $discipline = $matches[1]; // "CSC"
                                 $courseNumber = $matches[2]; // "101"
-                                echo "Letters: $letters\n";
-                                echo "Numbers: $numbers\n";
                             } else {
                                 echo "Invalid course code format.";
                             }
                             
-                            if (in_array($discipline, $uniqueDisciplines)) {
+                            if ($discipline && in_array($discipline, $uniqueDisciplines)) {
                                 continue; // Skip if discipline already added
                             }
                             $uniqueDisciplines[] = $discipline;
+                            if (empty($discipline)) {
+                                continue; // Skip empty disciplines
+                            }
                     ?>
                     <option value="<?php echo $discipline; ?>"><?php echo $discipline; ?></option>
                     <?php endwhile; ?>

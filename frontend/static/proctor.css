@@ -230,3 +230,22 @@ header, footer {
 .delete-icon:hover {
     background-color: #004B98;
 }
+
+/*--------------------- Modal Settings ------------------------*/
+
+.modal-dialog-lower {
+    margin-top: 5rem; /* Make modals and banners visible */
+    margin-bottom: 5rem; /* Helps keep it from hugging the bottom if content is short */
+    display: flex;
+    align-items: flex-start;
+    min-height: calc(100% - 10rem); /* Ensures it takes up some vertical space, adjusting for margins */
+}
+
+/* For smaller screens, ensure the modal doesn't get squished */
+@media (max-width: 576px) {
+    .modal-dialog-lower {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        min-height: calc(100% - 4rem);
+    }
+}

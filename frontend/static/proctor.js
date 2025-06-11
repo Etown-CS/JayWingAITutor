@@ -16,6 +16,61 @@ const enrollmentModal = new bootstrap.Modal(document.getElementById('editEnrollm
 // --------------------- General JavaScript ------------------------
 
 
+// Global timeout holders
+let feedbackTimeoutId = null;
+let errorTimeoutId = null;
+
+function hideAllBanners() {
+    const feedbackBanner = document.getElementById('feedback-banner');
+    const errorBanner = document.getElementById('error-banner');
+
+    if (feedbackBanner) {
+        feedbackBanner.classList.add('hidden');
+        if (feedbackTimeoutId) {
+            clearTimeout(feedbackTimeoutId);
+            feedbackTimeoutId = null;
+        }
+    }
+
+    if (errorBanner) {
+        errorBanner.classList.add('hidden');
+        if (errorTimeoutId) {
+            clearTimeout(errorTimeoutId);
+            errorTimeoutId = null;
+        }
+    }
+}
+
+function showFeedbackBanner(message) {
+    hideAllBanners(); // Hide others and clear their timeouts
+
+    const banner = document.getElementById('feedback-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    feedbackTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        feedbackTimeoutId = null;
+    }, 10000); // 10 seconds
+}
+
+function showErrorBanner(message) {
+    hideAllBanners(); // Hide others and clear their timeouts
+
+    const banner = document.getElementById('error-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    errorTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        errorTimeoutId = null;
+    }, 10000); // 10 seconds
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
     initializeSearchableClassTable();
@@ -71,91 +126,90 @@ document.addEventListener('DOMContentLoaded', function () {
             const courseCodeInput = document.getElementById('course_code');
             let courseCode = courseCodeInput.value.toUpperCase();
             let classDescription = document.getElementById('class_description').value;
-            
-            // Use the reusable function here as well
+            const className = document.getElementById('class_name').value.trim(); // Get the class name here
+
             if (isValidCourseCode(courseCode)) {
                 console.log("Add Form: Course code is valid.");
 
                 if (courseCode === '') { courseCode = null; }
                 if (classDescription === '') { classDescription = null; }
 
-            fetch('../backend/api/get_professor_classes.php')
-                .then(response => response.json())
-                .then(result => {
-                    if (!result.success) {
-                        console.error('Error loading classes:', result.message);
-                        return;
-                    }
-
-                    allClasses = result.data; // Save full list globally
-                    console.log('All classes loaded:', allClasses);
-                    classExists = false;
-                    
-                    // Check for duplicate class names or course codes
-                    const className = document.getElementById('class_name').value.trim();
-
-                    
-                    if (courseCode) {
-                        classExists = allClasses.some(cls =>
-                            (cls.name && className && cls.name.toLowerCase() === className.toLowerCase()) ||
-                            (cls.courseCode && courseCode && cls.courseCode.toLowerCase() === courseCode.toLowerCase())
-                        );
-                    } else {
-                        classExists = allClasses.some(cls =>
-                            (cls.name && className && cls.name.toLowerCase() === className.toLowerCase())
-                        );
-                    }
-                    
-
-                    if (classExists) {
-                        if (courseCode) {
-                            alert(`A class with the name "${className}" or course code "${courseCode}" has already been created by this user.`);
+                // Fetch all classes to check for duplicates
+                fetch('../backend/api/get_professor_classes.php')
+                    .then(response => response.json())
+                    .then(result => {
+                        if (!result.success) {
+                            console.error('Error loading classes for duplicate check:', result.message);
                             return;
-                        } else {
-                            alert(`A class with the name "${className}" has already been created by this user.`);
-                            return;
-                        }                        
-                    }
+                        }
 
-                    // Proceed with class creation
-                    const data = {
-                        userId: userId,
-                        name: className,
-                        courseCode: courseCode,
-                        description: classDescription
-                    };
+                        const allClassesForCheck = result.data;
+                        let duplicateFound = false;
 
-                    fetch('../backend/api/create_class.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert("Course added successfully!");
-                                loadClasses();
-                                reloadClassDropdowns();
-                                initializeSearchableClassTable();
-                                reloadFilterDropdowns();
-                                this.reset();
-                            } else {
-                                alert(`Error: ${data.message}`);
+                        for (const cls of allClassesForCheck) {
+                            // Check for duplicate class name and course code if provided
+                            if ((courseCode && cls.courseCode && cls.courseCode.toLowerCase() === courseCode.toLowerCase()) &&
+                                (className && cls.name && cls.name.toLowerCase() === className.toLowerCase())) {
+                                showErrorBanner(`A class with the name "${className}" and course code "${courseCode}" already exists for this user.`);
+                                duplicateFound = true;
+                                break;
                             }
+                            // Check for duplicate class name
+                            if (className && cls.name && cls.name.toLowerCase() === className.toLowerCase()) {
+                                showErrorBanner(`A class with the name "${className}" already exists for this user.`);
+                                duplicateFound = true;
+                                break;
+                            }
+                            // Check for duplicate course code if provided
+                            if (courseCode && cls.courseCode && cls.courseCode.toLowerCase() === courseCode.toLowerCase()) {
+                                showErrorBanner(`A class with the course code "${courseCode}" already exists for this user.`);
+                                duplicateFound = true;
+                                break;
+                            }
+                        }
+
+                        if (duplicateFound) {
+                            return; // Stop the form submission
+                        }
+
+                        // If no duplicates found, proceed with class creation
+                        const data = {
+                            userId: userId, // Ensure userId is defined in your scope
+                            name: className,
+                            courseCode: courseCode,
+                            description: classDescription
+                        };
+
+                        fetch('../backend/api/create_class.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
                         })
-                        .catch(error => {
-                            alert('An unexpected error occurred: ' + error.message);
-                        });
-                })
-                .catch(error => console.error('Error:', error));
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    showFeedbackBanner("Class added successfully!");
+                                    loadClasses();
+                                    reloadClassDropdowns();
+                                    initializeSearchableClassTable();
+                                    reloadFilterDropdowns();
+                                    this.reset();
+                                } else {
+                                    showErrorBanner(`Error: ${data.message}`);
+                                }
+                            })
+                            .catch(error => {
+                                showErrorBanner('An unexpected error occurred: ' + error.message);
+                            });
+                    })
+                    .catch(error => console.error('Error fetching classes for validation:', error));
 
             } else {
-                // Input is not empty and does not match the required format
-                alert("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
-                courseCodeInput.focus(); // Optional: bring focus to the incorrect field
-            } 
+                showErrorBanner("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
+                courseCodeInput.focus();
+            }
         });
     }
 
@@ -179,9 +233,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     allEnrollments = result.data; // Save full list globally
                     console.log('All enrollments loaded:', allEnrollments);
 
+                    // Check that user filled required fields
+                    const courseId = document.getElementById('class_id').value;
+                    const userId = document.getElementById('user_id').value;
+                    if (!(courseId)) {
+                        showErrorBanner("Please select a class in the dropdown.");
+                        return;
+                    }
+                    if (!(userId)) {
+                        showErrorBanner("Please select a user in the dropdown.");
+                        return;
+                    }
+
                     const data = {
-                        courseId: document.getElementById('class_id').value,
-                        userId: document.getElementById('user_id').value,
+                        courseId: courseId,
+                        userId: userId,
                         // roleOfClass: document.getElementById('roleOfClass').value
                     };
 
@@ -191,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
 
                     if (isAlreadyEnrolled) {
-                        alert("This user is already enrolled in the selected class.");
+                        showErrorBanner("This user is already enrolled in the selected class.");
                         return;
                     }
 
@@ -206,25 +272,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert("Enrollment added successfully!");
+                            showFeedbackBanner("Enrollment added successfully!");
                             loadEnrollments();
                             initializeSearchableEnrollmentTable();
                             reloadFilterDropdowns();
                             form.reset();
                         } else {
-                            alert(`Error: ${data.message}`);
+                            showErrorBanner(`Error: ${data.message}`);
                         }
                     })
                     .catch(error => {
-                        alert('An unexpected error occurred: ' + error.message);
+                        showErrorBanner('An unexpected error occurred: ' + error.message);
                     });
                 })
-                .catch(error => console.error('Error:', error));
-            
-            
-            
-            
-            
+                .catch(error => console.error('Error:', error)); 
         });
     }
     
@@ -236,6 +297,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const courseCodeInput = document.getElementById('edit_course_code');
             let courseCodeGet = courseCodeInput.value.toUpperCase();
             let classDescription = document.getElementById('edit_class_description').value;
+            const courseIdBeingEdited = document.getElementById('edit_course_id').value; // Get the ID of the class being edited
+            const newClassName = document.getElementById('edit_class_name').value.trim();
 
             // Use the reusable function to validate the input
             if (isValidCourseCode(courseCodeGet)) {
@@ -244,37 +307,88 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (courseCodeGet === '') { courseCodeGet = null; }
                 if (classDescription === '') { classDescription = null; }
 
-                const data = {
-                    courseId: document.getElementById('edit_course_id').value,
-                    name: document.getElementById('edit_class_name').value,
-                    courseCode: courseCodeGet,
-                    description: classDescription
-                };
-                
-                fetch('../backend/api/update_class.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        loadClasses();
-                        reloadFilterDropdowns();
-                        initializeSearchableClassTable();
-                        classModal.hide();
-                    }
-                });
+                // Fetch all classes to check for duplicates (excluding the current one)
+                fetch('../backend/api/get_professor_classes.php')
+                    .then(response => response.json())
+                    .then(result => {
+                        if (!result.success) {
+                            console.error('Error loading classes for duplicate check:', result.message);
+                            return;
+                        }
+
+                        const allClassesForCheck = result.data;
+                        let duplicateFound = false;
+
+                        for (const cls of allClassesForCheck) {
+                            // Skip the class currently being edited
+                            if (cls.id == courseIdBeingEdited) {
+                                continue;
+                            }
+
+                            // Check for duplicate class name and course code if new code provided
+                            if ((cls.name && newClassName && cls.name.toLowerCase() === newClassName.toLowerCase()) &&
+                                (courseCodeGet && cls.courseCode && cls.courseCode.toLowerCase() === courseCodeGet.toLowerCase())) {
+                                showErrorBanner(`A class with the name "${newClassName}" and course code "${courseCodeGet}" already exists for this user.`);
+                                duplicateFound = true;
+                                break;
+                            }
+
+                            // Check for duplicate class name
+                            if (cls.name && newClassName && cls.name.toLowerCase() === newClassName.toLowerCase()) {
+                                showErrorBanner(`A class with the name "${newClassName}" already exists for this user.`);
+                                duplicateFound = true;
+                                break;
+                            }
+                            // Check for duplicate course code if new code provided
+                            if (courseCodeGet && cls.courseCode && cls.courseCode.toLowerCase() === courseCodeGet.toLowerCase()) {
+                                showErrorBanner(`A class with the course code "${courseCodeGet}" already exists for this user.`);
+                                duplicateFound = true;
+                                break;
+                            }
+                        }
+
+                        if (duplicateFound) {
+                            return; // Stop the form submission
+                        }
+
+                        // If no duplicates found, proceed with the update
+                        const data = {
+                            courseId: courseIdBeingEdited,
+                            name: newClassName,
+                            courseCode: courseCodeGet,
+                            description: classDescription
+                        };
+                        
+                        fetch('../backend/api/update_class.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showFeedbackBanner("Class updated successfully!");
+                                loadClasses();
+                                reloadFilterDropdowns();
+                                initializeSearchableClassTable();
+                                classModal.hide();
+                            } else {
+                                hideAllBanners();
+                                classModal.hide();
+                            }
+                        })
+                        .catch(error => {
+                            showErrorBanner('An unexpected error occurred during update: ' + error.message);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching classes for validation:', error));
 
             } else {
-                alert("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
+                showErrorBanner("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
                 courseCodeInput.focus();
             }
-
-            
-            
         });
     }
 
@@ -282,30 +396,69 @@ document.addEventListener('DOMContentLoaded', function () {
     if (editEnrollmentForm) {
         editEnrollmentForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const data = {
-                userCourseId: document.getElementById('edit_enrollment_id').value,
-                courseId: document.getElementById('edit_class_id').value,
-                userId: document.getElementById('edit_user_id').value,
-                roleOfClass: document.getElementById('edit_roleOfClass').value
-            };
-            
-            fetch('../backend/api/update_enrollment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadEnrollments();
-                    initializeSearchableEnrollmentTable();
-                    reloadFilterDropdowns();
-                    enrollmentModal.hide();
-                }
-            });
+
+            const userCourseId = document.getElementById('edit_enrollment_id').value;
+            const courseId = document.getElementById('edit_class_id').value;
+            const userId = document.getElementById('edit_user_id').value;
+            const roleOfClass = document.getElementById('edit_roleOfClass').value;
+
+            // Step 1: Fetch all current enrollments
+            fetch('../backend/api/get_professor_enrollments.php')
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success) {
+                        console.error('Error loading enrollments:', result.message);
+                        return;
+                    }
+
+                    const enrollments = result.data;
+                    let duplicateFound = false;
+
+                    for (const enrollment of enrollments) {
+                        // Skip the current enrollment being edited
+                        if (enrollment.userCoursesId == userCourseId) continue;
+
+                        // Check for same courseId + userId pair
+                        if (enrollment.courseId == courseId && enrollment.userId == userId) {
+                            showErrorBanner(`This user is already enrolled in the selected class.`);
+                            duplicateFound = true;
+                            break;
+                        }
+                    }
+
+                    if (duplicateFound) return;
+                    
+                    const data = {
+                        userCourseId,
+                        courseId,
+                        userId,
+                        roleOfClass
+                    };
+
+                    fetch('../backend/api/update_enrollment.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showFeedbackBanner("Enrollment updated successfully!");
+                            loadEnrollments();
+                            initializeSearchableEnrollmentTable();
+                            reloadFilterDropdowns();
+                            enrollmentModal.hide();
+                        }
+                    })
+                    .catch(error => {
+                        showErrorBanner("An error occurred: " + error.message);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching enrollments:', error);
+                });
         });
     }
 });
@@ -464,7 +617,8 @@ function renderEnrollmentTable(userCourses) {
                         data-usercourse-user="${userCourse.username}"
                         data-course-id="${userCourse.courseId}"
                         data-user-id="${userCourse.userId}"
-                        data-created-by-username="${userCourse.createdByUsername}">
+                        data-created-by-username="${userCourse.createdByUsername}"
+                        data-course-code="${userCourse.courseCode}">
                         Edit
                     </button>
                     <button class="btn btn-sm btn-danger m-0" onclick="deleteEnrollment(${userCourse.userCoursesId})">
@@ -531,6 +685,7 @@ document.addEventListener('click', function (e) {
         document.getElementById('edit_course_code').value = btn.dataset.courseCode || '';
         document.getElementById('edit_class_description').value = btn.dataset.classDescription || '';
 
+        hideAllBanners();
         classModal.show();
     }
     
@@ -542,10 +697,11 @@ document.addEventListener('click', function (e) {
         // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
 
         let mainDisplayText = btn.dataset.usercourseName + ' ';
-        if (btn.dataset.courseCode) { mainDisplayText += (btn.dataset.courseCode) + ' '}
+        if (btn.dataset.courseCode) { mainDisplayText += '(' + (btn.dataset.courseCode) + ') '}
         document.getElementById('selectedEditClassText').textContent = mainDisplayText + 'Created by: ' + btn.dataset.createdByUsername;
         document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
 
+        hideAllBanners();
         enrollmentModal.show();
     }
 });
@@ -554,6 +710,7 @@ document.addEventListener('click', function (e) {
 function deleteClass(classId) {
     if (confirm('Are you sure? This will also delete all enrollments for this class.')) {
         document.getElementById('loading-spinner').classList.remove('hidden');
+        showFeedbackBanner("Deleting class...");
         // First delete all files from class
         fetch(`${FLASK_API}/delete-course`, {
             method: 'DELETE',
@@ -593,6 +750,7 @@ function deleteClass(classId) {
             });
         })
         .finally(() => {
+            showFeedbackBanner("Class deleted.");
             document.getElementById('loading-spinner').classList.add('hidden');
         });
     }
@@ -611,6 +769,7 @@ function deleteEnrollment(enrollmentId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                showFeedbackBanner("Enrollment deleted.");
                 initializeSearchableEnrollmentTable();
                 reloadFilterDropdowns();
                 loadEnrollments();

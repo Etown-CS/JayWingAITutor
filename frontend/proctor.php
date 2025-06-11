@@ -99,11 +99,24 @@ if ($currentUserId) {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        #feedback-banner,
+        #error-banner {
+            z-index: 1060; /* Bootstrap modals typically use z-index around 1050 */
+        }
     </style>
 
     <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
         Proctor Page
     </header>
+
+    <div id="feedback-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-blue-100 text-blue-800 px-4 py-2 rounded shadow hidden text-sm">
+        <!-- JavaScript -->
+    </div>
+
+    <div id="error-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-red-100 text-red-800 px-4 py-2 rounded shadow hidden text-sm">
+        <!-- JavaScript -->
+    </div>
 
     <div class="flex flex-grow w-full mt-0 overflow-hidden">
 
@@ -424,7 +437,7 @@ if ($currentUserId) {
 
     <!-- Edit Classes Modal -->
     <div class="modal fade" id="editClassesModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-lower">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Class</h5>
@@ -465,7 +478,7 @@ if ($currentUserId) {
 
     <!-- Edit Enrollments Modal -->
     <div class="modal fade" id="editEnrollmentsModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-lower">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Enrollment</h5>

@@ -17,6 +17,8 @@ try {
         throw new Exception('Class ID is required');
     }
 
+    // TODO: Delete all related files before deleting the class
+
     $connection->begin_transaction();
 
     // First delete related enrollments

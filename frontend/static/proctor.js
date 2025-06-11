@@ -455,23 +455,46 @@ document.addEventListener('click', function (e) {
 // Delete Class
 function deleteClass(classId) {
     if (confirm('Are you sure? This will also delete all enrollments for this class.')) {
-        fetch('../backend/api/delete_class.php', {
-            method: 'POST',
+        // First delete all files from class
+        fetch(`${FLASK_API}/delete-course`, {
+            method: 'DELETE',
+            credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-User-Id': userId,
+                'X-User-Role': userRole,
+                'X-Username': username
             },
-            body: JSON.stringify({ id: classId })
+            body: JSON.stringify({ courseId: classId})
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {                
-                loadClasses();
-                reloadClassDropdowns();
-                reloadFilterDropdowns();
-                initializeSearchableClassTable();
-                loadEnrollments();
+            if (!data.success) {
+                console.error(`Error deleting files for class ${classId}:`, data.message);
+                return;
             }
-        });
+            console.log(`Files for class ${classId} deleted successfully.`);
+            // Now delete the class itself
+            fetch('../backend/api/delete_class.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: classId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {                
+                    loadClasses();
+                    reloadClassDropdowns();
+                    reloadFilterDropdowns();
+                    initializeSearchableClassTable();
+                    loadEnrollments();
+                }
+            });
+        })
+
+        
     }
 }
 
@@ -902,16 +925,16 @@ function handleFiles(event) {
     }
 
     for (const file of files) {
-        saveFileToDocsFolder(file, selectedCourseName); // Pass selected course
+        saveFileToDocsFolder(file, selectedCourse); // Pass selected course
         displayFilePreview(file.name, file.type, false); // Mark file as untrained initially
     }
 }
 
 // Save file to the appropriate course's folder
-function saveFileToDocsFolder(file, course) {
+function saveFileToDocsFolder(file, courseId) {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("course", course); // course name
+    formData.append("courseId", courseId); // course name
 
     document.getElementById('loading-spinner').classList.remove('hidden');
 
@@ -929,7 +952,7 @@ function saveFileToDocsFolder(file, course) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`${file.name} saved to ${course} folder.`);
+            console.log(`${file.name} saved to course id ${courseId} folder.`);
             loadExistingFiles();
         } else {
             console.error(`Error saving ${file.name}: ${data.message}`);
@@ -1042,7 +1065,7 @@ function updateTrainedFiles() {
 // and display them in the preview area
 function loadExistingFiles() {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
-    const selectedCourse = coursesDropdownUpload.value;
+    const selectedCourse = coursesDropdownUpload.value; // This is the course ID
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
 
     if (!selectedCourseName) {
@@ -1050,7 +1073,7 @@ function loadExistingFiles() {
         return;
     }
 
-    fetch(`${FLASK_API}/load-docs?course=${encodeURIComponent(selectedCourseName)}`, {
+    fetch(`${FLASK_API}/load-docs?courseId=${encodeURIComponent(selectedCourse)}`, {
         method: "GET",
         credentials: 'include',
         headers: {

@@ -67,7 +67,21 @@ try {
         throw new Exception("Execution failed: " . $stmt->error);
     }
 
+    $stmt->close();
+
+    // Update the file path to include the course ID
     $newId = $connection->insert_id;
+    // Create filepath
+    $filepath = "" . $username . "_" . $userId . "/" . $name . "_" . $newId . "/";
+    $stmt = $connection->prepare("UPDATE courses SET filepath = ? WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $connection->error);
+    }
+    $stmt->bind_param("si", $filepath, $newId);
+    if (!$stmt->execute()) {
+        throw new Exception("Execution failed: " . $stmt->error);
+    }
+    $stmt->close();
 
     // Enroll the professor in the newly created class
     $stmt = $connection->prepare("INSERT INTO user_courses (courseId, userId) VALUES (?, ?)");

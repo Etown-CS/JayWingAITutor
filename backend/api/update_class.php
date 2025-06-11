@@ -26,29 +26,15 @@ try {
     $description = $data['description'] ?? null; 
     $courseId = $data['courseId'];
 
-    // Get user name from ID
-    $stmt = $connection->prepare("SELECT username FROM users WHERE id = ?");
-    $stmt->bind_param("i", $userId);
-    if (!$stmt->execute()) {
-        throw new Exception("Execution failed: " . $stmt->error);
-    }
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
-    $stmt->close();
-    $username = $user['username'];
-
-    // Create filepath
-    $filepath = "" . $username . "_" . $userId . "/" . $name . "/";
-
-    $stmt = $connection->prepare("UPDATE courses SET name = ?, filepath = ?, courseCode = ?, description = ? WHERE id = ?");
+    // File path is not being updated because it is impossible to change the namespace names in Pinecone
+    $stmt = $connection->prepare("UPDATE courses SET name = ?, courseCode = ?, description = ? WHERE id = ?");
     
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $connection->error);
     }
 
-    $stmt->bind_param("ssssi", 
+    $stmt->bind_param("sssi", 
         $name,
-        $filepath,
         $courseCode,
         $description,
         $courseId
@@ -60,7 +46,7 @@ try {
     
     // Check if any rows were affected
     if ($stmt->affected_rows === 0) {
-        throw new Exception("No class found with the provided information: " . $courseId . " - " . $name . " - " . $filepath . " - " . $courseCode . " - " . $description);
+        throw new Exception("No class found with the provided information: " . $courseId . " - " . $courseCode . " - " . $description);
     }
 
     echo json_encode([

@@ -3,12 +3,13 @@ import sys
 import fitz  # PyMuPDF
 import re
 from pptx import Presentation
+from flask import jsonify
 import json
 from PIL import Image
 import io
 from google.cloud import storage  # Google Cloud Storage library
 from dotenv import load_dotenv
-from uuid import uuid4
+import mysql.connector
 
 # Pinecone/LangChain imports
 from pinecone import Pinecone
@@ -17,16 +18,29 @@ from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_pinecone import PineconeVectorStore
 
-load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 #For local testing:
 #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "gcloud_keys/ds400-capstone-7c0083efd90a.json"
 
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+
 DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")
 DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
+DB_PORT = os.environ.get("DB_PORT")
+
+def get_db_connection():
+    conn = mysql.connector.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS,
+        port=int(DB_PORT)
+    )
+    return conn
 
 # Initialize EasyOCR reader (uses GPU if available, else CPU)
 #reader = easyocr.Reader(['en'], gpu=True)
@@ -38,8 +52,50 @@ GCS_BUCKET_NAME = 'ai-tutor-docs-bucket'
 storage_client = storage.Client()
 bucket = storage_client.bucket(GCS_BUCKET_NAME)
 
+def get_course_name(courseId):
+    """
+    Retrieves the course name from the database based on courseId.
+    
+    Args:
+        courseId (int): The ID of the course.
+
+    Returns:
+        str: The name of the course.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT name FROM courses WHERE id = %s", (courseId,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if not result:
+        raise ValueError(f"Course with ID {courseId} not found.")
+    
+    return result['name']
+
+def get_filepath_from_db(courseId):
+    """
+    Retrieves the file path from the database based on courseId.
+    
+    Args:
+        courseId (int): The ID of the course.
+
+    Returns:
+        str: The file path of the course.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT filepath FROM courses WHERE id = %s", (courseId,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if not result:
+        raise ValueError(f"Course with ID {courseId} not found.")
+    
+    return result['filepath']
+
 # Function to read all .pdf and .pptx files from the "admin" folder in GCS
-def read_docs_from_gcs(username, course_name, userId):
+def read_docs_from_gcs(courseId):
     """
     Reads all .pdf and .pptx files from the specified user's course folder in GCS.
     
@@ -51,9 +107,13 @@ def read_docs_from_gcs(username, course_name, userId):
         dict: Key-value pairs of filenames and their extracted text.
     """
     all_text = {}
-    folder_prefix = f"{username}_{userId}/{course_name}/"  # Path in GCS bucket
+
+    # Get filepath from database
+    filepath = get_filepath_from_db(courseId)
+    print(f"📂 Reading files from GCS bucket: {GCS_BUCKET_NAME}, folder: {filepath}")
+
     # List all files in the specified folder within the bucket
-    blobs = bucket.list_blobs(prefix=folder_prefix)
+    blobs = bucket.list_blobs(prefix=filepath)
     for blob in blobs:
         filename = blob.name.split('/')[-1]
         if filename.endswith(".pdf"):
@@ -170,7 +230,7 @@ def chunk_text(text, chunk_size=750):
     return chunks
 
 # Function to embed and store text in Pinecone
-def to_pinecone(text_dict, course_name):
+def to_pinecone(text_dict, courseId):
     """
     Embeds and stores text in Pinecone vector database.
 
@@ -191,6 +251,11 @@ def to_pinecone(text_dict, course_name):
 
     index = pc.Index(index_name)
 
+    # Get course name from database
+    course_name = get_course_name(courseId)
+    # Create namespace name
+    namespace = f"{course_name}_{courseId}"
+
     for filename, text in text_dict.items():
         # Creating chunks
         chunks = chunk_text(text)
@@ -210,7 +275,7 @@ def to_pinecone(text_dict, course_name):
                     "values": vector,
                     "metadata": metadata
                 }],
-                namespace=course_name
+                namespace=namespace
             )
 
 
@@ -222,16 +287,26 @@ def main():
         raise ValueError("Username, Course Name, and Proctor ID are required as command-line arguments.")
     
     username = sys.argv[1]
-    course_name = sys.argv[2]
+    courseId = sys.argv[2]
     proctor_id = int(sys.argv[3])
     specific_file = sys.argv[4] if len(sys.argv) > 4 else None
 
-    print(f"Training context for user: {username}, course: {course_name}, proctor ID: {proctor_id}")
+    print(f"Training context for user: {username}, courseId: {courseId}, proctor ID: {proctor_id}")
 
     if specific_file:
         print(f"📂 Processing only file: {specific_file}")
-        folder_prefix = f"{username}_{proctor_id}/{course_name}/"
-        blob_path = folder_prefix + specific_file
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # This is not a valid way to find filepath, should be based on course id - name is not unique
+        cursor.execute("SELECT filepath FROM courses WHERE id = %s", (courseId,))
+        result = cursor.fetchone()
+        conn.close()
+        if not courseId:
+            return jsonify(success=False, message="Course not found"), 404
+
+        filepath = result['filepath']
+        blob_path = filepath + specific_file
         blob = bucket.blob(blob_path)
         file_bytes = blob.download_as_bytes()
 
@@ -243,12 +318,12 @@ def main():
             print(f"Unsupported file type: {specific_file}")
             return
 
-        to_pinecone({specific_file: text}, course_name)
+        to_pinecone({specific_file: text}, courseId)
 
     else:
         print("⚠️ No specific file provided—processing entire folder (legacy mode)")
-        course_notes = read_docs_from_gcs(username, course_name, proctor_id)
-        to_pinecone(course_notes, course_name)
+        course_notes = read_docs_from_gcs(courseId)
+        to_pinecone(course_notes, courseId)
 
 
 if __name__ == "__main__":

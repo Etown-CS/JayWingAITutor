@@ -166,35 +166,64 @@ document.addEventListener('DOMContentLoaded', function () {
         enrollmentForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const form = this;
+
+            fetch('../backend/api/get_professor_enrollments.php')
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success) {
+                        console.error('Error loading user courses:', result.message);
+                        return;
+                    }
+
+                    allEnrollments = result.data; // Save full list globally
+                    console.log('All enrollments loaded:', allEnrollments);
+
+                    const data = {
+                        courseId: document.getElementById('class_id').value,
+                        userId: document.getElementById('user_id').value,
+                        // roleOfClass: document.getElementById('roleOfClass').value
+                    };
+
+                    // Check if user is already enrolled in the class
+                    const isAlreadyEnrolled = allEnrollments.some(enrollment =>
+                        enrollment.courseId == data.courseId && enrollment.userId == data.userId
+                    );
+
+                    if (isAlreadyEnrolled) {
+                        alert("This user is already enrolled in the selected class.");
+                        return;
+                    }
+
+                    // Proceed with enrollment
+                    fetch('../backend/api/create_enrollment.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Enrollment added successfully!");
+                            loadEnrollments();
+                            initializeSearchableEnrollmentTable();
+                            reloadFilterDropdowns();
+                            form.reset();
+                        } else {
+                            alert(`Error: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        alert('An unexpected error occurred: ' + error.message);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
             
-            const data = {
-                courseId: document.getElementById('class_id').value,
-                userId: document.getElementById('user_id').value,
-                // roleOfClass: document.getElementById('roleOfClass').value
-            };
             
-            fetch('../backend/api/create_enrollment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Enrollment added successfully!");
-                    loadEnrollments();
-                    initializeSearchableEnrollmentTable();
-                    reloadFilterDropdowns();
-                    form.reset();
-                } else {
-                    alert(`Error: ${data.message}`);
-                }
-            })
-            .catch(error => {
-                alert('An unexpected error occurred: ' + error.message);
-            });
+            
+            
+            
         });
     }
     

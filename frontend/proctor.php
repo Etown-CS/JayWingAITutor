@@ -24,7 +24,24 @@ if (isset($_GET['manageclasses'])) {
     $currentPage = "Manage Proctor Notes";
 }
 
-$classes = $connection->query("SELECT c.*, u.username AS created_by_username FROM courses c JOIN users u ON c.createdBy = u.id");
+// classes
+if ($isUserLoggedIn) {
+    $query = "
+        SELECT c.*, u.username AS created_by_username
+        FROM user_courses uc
+        JOIN courses c ON uc.courseId = c.id
+        LEFT JOIN users u ON c.createdBy = u.id
+        WHERE uc.userId = ?
+    ";
+    
+    $stmt = $connection->prepare($query);
+    $stmt->bind_param("i", $userId); // Bind the logged-in user's ID
+    $stmt->execute();
+    $classes = $stmt->get_result();
+    $stmt->close();
+} else {
+    $classes = [];
+}
 
 // users
 $isUserLoggedIn = isLoggedIn();
@@ -250,7 +267,11 @@ if ($currentUserId) {
                                         <div class="dropdown-menu w-100 p-2">
                                             <input type="text" class="form-control mb-2" id="userSearchInput" placeholder="Search users...">
                                             <div class="user-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <!-- JavaScript -->
+                                                <?php while($user = $users->fetch_assoc()): ?>
+                                                    <div class="dropdown-item" data-value="<?= $user['id'] ?>">
+                                                        <?= htmlspecialchars($user['username']) ?>
+                                                    </div>
+                                                <?php endwhile; ?>
                                             </div>
                                         </div>
                                         <input type="hidden" id="user_id" name="user_id" required>
@@ -474,7 +495,13 @@ if ($currentUserId) {
                                         placeholder="Search users..."
                                     />
                                     <div class="user-edit-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                        <!-- JavaScript -->
+                                        <?php
+                                        $users->data_seek(0);
+                                        while($user = $users->fetch_assoc()): ?>
+                                            <div class="dropdown-item" data-value="<?= $user['id'] ?>">
+                                                <?= htmlspecialchars($user['username']) ?>
+                                            </div>
+                                        <?php endwhile; ?>
                                     </div>
                                 </div>
                                 <input type="hidden" id="edit_user_id" name="edit_user_id" required>

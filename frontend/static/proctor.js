@@ -552,6 +552,7 @@ document.addEventListener('click', function (e) {
 // Delete Class
 function deleteClass(classId) {
     if (confirm('Are you sure? This will also delete all enrollments for this class.')) {
+        document.getElementById('loading-spinner').classList.remove('hidden');
         // First delete all files from class
         fetch(`${FLASK_API}/delete-course`, {
             method: 'DELETE',
@@ -590,8 +591,9 @@ function deleteClass(classId) {
                 }
             });
         })
-
-        
+        .finally(() => {
+            document.getElementById('loading-spinner').classList.add('hidden');
+        });
     }
 }
 

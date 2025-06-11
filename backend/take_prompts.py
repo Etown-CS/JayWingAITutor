@@ -12,6 +12,12 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
+DB_HOST = os.environ.get("DB_HOST")
+DB_NAME = os.environ.get("DB_NAME")
+DB_USER = os.environ.get("DB_USER")
+DB_PASS = os.environ.get("DB_PASS")
+DB_PORT = os.environ.get("DB_PORT")
+
 # Database connection utility
 def get_db_connection():
     print("Connecting to the database...")
@@ -22,52 +28,44 @@ def get_db_connection():
         password=DB_PASS,
         port=int(DB_PORT)
     )
+    print("Database connection established.")
     return conn
-
-DB_HOST = os.environ.get("DB_HOST")
-DB_NAME = os.environ.get("DB_NAME")
-DB_USER = os.environ.get("DB_USER")
-DB_PASS = os.environ.get("DB_PASS")
-DB_PORT = os.environ.get("DB_PORT")
 
 # Constants for AI tutor
 ai_memory = 4 # Number of messages provided to the AI for context
 chunk_count = 10 # Number of chunks to retrieve from Pinecone
 similarity_threshold = 0.375 # Minimum similarity score for document relevance -- play around with this
 
-def get_userCoursesId(user_id, course_name):
+def chat_info(chatId):
     '''
-    Fetches the userCoursesId for a given user and course.
-    
+    Retrieves the course name from the chatId.
     Args:
-        user_id (str): The ID of the user.
-        course_name (str): The name of the course.
-    
+        chatId (str): The ID of the chat.
     Returns:
-        int: The userCoursesId if found, otherwise None.
+        str: The name of the course.
     '''
-    print("Fetching userCoursesId...")
+    print("Retrieving course name from chatId...")
     conn = get_db_connection()
     cursor = conn.cursor()
-
     query = """
-        SELECT userCoursesId FROM user_courses 
-        WHERE userId = %s AND courseId = (SELECT id FROM courses WHERE name = %s);
+        SELECT c.name
+        FROM user_courses uc
+        JOIN courses c ON c.id = uc.courseId
+        WHERE uc.userCoursesId = %s;
     """
-    
-    cursor.execute(query, (user_id, course_name))
+    cursor.execute(query, (chatId,))
     result = cursor.fetchone()
-    
     cursor.close()
     conn.close()
+    print("Database query executed.")
+    if not result:
+        raise ValueError("No course found for the given chatId.")
+    course_name = result[0]
+    print(f"Course name retrieved: {course_name}")
 
-    if result:
-        return result[0]
-    else:
-        print("No userCoursesId found for the given user and course.")
-        return None
+    return course_name
 
-def construct_initial_prompt(userId, courseName):
+def construct_initial_prompt(userId, chatId):
     '''
     Constructs the initial prompt using database information.
     Args:
@@ -78,9 +76,14 @@ def construct_initial_prompt(userId, courseName):
     print("Constructing initial prompt...")
 
     # Get userCoursesId for the user and course
-    user_courses_id = get_userCoursesId(userId, courseName)
-    if not user_courses_id:
+    
+    if not chatId:
         raise ValueError("No userCoursesId found for the given user and course.")
+    
+    # Get course name from chatId
+    courseName = chat_info(chatId)
+    if not courseName:
+        raise ValueError("No course name found for the given userCoursesId.")
     
     # Fetch interaction settings
     conn = get_db_connection()
@@ -90,7 +93,7 @@ def construct_initial_prompt(userId, courseName):
         FROM user_courses
         WHERE userCoursesId = %s;
     """
-    cursor.execute(query, (user_courses_id,))
+    cursor.execute(query, (chatId,))
     result = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -201,7 +204,7 @@ def get_recent_chat_history(user_id, course_name, memory_limit=5):
     return chat_history
 
 
-def get_docs(user_id, course, question):
+def get_docs(user_id, course, chatId, question):
     '''
     Fetches relevant documents from Pinecone based on the course and question.
 
@@ -222,12 +225,34 @@ def get_docs(user_id, course, question):
     index_name = "ai-tutor-index"
     index = pc.Index(index_name)
 
+    # TODO: Use chatId to get course Id
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = """
+        SELECT c.id
+        FROM user_courses uc
+        JOIN courses c ON c.id = uc.courseId
+        WHERE uc.userCoursesId = %s;
+    """
+    cursor.execute(query, (chatId,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if not result:
+        raise ValueError("No course found for the given chatId.")
+    course_id = result[0]
+
+    print(f"Searching in index: {index_name} for course: {course}")
+    
+    # Construct namespace
+    namespace = f"{course}_{course_id}"
+
     # Perform similarity search
     search_results = index.query(
         vector=question_embedding,
         top_k=chunk_count,
         include_metadata=True,
-        namespace=course # TODO Change
+        namespace=namespace
     )
 
     # Extract document names
@@ -295,42 +320,57 @@ def printTokens(response):
     print("-" * 30)
 
 
-def update_chat_logs(student_id, course_name, user_question, tutor_response, source_names):  
+def update_chat_logs(student_id, chatId, user_question, tutor_response, source_names):  
     message_id = None
-    
+
+    # Debugging print statements
+    # Uncomment for debugging
+    # print("🔄 Updating chat logs...")
+    # print("📝 Logging chat:")
+    # print(" - student_id:", student_id)
+    # print(" - chatId:", chatId)
+    # print(" - user_question:", user_question[:100])
+    # print(" - tutor_response:", tutor_response[:100])
+    # print(" - source_names:", source_names)
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Get userCoursesId for the student and course
-    user_courses_id = get_userCoursesId(student_id, course_name)
 
-    if user_courses_id:
-        # Create names string
-        source_names_str = ", ".join(source_names)
-        print("Source names string:", source_names_str)
-        # Insert the new message into the messages table
-        insert_query = """
-            INSERT INTO messages (userCoursesId, question, answer, sourceName)
-            VALUES (%s, %s, %s, %s);
-        """
-        cursor.execute(insert_query, (user_courses_id, user_question, tutor_response, source_names_str))
-        conn.commit()
-        message_id = cursor.lastrowid
-        print("Chat logs updated successfully.")
-    else:
-        print("No userCoursesId found for the given student and course.")
-    cursor.close()
-    conn.close()
+    try:
+        if chatId:
+            # Safely join source names
+            source_names_str = ", ".join(str(name) for name in source_names) if source_names else ""
+            print("Source names string:", source_names_str)
+
+            # Insert the new message into the messages table
+            insert_query = """
+                INSERT INTO messages (userCoursesId, question, answer, sourceName)
+                VALUES (%s, %s, %s, %s);
+            """
+            cursor.execute(insert_query, (chatId, user_question, tutor_response, source_names_str))
+            conn.commit()
+            message_id = cursor.lastrowid
+            print("✅ Chat logs updated successfully.")
+        else:
+            print("⚠️ No userCoursesId found for the given student and course.")
+    except Exception as e:
+        print(f"❌ Error inserting chat logs: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+    
     return message_id
 
 
+
 # Function to generate GPT-4 response
-def generate_gpt_response(user_id, course_name, user_question, originalAnswer=None):
+def generate_gpt_response(user_id, chatId, user_question, originalAnswer=None):
     """
     Generates a response from the GPT-4 model based on the user's question and course context.
 
     Args:
         student_id (str): The ID of the student.
-        course_name (str): The name of the course.
+        chat_id (str): The ID of the chat (from userCoursesId).
         user_question (str): The user's question.
         originalAnswer (str, optional): The original answer provided by the AI previously - only occurs if the user asks for a deeper explanation.
     Returns:
@@ -338,11 +378,17 @@ def generate_gpt_response(user_id, course_name, user_question, originalAnswer=No
     """
     print("Generating GPT response...")
     try:
+        # Get course name from chatId
+        print("Retrieving course name... C1")
+        course_name = chat_info(chatId)
+
         # Construct the initial prompt with user-specific context
-        initial_prompt = construct_initial_prompt(user_id, course_name)
+        print("Constructing initial prompt... C2")
+        initial_prompt = construct_initial_prompt(user_id, chatId)
 
         # Initialize session chat history
-        chat_history = get_recent_chat_history(user_id, course_name, ai_memory)
+        print("Fetching recent chat history... C3")
+        chat_history = get_recent_chat_history(user_id, course_name, ai_memory) # Keep to have course_name
 
         # Check type of question --> Could be explain/examples button press
         final_user_question = user_question
@@ -359,11 +405,11 @@ def generate_gpt_response(user_id, course_name, user_question, originalAnswer=No
             print(f"Original question: '{originalQuestion}'")
 
             # Re-fetch similar documents from Pinecone using the original question
-            docs = get_docs(user_id, course_name, originalQuestion)
+            docs = get_docs(user_id, course_name, chatId, originalQuestion)
         else:
             # Normal user question --> No button press
             # Fetch similar documents from Pinecone
-            docs = get_docs(user_id, course_name, user_question)
+            docs = get_docs(user_id, course_name, chatId, user_question)
 
         # Create a context string from the documents and get source
         if not docs:
@@ -400,7 +446,7 @@ def generate_gpt_response(user_id, course_name, user_question, originalAnswer=No
         tutor_response = response.choices[0].message.content
 
         # Update chat logs in database
-        message_id = update_chat_logs(user_id, course_name, user_question, tutor_response, document_names)
+        message_id = update_chat_logs(user_id, chatId, user_question, tutor_response, document_names)
 
         # print(f"\n\nGenerated response: {tutor_response}") # Uncomment for debugging
         return (tutor_response, list(document_names), message_id)

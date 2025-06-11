@@ -34,6 +34,7 @@ try {
                 WHERE userId = ? 
             )
             AND uc.userId != ?
+            AND uc.userId != c.createdBy
     ";
 
     $stmt = $connection->prepare($query);

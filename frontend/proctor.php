@@ -71,6 +71,9 @@ if ($currentUserId) {
     <!-- bootstrap css -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
+    <!-- font awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <!-- custom css -->
     <link rel="stylesheet" href="static/proctor.css">
 </head>
@@ -151,11 +154,13 @@ if ($currentUserId) {
                                 </div>
                                 <!-- Course Code -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="course_code" class="form-label">Course Code</label>
-                                    <i
-                                        class="fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-pointer"
-                                        title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
-                                    ></i>
+                                    <div class="flex items-center gap-1">
+                                        <label for="course_code" class="form-label">Course Code</label>
+                                        <i
+                                            class="mb-2 fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-default"
+                                            title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
+                                        ></i>
+                                    </div>
                                     <input type="text" class="form-control" id="course_code" maxlength="20">
                                 </div>
                                 <!-- Class Description -->
@@ -437,7 +442,13 @@ if ($currentUserId) {
                         </div>
                         <!-- Edit Course Code -->
                         <div class="mb-3">
-                            <label for="edit_course_code" class="form-label">Course Code</label>
+                            <div class="flex items-center gap-1">
+                                <label for="edit_course_code" class="form-label">Course Code</label>
+                                <i
+                                    class="mb-2 fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-default"
+                                    title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
+                                ></i>
+                            </div>
                             <input type="text" class="form-control" id="edit_course_code" maxlength="20">
                         </div>
                         <!-- Edit Class Description -->

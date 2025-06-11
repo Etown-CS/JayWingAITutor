@@ -466,7 +466,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         <div class="flex items-center gap-1 mb-1">
                             <label for="interest-input" class="text-sm text-gray-700">Your Interests</label>
                             <i
-                                class="fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-pointer"
+                                class="fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-default"
                                 title="Used to personalize responses for this course. Consider entering your major, hobbies, or specific topics you enjoy."
                             ></i>
                         </div>

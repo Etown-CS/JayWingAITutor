@@ -245,31 +245,44 @@ def delete_course():
 
         # Delete the course folder in the bucket
         bucket = storage_client.bucket(bucket_name)
-        blobs = bucket.list_blobs(prefix=filepath)
-        
-        for blob in blobs:
-            blob.delete()
+        blobs = list(bucket.list_blobs(prefix=filepath))  # Convert iterator to list to inspect it
 
-        # Delete the namespace in Pinecone
-        index_name = "ai-tutor-index"
-        index = pc.Index(index_name)
-
-        # Extract namespace from filepath
-        filepath_parts = filepath.split('/')
-        namespace = filepath_parts[1] 
-
-        # Get all stats (includes existing namespaces)
-        stats = index.describe_index_stats()
-        existing_namespaces = stats.get('namespaces', {})
-
-        # Delete the namespace if it exists
-        if namespace in existing_namespaces:
-            print(f"Deleting Pinecone namespace: {namespace}")
-            index.delete(delete_all=True, namespace=namespace)
+        if blobs:
+            print(f"Found {len(blobs)} blobs in '{filepath}'. Deleting...")
+            for blob in blobs:
+                blob.delete()
+            print("Deletion complete.")
         else:
-            print(f"Namespace '{namespace}' does not exist in Pinecone. Skipping deletion.")
+            print(f"No folder or files found at '{filepath}'. Skipping deletion.")
 
-        return jsonify(success=True, message="Course deleted successfully")
+        index_name = "ai-tutor-index"
+
+        # Check if the index exists first
+        existing_indexes = pc.list_indexes()
+
+        if index_name in existing_indexes:
+            index = pc.Index(index_name)
+
+            # Extract namespace from filepath
+            filepath_parts = filepath.split('/')
+            if len(filepath_parts) > 1:
+                namespace = filepath_parts[1]
+
+                # Get all stats (includes existing namespaces)
+                stats = index.describe_index_stats()
+                existing_namespaces = stats.get('namespaces', {})
+
+                # Delete the namespace if it exists
+                if namespace in existing_namespaces:
+                    print(f"Deleting Pinecone namespace: {namespace}")
+                    index.delete(delete_all=True, namespace=namespace)
+                else:
+                    print(f"Namespace '{namespace}' does not exist in Pinecone. Skipping deletion.")
+            else:
+                print(f"Invalid filepath format: {filepath}. Cannot extract namespace.")
+        else:
+            print(f"Pinecone index '{index_name}' does not exist. Skipping namespace deletion.")
+            return jsonify(success=True, message="Course deleted successfully")
     
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500

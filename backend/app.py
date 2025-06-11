@@ -307,22 +307,35 @@ def download_file():
     # if not user_id:
     #     return jsonify(success=False, message="Unauthorized"), 401
     file_name = request.args.get('file')
-    course = request.args.get('course')
-    if not file_name or not course:
+    chatId = request.args.get('chatId')
+    courseId = request.args.get('courseId') 
+    print(f"File name: {file_name}, Chat ID: {chatId}, Course ID: {courseId}")
+    if not file_name or (not chatId and not courseId):
         return jsonify(success=False, message="Missing file or course"), 400
+    if not courseId:
+        # Get course id from chatId
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT courseId FROM user_courses WHERE userCoursesId = %s", (chatId,))
+        result = cursor.fetchone()
+        conn.close()
+        if not result:
+            return jsonify(success=False, message="Chat not found"), 404
+        courseId = result['courseId']
+        print(f"File name: {file_name}, Course ID: {courseId}")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT filepath FROM courses WHERE name = %s", (course,))
+    cursor.execute("SELECT filepath FROM courses WHERE id = %s", (courseId,))
     result = cursor.fetchone()
     conn.close()
-    if not course:
+    if not courseId:
         return jsonify(success=False, message="Course not found"), 404
 
     filepath = result['filepath']
 
-    print(f"Downloading file: {file_name} for course: {course} at file path: {filepath}")
+    print(f"Downloading file: {file_name} for course: {courseId} at file path: {filepath}")
 
     blob_path = f"{filepath}{file_name}"
     blob = bucket.blob(blob_path)
@@ -437,18 +450,20 @@ def ask_question():
         return jsonify(success=False, message="Unauthorized"), 401
     try:
         data = request.get_json()
-        course_name = data.get('courseName')
+        chatId = data.get('chatId')
         question = data.get('question')
         answer = None  # Initialize answer to None
         # If answer is provided, get it
         if data.get('answer'):
             answer = data.get('answer')
 
-        if not (user_id and course_name and question):
+        print(f"Chat ID: {chatId}, Question: {question}, Answer: {answer}")
+
+        if not (user_id and chatId and question):
             return jsonify({'success': False, 'message': 'Missing required parameters.'}), 400
 
         # Call the generate_gpt_response function
-        (tutor_response, sourceNames, messageId) = generate_gpt_response(user_id, course_name, question, answer)
+        (tutor_response, sourceNames, messageId) = generate_gpt_response(user_id, chatId, question, answer)
         # Convert sourceNames to a string
         sourceNames = ', '.join(sourceNames) if sourceNames else ""
 

@@ -148,7 +148,7 @@ function addTypingIndicator() {
 }
 
 let typingIndicatorElement = null;
-function askQuestion(selectedCourseName) {
+function askQuestion(chatId) {
     const question = document.getElementById('student-question').value;
     updateConversationUser(question);
 
@@ -164,7 +164,7 @@ function askQuestion(selectedCourseName) {
         },
         body: JSON.stringify({
             question: question,
-            courseName: selectedCourseName,
+            chatId: chatId,
         }),
     })
         .then(response => response.json())
@@ -177,7 +177,7 @@ function askQuestion(selectedCourseName) {
                 }
 
                 // Update conversation with AI response
-                updateConversationAI(data.response, data.sourceName, selectedCourseName, data.messageId);
+                updateConversationAI(data.response, data.sourceName, currentCourseName, data.messageId);
             } else {
                 console.error("Error in response:", data.message);
                 // Remove typing indicator
@@ -198,7 +198,7 @@ function askQuestion(selectedCourseName) {
 };
 
 // Ask a preset question
-function askPresetQuestion(selectedCourseName, question, answer) {
+function askPresetQuestion(chatId, question, answer) {
     console.log("Asking preset question:", question);
 
     // TODO: Formatting the question - Make the second part italic
@@ -232,7 +232,7 @@ function askPresetQuestion(selectedCourseName, question, answer) {
         body: JSON.stringify({
             question: question,
             answer: answer,
-            courseName: selectedCourseName
+            chatId: chatId
         }),
     })
         .then(response => response.json())
@@ -245,7 +245,7 @@ function askPresetQuestion(selectedCourseName, question, answer) {
                 }
 
                 // Update conversation with AI response
-                updateConversationAI(data.response, data.sourceName, selectedCourseName, data.messageId);
+                updateConversationAI(data.response, data.sourceName, currentCourseName, data.messageId);
             } else {
                 console.error("Error in response:", data.message);
                 // Remove typing indicator
@@ -294,7 +294,7 @@ function updateConversationUser(text) {
     scrollToBottom();
 }
 
-function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
+function updateConversationAI(text, sourceName, currentCourseName, messageId) {
     const chatlocationDiv = document.getElementById('chat-location');
 
     const newMessageAlignment = document.createElement('div');
@@ -324,7 +324,7 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
         const sources = sourceName.split(', ').map(s => s.trim()).filter(Boolean);
         sources.forEach((fileName, index) => {
             const link = document.createElement('a');
-            link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
+            link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&chatId=${encodeURIComponent(currentChatId)}`;
             link.title = "Download file";
             link.setAttribute('download', fileName);
             link.textContent = fileName;
@@ -449,7 +449,7 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
                 question = originalQuestion; // Use the original question for the simplify request
             }
             const simplifyQuestion = simplifyPrompt + question;
-            askPresetQuestion(selectedCourseName, simplifyQuestion, answer);
+            askPresetQuestion(currentCourseName, simplifyQuestion, answer);
         } catch (error) {
             console.error("Error handling simplify click:", error);
         }
@@ -474,7 +474,7 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
                 question = originalQuestion; // Use the original question for the examples request
             }
             const examplesQuestion = examplesPrompt + question;
-            askPresetQuestion(selectedCourseName, examplesQuestion, answer);
+            askPresetQuestion(currentCourseName, examplesQuestion, answer);
         } catch (error) {
             console.error("Error handling examples click:", error);
         }
@@ -500,7 +500,7 @@ function updateConversationAI(text, sourceName, selectedCourseName, messageId) {
                 question = originalQuestion; // Use the original question for the explain request
             }
             const explainQuestion = explainPrompt + question;
-            askPresetQuestion(selectedCourseName, explainQuestion, answer);
+            askPresetQuestion(currentCourseName, explainQuestion, answer);
         } catch (error) {
             console.error("Error handling explain click:", error);
         }
@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         textarea.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault(); // Prevent default new line
-                askQuestion(currentCourseName); // Submit question to AI Tutor
+                askQuestion(currentChatId); // Submit question to AI Tutor
                 textarea.value = ''; // Clear textarea after sending
                 autoResizeTextarea(); // Reset height
             }
@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; // Do not send empty messages
         }
         event.preventDefault(); // Prevent default form submission
-        askQuestion(currentCourseName); // Submit question to AI Tutor
+        askQuestion(currentChatId); // Submit question to AI Tutor
         textarea.value = ''; // Clear textarea after sending
         autoResizeTextarea(); // Reset height
     });
@@ -759,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     question = originalQuestion; // Use the original question for the simplify request
                 }
                 const simplifyQuestion = simplifyPrompt + question;
-                askPresetQuestion(currentCourseName, simplifyQuestion, answer);
+                askPresetQuestion(currentChatId, simplifyQuestion, answer);
             } catch (error) {
                 console.error("Error handling simplify click:", error);
             }
@@ -792,7 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const examplesQuestion = examplesPrompt + question;
-                askPresetQuestion(currentCourseName, examplesQuestion, answer);
+                askPresetQuestion(currentChatId, examplesQuestion, answer);
             } catch (error) {
                 console.error("Error handling examples click:", error);
             }
@@ -825,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const explainQuestion = explainPrompt + question;
-                askPresetQuestion(currentCourseName, explainQuestion, answer);
+                askPresetQuestion(currentChatId, explainQuestion, answer);
             } catch (error) {
                 console.error("Error handling explain click:", error);
             }

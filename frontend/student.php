@@ -345,8 +345,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                     $sources = array_filter(array_map('trim', explode(',', $message['sourceName'])));
                                                     foreach ($sources as $index => $fileName) {
                                                         $encodedFileName = urlencode($fileName);
-                                                        $encodedCourseName = urlencode($chatCourseName);
-                                                        $downloadLink = "http://localhost:5000/download?file={$encodedFileName}&course={$encodedCourseName}";
+                                                        $encodedCourseId = urlencode($currentChat);
+                                                        $downloadLink = "http://localhost:5000/download?file={$encodedFileName}&chatId={$encodedCourseId}";
 
                                                         $htmlOutput .= '<a href="' . htmlspecialchars($downloadLink) . '" ';
                                                         $htmlOutput .= 'title="Download file" ';

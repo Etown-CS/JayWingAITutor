@@ -1180,7 +1180,7 @@ function handleFiles(event) {
     console.log(event)
     const coursesDropdownUpload = document.getElementById('notes_class_id');
     const files = event.target.files;
-    const selectedCourse = coursesDropdownUpload.value;
+    const selectedCourse = coursesDropdownUpload.value; // This is the course ID
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
     // if the above name call doesnt work, consider .text instead (data seemed to contain the text but maybe it doesnt always?)
     if (!selectedCourseName || selectedCourseName === "Select Class") {
@@ -1190,7 +1190,7 @@ function handleFiles(event) {
 
     for (const file of files) {
         saveFileToDocsFolder(file, selectedCourse); // Pass selected course
-        displayFilePreview(file.name, file.type);
+        displayFilePreview(file.name, file.type, selectedCourse);
         
     }
 }
@@ -1231,7 +1231,7 @@ function saveFileToDocsFolder(file, courseId) {
 }
 
 // Display file preview based on file type
-function displayFilePreview(fileName, fileType) {
+function displayFilePreview(fileName, fileType, courseId) {
     const preview = document.createElement('div');
     preview.className = 'file-preview flex flex-col items-center gap-1 p-0 rounded bg-gray-200 text-white w-40';
 
@@ -1240,9 +1240,10 @@ function displayFilePreview(fileName, fileType) {
 
     // Create download link
     const coursesDropdownUpload = document.getElementById('notes_class_id');
+    console.log(coursesDropdownUpload.textContent)
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText || '';
     const link = document.createElement('a');
-    link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&course=${encodeURIComponent(selectedCourseName)}`;
+    link.href = `${FLASK_API}/download?file=${encodeURIComponent(fileName)}&courseId=${encodeURIComponent(courseId)}`;
     link.title = "Download file";
     link.setAttribute('download', fileName);
 
@@ -1348,7 +1349,7 @@ function loadExistingFiles() {
         .then(files => {
             previewDiv.innerHTML = ''; // Clear existing previews
             files.forEach(file => {
-                displayFilePreview(file.name, file.type);
+                displayFilePreview(file.name, file.type, selectedCourse);
             });
         })
         .catch(err => console.error("Error loading files:", err));

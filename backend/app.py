@@ -265,7 +265,7 @@ def delete_course():
         # Delete the namespace if it exists
         if namespace in existing_namespaces:
             print(f"Deleting Pinecone namespace: {namespace}")
-            index.delete(namespace=namespace)
+            index.delete(delete_all=True, namespace=namespace)
         else:
             print(f"Namespace '{namespace}' does not exist in Pinecone. Skipping deletion.")
 

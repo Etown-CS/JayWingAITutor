@@ -116,6 +116,7 @@ def upload_file():
 
 @app.route('/load-docs', methods=['GET'])
 def load_docs():
+    print("Load docs endpoint hit")
     # Get user info from headers
     user_id, username, user_role, folder_prefix = get_user_info_from_headers()
     if not user_id or user_role != 1:
@@ -155,17 +156,6 @@ def load_docs():
 
     return jsonify(file_list)
 
-# Is this ever even used?
-# @app.route('/docs/<filename>')
-# def get_doc(filename):
-#     # Serve file from bucket
-#     blob = bucket.blob(f"{session.get('folder_prefix')}{filename}")
-#     if blob.exists():
-#         file_data = blob.download_as_bytes()
-#         response = send_from_directory(file_data, mimetype='application/pdf' if filename.endswith('.pdf') else 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
-#         return response
-#     return jsonify(success=False, message="File not found"), 404
-
 # Delete file endpoint
 @app.route('/delete', methods=['DELETE'])
 def delete_file():
@@ -175,20 +165,31 @@ def delete_file():
         return jsonify(success=False, message="Unauthorized"), 401
     
     file_name = request.args.get('file')
-    course = request.args.get('course')
+    courseId = request.args.get('courseId')
 
     if not file_name:
         return jsonify(success=False, message="No file specified")
-    if not course:
+    if not courseId:
         return jsonify(success=False, message="No course specified")
+    
+    # Get course name from the courseId
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT name FROM courses WHERE id = %s", (courseId,))
+    result = cursor.fetchone()
+    conn.close()
+    if result:
+        course = result['name']
+    else:
+        return jsonify(success=False, message="Course not found"), 404
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT filepath FROM courses WHERE name = %s", (course,))
+    cursor.execute("SELECT filepath FROM courses WHERE id = %s", (courseId,))
     result = cursor.fetchone()
     conn.close()
-    if not course:
+    if not courseId:
         return jsonify(success=False, message="Course not found"), 404
 
     filepath = result['filepath']
@@ -208,10 +209,20 @@ def delete_file():
         index_name = "ai-tutor-index"
         index = pc.Index(index_name)
 
+        
+        # Check if the index exists first
+        existing_indexes = pc.list_indexes()
+
+        if index_name in existing_indexes:
+            index = pc.Index(index_name)
+        
+        # Create namespace
+        namespace = f"{course}_{courseId}"
+
         # Delete vectors by metadata filter
         index.delete(
             filter={"filename": file_name, "course_name": course},
-            namespace=course
+            namespace=namespace
         )
         pinecone_deleted = True
     except Exception as e:

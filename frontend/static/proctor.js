@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (courseId && courseName && courseName !== "Select Class") {
             loadExistingFiles();
+
         }
     }
 
@@ -767,8 +768,10 @@ function initializeSearchableDropdowns() {
             const dropdownItem = e.target.closest('.dropdown-item');
             if (dropdownItem && classNotesListContainer.contains(dropdownItem)) {
                 const value = dropdownItem.dataset.value;
-                const text  = dropdownItem.textContent;
+                text  = dropdownItem.textContent;
+                text = text.replace(/Created by: .*/, '').trim(); // Remove "Created by" part
                 document.getElementById('notes_class_id').value = value;
+                document.getElementById('notes_class_id').dispatchEvent(new Event('change'));
                 document.getElementById('selectedNotesClassText').textContent = text;
 
                 const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
@@ -1028,7 +1031,8 @@ function handleFiles(event) {
 
     for (const file of files) {
         saveFileToDocsFolder(file, selectedCourse); // Pass selected course
-        displayFilePreview(file.name, file.type, false); // Mark file as untrained initially
+        displayFilePreview(file.name, file.type);
+        
     }
 }
 
@@ -1055,6 +1059,7 @@ function saveFileToDocsFolder(file, courseId) {
     .then(data => {
         if (data.success) {
             console.log(`${file.name} saved to course id ${courseId} folder.`);
+            console.log("Suspected over triggering of loading existing files here but it works so leaving it for now");
             loadExistingFiles();
         } else {
             console.error(`Error saving ${file.name}: ${data.message}`);
@@ -1067,13 +1072,9 @@ function saveFileToDocsFolder(file, courseId) {
 }
 
 // Display file preview based on file type
-function displayFilePreview(fileName, fileType, isTrained) {
+function displayFilePreview(fileName, fileType) {
     const preview = document.createElement('div');
     preview.className = 'file-preview flex flex-col items-center gap-1 p-0 rounded bg-gray-200 text-white w-40';
-
-    if (!isTrained) {
-        preview.classList.add('border', 'border-yellow-500');
-    }
 
     // Extract short name
     const abbreviatedFileName = fileName.split("/").pop().split(".")[0].replace(/_/g, " ");
@@ -1135,7 +1136,7 @@ function removeFileFromDocsFolder(fileName) {
     }
     // console.log(fileName)
     // console.log(selectedCourseName)
-    fetch(`${FLASK_API}/delete?file=${fileName}&course=${selectedCourseName}`, {
+    fetch(`${FLASK_API}/delete?file=${fileName}&courseId=${selectedCourse}`, {
         method: "DELETE",
         credentials: 'include',
         headers: {
@@ -1168,13 +1169,13 @@ function updateTrainedFiles() {
 function loadExistingFiles() {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
     const selectedCourse = coursesDropdownUpload.value; // This is the course ID
-    const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
 
-    if (!selectedCourseName) {
+    if (!selectedCourse) {
         console.warn("No course selected, skipping file load.");
         return;
     }
 
+    console.log(`Loading files for course ID: ${selectedCourse}`);
     fetch(`${FLASK_API}/load-docs?courseId=${encodeURIComponent(selectedCourse)}`, {
         method: "GET",
         credentials: 'include',
@@ -1188,7 +1189,7 @@ function loadExistingFiles() {
         .then(files => {
             previewDiv.innerHTML = ''; // Clear existing previews
             files.forEach(file => {
-                displayFilePreview(file.name, file.type, file.isTrained);
+                displayFilePreview(file.name, file.type);
             });
         })
         .catch(err => console.error("Error loading files:", err));

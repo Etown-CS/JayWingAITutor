@@ -227,7 +227,7 @@ def get_docs(user_id, course, question):
         vector=question_embedding,
         top_k=chunk_count,
         include_metadata=True,
-        namespace=course
+        namespace=course # TODO Change
     )
 
     # Extract document names

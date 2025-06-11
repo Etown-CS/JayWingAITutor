@@ -78,36 +78,78 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (courseCode === '') { courseCode = null; }
                 if (classDescription === '') { classDescription = null; }
 
-                const data = {
-                    userId: userId,
-                    name: document.getElementById('class_name').value,
-                    courseCode: courseCode,
-                    description: classDescription
-                };
-
-                fetch('../backend/api/create_class.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
+            fetch('../backend/api/get_professor_classes.php')
                 .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Course added successfully!");
-                        loadClasses();
-                        reloadClassDropdowns();
-                        initializeSearchableClassTable();
-                        reloadFilterDropdowns();
-                        this.reset();
-                    } else {
-                        alert(`Error: ${data.message}`);
+                .then(result => {
+                    if (!result.success) {
+                        console.error('Error loading classes:', result.message);
+                        return;
                     }
+
+                    allClasses = result.data; // Save full list globally
+                    console.log('All classes loaded:', allClasses);
+                    classExists = false;
+                    
+                    // Check for duplicate class names or course codes
+                    const className = document.getElementById('class_name').value.trim();
+
+                    
+                    if (courseCode) {
+                        classExists = allClasses.some(cls =>
+                            (cls.name && className && cls.name.toLowerCase() === className.toLowerCase()) ||
+                            (cls.courseCode && courseCode && cls.courseCode.toLowerCase() === courseCode.toLowerCase())
+                        );
+                    } else {
+                        classExists = allClasses.some(cls =>
+                            (cls.name && className && cls.name.toLowerCase() === className.toLowerCase())
+                        );
+                    }
+                    
+
+                    if (classExists) {
+                        if (courseCode) {
+                            alert(`A class with the name "${className}" or course code "${courseCode}" has already been created by this user.`);
+                            return;
+                        } else {
+                            alert(`A class with the name "${className}" has already been created by this user.`);
+                            return;
+                        }                        
+                    }
+
+                    // Proceed with class creation
+                    const data = {
+                        userId: userId,
+                        name: className,
+                        courseCode: courseCode,
+                        description: classDescription
+                    };
+
+                    fetch('../backend/api/create_class.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Course added successfully!");
+                                loadClasses();
+                                reloadClassDropdowns();
+                                initializeSearchableClassTable();
+                                reloadFilterDropdowns();
+                                this.reset();
+                            } else {
+                                alert(`Error: ${data.message}`);
+                            }
+                        })
+                        .catch(error => {
+                            alert('An unexpected error occurred: ' + error.message);
+                        });
                 })
-                .catch(error => {
-                    alert('An unexpected error occurred: ' + error.message);
-                });
+                .catch(error => console.error('Error:', error));
+
             } else {
                 // Input is not empty and does not match the required format
                 alert("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
@@ -841,40 +883,43 @@ function reloadFilterDropdowns() {
             }
 
             const dropdown = document.getElementById('filter-by-btn');
-            dropdown.innerHTML = '';
+            if (dropdown) {
+                dropdown.innerHTML = '';
 
-            // Add "All" option
-            const allOption = document.createElement('option');
-            allOption.value = 'allCourses';
-            allOption.textContent = 'All';
-            dropdown.appendChild(allOption);
+                // Add "All" option
+                const allOption = document.createElement('option');
+                allOption.value = 'allCourses';
+                allOption.textContent = 'All';
+                dropdown.appendChild(allOption);
 
-            // Add discipline options
-            result.data.forEach(discipline => {
-                const option = document.createElement('option');
-                option.value = discipline;
-                option.textContent = discipline;
-                dropdown.appendChild(option);
-            });
+                // Add discipline options
+                result.data.forEach(discipline => {
+                    const option = document.createElement('option');
+                    option.value = discipline;
+                    option.textContent = discipline;
+                    dropdown.appendChild(option);
+                });
 
+            }
+            
             const dropdown2 = document.getElementById('filter-by-btn-2');
-            if (dropdown2) dropdown2.innerHTML = '';
-            
-            
+            if (dropdown2) {
+                dropdown2.innerHTML = '';
 
-            // Add "All" option
-            const allOption2 = document.createElement('option');
-            allOption2.value = 'allCourses';
-            allOption2.textContent = 'All';
-            if (dropdown2) dropdown2.appendChild(allOption2);
+                // Add "All" option
+                const allOption2 = document.createElement('option');
+                allOption2.value = 'allCourses';
+                allOption2.textContent = 'All';
+                if (dropdown2) dropdown2.appendChild(allOption2);
 
-            // Add discipline options
-            result.data.forEach(discipline => {
-                const option = document.createElement('option');
-                option.value = discipline;
-                option.textContent = discipline;
-                if (dropdown2) dropdown2.appendChild(option);
-            });
+                // Add discipline options
+                result.data.forEach(discipline => {
+                    const option = document.createElement('option');
+                    option.value = discipline;
+                    option.textContent = discipline;
+                    if (dropdown2) dropdown2.appendChild(option);
+                });
+            }
         })
         .catch(error => console.error('Error fetching disciplines:', error));
 }

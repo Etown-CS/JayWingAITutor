@@ -152,6 +152,10 @@ if ($currentUserId) {
                                 <!-- Course Code -->
                                 <div class="col-md-4 mb-3">
                                     <label for="course_code" class="form-label">Course Code</label>
+                                    <i
+                                        class="fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-pointer"
+                                        title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
+                                    ></i>
                                     <input type="text" class="form-control" id="course_code" maxlength="20">
                                 </div>
                                 <!-- Class Description -->

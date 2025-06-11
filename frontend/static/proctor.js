@@ -67,25 +67,31 @@ document.addEventListener('DOMContentLoaded', function () {
         classForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            courseCode = document.getElementById('course_code').value.toUpperCase();
-            classDescription = document.getElementById('class_description').value
-            if (courseCode === '') { courseCode = null}
-            if (classDescription === '') { classDescription = null}
+            const courseCodeInput = document.getElementById('course_code');
+            let courseCode = courseCodeInput.value.toUpperCase();
+            let classDescription = document.getElementById('class_description').value;
+            
+            // Use the reusable function here as well
+            if (isValidCourseCode(courseCode)) {
+                console.log("Add Form: Course code is valid.");
 
-            const data = {
-                userId: userId,
-                name: document.getElementById('class_name').value,
-                courseCode: courseCode,
-                description: classDescription
-            };
+                if (courseCode === '') { courseCode = null; }
+                if (classDescription === '') { classDescription = null; }
 
-            fetch('../backend/api/create_class.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
+                const data = {
+                    userId: userId,
+                    name: document.getElementById('class_name').value,
+                    courseCode: courseCode,
+                    description: classDescription
+                };
+
+                fetch('../backend/api/create_class.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -102,6 +108,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(error => {
                     alert('An unexpected error occurred: ' + error.message);
                 });
+            } else {
+                // Input is not empty and does not match the required format
+                alert("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
+                courseCodeInput.focus(); // Optional: bring focus to the incorrect field
+            } 
         });
     }
 
@@ -135,11 +146,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     initializeSearchableEnrollmentTable();
                     reloadFilterDropdowns();
                     form.reset();
-                    // Reset selected class text and value
-                    document.getElementById('selectedClassText').textContent = 'Select Class';
-                    document.getElementById('selectedUserText').textContent = 'Select User';
-                    document.getElementById('class_id').value = null;
-                    document.getElementById('user_id').value = null;
                 } else {
                     alert(`Error: ${data.message}`);
                 }
@@ -155,34 +161,48 @@ document.addEventListener('DOMContentLoaded', function () {
         editClassForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            courseCodeGet = document.getElementById('edit_course_code').value.toUpperCase();
-            classDescription = document.getElementById('edit_class_description').value
-            if (courseCodeGet === '') { courseCodeGet = null}
-            if (classDescription === '') { classDescription = null}
+            const courseCodeInput = document.getElementById('edit_course_code');
+            let courseCodeGet = courseCodeInput.value.toUpperCase();
+            let classDescription = document.getElementById('edit_class_description').value;
+
+            // Use the reusable function to validate the input
+            if (isValidCourseCode(courseCodeGet)) {
+                console.log("Edit Form: Course code is valid.");
+
+                if (courseCodeGet === '') { courseCodeGet = null; }
+                if (classDescription === '') { classDescription = null; }
+
+                const data = {
+                    courseId: document.getElementById('edit_course_id').value,
+                    name: document.getElementById('edit_class_name').value,
+                    courseCode: courseCodeGet,
+                    description: classDescription
+                };
+                
+                fetch('../backend/api/update_class.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadClasses();
+                        reloadFilterDropdowns();
+                        initializeSearchableClassTable();
+                        classModal.hide();
+                    }
+                });
+
+            } else {
+                alert("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
+                courseCodeInput.focus();
+            }
+
             
-            const data = {
-                courseId: document.getElementById('edit_course_id').value,
-                name: document.getElementById('edit_class_name').value,
-                courseCode: courseCodeGet,
-                description: classDescription
-            };
             
-            fetch('../backend/api/update_class.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadClasses();
-                    reloadFilterDropdowns();
-                    initializeSearchableClassTable();
-                    classModal.hide();
-                }
-            });
         });
     }
 
@@ -221,6 +241,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // --------------------- Class and Enrollment Management JavaScript ------------------------
 
+
+// Validates a course code against specific formats.
+function isValidCourseCode(code) {
+    const courseCodePattern = /^$|^[A-Z]{2,3}(\/[A-Z]{2,3})?\d{3}$/;
+    return courseCodePattern.test(code);
+}
 
 // Load Classes
 let allClasses = []; // Store full class list globally

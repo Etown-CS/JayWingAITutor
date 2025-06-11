@@ -649,7 +649,8 @@ document.addEventListener('DOMContentLoaded', () => {
         textarea.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault(); // Prevent default new line
-                askQuestion(currentChatId); // Submit question to AI Tutor
+                const urlParams = new URLSearchParams(window.location.search);
+                askQuestion(urlParams.get('chatId')); // Submit question to AI Tutor
                 textarea.value = ''; // Clear textarea after sending
                 autoResizeTextarea(); // Reset height
             }
@@ -662,7 +663,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return; // Do not send empty messages
         }
         event.preventDefault(); // Prevent default form submission
-        askQuestion(currentChatId); // Submit question to AI Tutor
+        const urlParams = new URLSearchParams(window.location.search);
+        askQuestion(urlParams.get('chatId')); // Submit question to AI Tutor
         textarea.value = ''; // Clear textarea after sending
         autoResizeTextarea(); // Reset height
     });

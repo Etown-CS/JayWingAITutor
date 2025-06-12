@@ -292,11 +292,7 @@ if ($currentUserId) {
                                         <div class="dropdown-menu w-100 p-2">
                                             <input type="text" class="form-control mb-2" id="userSearchInput" placeholder="Search users...">
                                             <div class="user-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <?php while($user = $users->fetch_assoc()): ?>
-                                                    <div class="dropdown-item" data-value="<?= $user['id'] ?>">
-                                                        <?= htmlspecialchars($user['username']) ?>
-                                                    </div>
-                                                <?php endwhile; ?>
+                                                <!-- JavaScript -->
                                             </div>
                                             <button id="add-multiple-enrollments" type="button" class="btn btn-outline-primary w-full mt-2">Add Mutiple Enrollments</button>
                                         </div>
@@ -405,16 +401,7 @@ if ($currentUserId) {
                                                 placeholder="Search classes..."
                                             />
                                             <div class="class-notes-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <?php while($class = $classes->fetch_assoc()): ?>
-                                                    <div class="dropdown-item" data-value="<?= $class['id'] ?>">
-                                                        <div class="main-line">
-                                                        <?= htmlspecialchars($class['name']) ?> 
-                                                        <?php if (!empty($class['courseCode'])): ?>
-                                                            (<?= htmlspecialchars($class['courseCode']) ?>)
-                                                        <?php endif; ?>
-                                                        </div>
-                                                        <div class="subheader-line">Created by: <?= htmlspecialchars($class['created_by_username']) ?></div>                                                    </div>
-                                                <?php endwhile; ?>
+                                                <!-- JavaScript -->
                                             </div>
                                         </div>
                                         <input type="hidden" id="notes_class_id" name="notes_class_id" required>
@@ -530,13 +517,7 @@ if ($currentUserId) {
                                         placeholder="Search users..."
                                     />
                                     <div class="user-edit-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                        <?php
-                                        $users->data_seek(0);
-                                        while($user = $users->fetch_assoc()): ?>
-                                            <div class="dropdown-item" data-value="<?= $user['id'] ?>">
-                                                <?= htmlspecialchars($user['username']) ?>
-                                            </div>
-                                        <?php endwhile; ?>
+                                        <!-- JavaScript -->
                                     </div>
                                 </div>
                                 <input type="hidden" id="edit_user_id" name="edit_user_id" required>

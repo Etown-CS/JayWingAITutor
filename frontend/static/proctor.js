@@ -27,6 +27,8 @@ let allUsers = [];
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
     loadEnrollments(); // Ensure enrollments are loaded to populate tables
+    reloadClassDropdowns();
+    reloadUserDropdowns();
     initializeSearchableClassTable();
     initializeSearchableEnrollmentTable();
     initializeSearchableDropdowns(); // This now includes loading all users for regular dropdowns
@@ -716,7 +718,7 @@ function initializeSearchableEnrollmentTable() {
     });
 }
 
-// Edit Class/Enrollment
+// Edit Class/Edit Enrollment
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('edit-class-btn')) {
         const btn = e.target;
@@ -737,7 +739,7 @@ document.addEventListener('click', function (e) {
         // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
 
         let mainDisplayText = btn.dataset.usercourseName + ' ';
-        if (btn.dataset.courseCode) { mainDisplayText += '(' + (btn.dataset.courseCode) + ') '}
+        if (btn.dataset.courseCode && btn.dataset.courseCode !== 'null') { mainDisplayText += '(' + (btn.dataset.courseCode) + ') '}
         document.getElementById('selectedEditClassText').textContent = mainDisplayText;
         document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
 
@@ -1115,9 +1117,6 @@ function initializeSearchableDropdowns() {
             }
         });
     }
-
-    // Removed direct call to renderUserMultipleList() and loadAllUsersForMultipleSelect() here
-    // as they are now called when the multipleEnrollmentsModal is shown.
 }
 
 function updateSelectedUsersDisplay() {
@@ -1330,17 +1329,49 @@ function reloadClassDropdowns() {
                     });
                 }
             }
+        });
+}
 
-            // Update edit form select
-            const editClassSelect = document.getElementById('edit_class_id');
-            if (editClassSelect) {
-                editClassSelect.innerHTML = '';
-                if (Array.isArray(courses)) {
-                    courses.forEach(classItem => {
-                        const option = document.createElement('option');
-                        option.value = classItem.id;
-                        option.textContent = `${classItem.name} (${classItem.courseCode || ''})`;
-                        editClassSelect.appendChild(option);
+// Reload User Dropdowns
+function reloadUserDropdowns() {
+    fetch('../backend/api/get_all_users.php')
+        .then(response => response.json())
+        .then(result => {
+            if (!result.success) {
+                console.error('Error loading users:', result.message);
+                return;
+            }
+
+            const users = result.data;
+
+            // Update dropdown menus
+            const userDropdown = document.querySelector('.user-list');
+            if (userDropdown) {
+                userDropdown.innerHTML = '';
+                if (Array.isArray(users)) {
+                    users.forEach(user => {
+                        const dropdownItem = document.createElement('div');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.dataset.value = user.id;
+                        dropdownItem.textContent = user.username;
+
+                        userDropdown.appendChild(dropdownItem);
+                    });
+                }
+            }
+
+            // Update dropdown menus
+            const userEditDropdown = document.querySelector('.user-edit-list');
+            if (userEditDropdown) {
+                userEditDropdown.innerHTML = '';
+                if (Array.isArray(users)) {
+                    users.forEach(user => {
+                        const dropdownItem = document.createElement('div');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.dataset.value = user.id;
+                        dropdownItem.textContent = user.username;
+
+                        userEditDropdown.appendChild(dropdownItem);
                     });
                 }
             }

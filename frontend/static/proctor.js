@@ -858,7 +858,8 @@ function initializeSearchableDropdowns() {
             const dropdownItem = e.target.closest('.dropdown-item');
             if (dropdownItem && classListContainer.contains(dropdownItem)) {
                 const value = dropdownItem.dataset.value;
-                const text  = dropdownItem.textContent;
+                text  = dropdownItem.textContent;
+                text = text.replace(/Created by: .*/, '').trim(); // Remove "Created by" part
                 document.getElementById('class_id').value = value;
                 document.getElementById('selectedClassText').textContent = text;
 

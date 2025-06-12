@@ -1,6 +1,7 @@
 // currentChatId is set in the HTML template - easy access here
 const FLASK_API = "http://localhost:5000";
 const chatDiv = document.getElementById('chat-div');
+generating = false; // Flag to prevent multiple fetches at once
 
 // Predetermined prompts
 const simplifyPrompt = "Explain this in simpler terms so a beginner can understand. Avoid jargon and break it down step by step if needed: ";
@@ -149,6 +150,11 @@ function addTypingIndicator() {
 
 let typingIndicatorElement = null;
 function askQuestion(chatId) {
+    if (generating) {
+        alert("Please wait for the current response to finish.");
+        return;
+    }
+    generating = true;
     const question = document.getElementById('student-question').value;
     updateConversationUser(question);
 
@@ -185,6 +191,7 @@ function askQuestion(chatId) {
                     typingIndicatorElement.remove();
                     typingIndicatorElement = null;
                 }
+
             }
         })
         .catch(err => {
@@ -194,11 +201,19 @@ function askQuestion(chatId) {
                 typingIndicatorElement.remove();
                 typingIndicatorElement = null;
             }
+        })
+        .finally(() => {
+            generating = false; // Reset generating flag after fetch completes
         });
 };
 
 // Ask a preset question
 function askPresetQuestion(chatId, question, answer) {
+    if (generating) {
+        alert("Please wait for the current response to finish.");
+        return;
+    }
+    generating = true;
     console.log("Asking preset question:", question);
 
     // TODO: Formatting the question - Make the second part italic
@@ -449,7 +464,7 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
                 question = originalQuestion; // Use the original question for the simplify request
             }
             const simplifyQuestion = simplifyPrompt + question;
-            askPresetQuestion(currentCourseName, simplifyQuestion, answer);
+            askPresetQuestion(currentChatId, simplifyQuestion, answer);
         } catch (error) {
             console.error("Error handling simplify click:", error);
         }
@@ -474,7 +489,7 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
                 question = originalQuestion; // Use the original question for the examples request
             }
             const examplesQuestion = examplesPrompt + question;
-            askPresetQuestion(currentCourseName, examplesQuestion, answer);
+            askPresetQuestion(currentChatId, examplesQuestion, answer);
         } catch (error) {
             console.error("Error handling examples click:", error);
         }
@@ -500,7 +515,7 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
                 question = originalQuestion; // Use the original question for the explain request
             }
             const explainQuestion = explainPrompt + question;
-            askPresetQuestion(currentCourseName, explainQuestion, answer);
+            askPresetQuestion(currentChatId, explainQuestion, answer);
         } catch (error) {
             console.error("Error handling explain click:", error);
         }
@@ -648,29 +663,38 @@ document.addEventListener('DOMContentLoaded', () => {
         // Enter to send, Shift+Enter for new line
         textarea.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Prevent default new line
+                event.preventDefault();
+                if (generating) {
+                    alert("Please wait for the current response to finish.");
+                    return;
+                }
+
                 const urlParams = new URLSearchParams(window.location.search);
-                askQuestion(urlParams.get('chatId')); // Submit question to AI Tutor
-                textarea.value = ''; // Clear textarea after sending
-                autoResizeTextarea(); // Reset height
+                askQuestion(urlParams.get('chatId'));
+                textarea.value = '';
+                autoResizeTextarea();
             }
-        });
+        });        
     }
 
-    if (sendButton) {
-        sendButton.addEventListener('click', (event) => {
+    sendButton.addEventListener('click', (event) => {
         if (!textarea || textarea.value.trim() === '') {
-            return; // Do not send empty messages
+            return;
         }
-        event.preventDefault(); // Prevent default form submission
+
+        event.preventDefault();
+
+        if (generating) {
+            alert("Please wait for the current response to finish.");
+            return;
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
-        askQuestion(urlParams.get('chatId')); // Submit question to AI Tutor
-        textarea.value = ''; // Clear textarea after sending
-        autoResizeTextarea(); // Reset height
+        askQuestion(urlParams.get('chatId'));
+        textarea.value = '';
+        autoResizeTextarea();
     });
 
-    }
-    
     // Response Buttons Row Logic
     // Thumbs up/down button logic for each AI response
     const thumbsUpButtons = document.querySelectorAll('.thumbs-up');

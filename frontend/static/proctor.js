@@ -317,6 +317,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Clear selected values in main class dropdown
                         document.getElementById('class_id').value = null;
                         document.getElementById('selectedClassText').textContent = 'Select Class';
+                        document.getElementById('user_id').value = null;
+                        document.getElementById('selectedUserText').textContent = 'Select User';
                         multipleEnrollmentsModal.hide();
                     } else {
                         showErrorBanner("Some enrollments could not be added. Check console for details.");
@@ -329,6 +331,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Clear selected values in main class dropdown
                         document.getElementById('class_id').value = null;
                         document.getElementById('selectedClassText').textContent = 'Select Class';
+                        document.getElementById('user_id').value = null;
+                        document.getElementById('selectedUserText').textContent = 'Select User';
                         multipleEnrollmentsModal.hide();
                     }
                 })
@@ -782,7 +786,7 @@ function clearEnrollmentInputs() {
     }
 }
 
-// Add Multiple Enrollments
+// Add Multiple Enrollments (Create Multiple Enrollments)
 const addMultipleEnrollments = document.getElementById('add-multiple-enrollments');
 if (addMultipleEnrollments) {
     addMultipleEnrollments.addEventListener('click', function (e) {
@@ -798,8 +802,15 @@ if (addMultipleEnrollments) {
         document.getElementById('selectedMultipleClassText').textContent = selectedClassText;
         document.getElementById('multiple_class_id').value = selectedClassId;
 
-        updateSelectedUsersDisplay(); // Update display to "Select User(s)"
+        updateSelectedUsersDisplay(); // Update display to "Select Users"
         multipleEnrollmentsModal.show();
+
+        // Close the user-list dropdown if it's open
+        const userDropdownToggle = document.querySelector('.user-list')?.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+        const userDropdownInstance = bootstrap.Dropdown.getInstance(userDropdownToggle);
+        if (userDropdownInstance) {
+            userDropdownInstance.hide();
+        }
     })
 }
 
@@ -1139,7 +1150,7 @@ function updateSelectedUsersDisplay() {
         selectedMultipleUserText.textContent = userNames.join(', ');
         multipleUserIdInput.value = Array.from(selectedUsers).join(',');
     } else {
-        selectedMultipleUserText.textContent = 'Select User(s)';
+        selectedMultipleUserText.textContent = 'Select Users';
         multipleUserIdInput.value = '';
     }
 }

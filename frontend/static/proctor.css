@@ -112,6 +112,11 @@ header, footer {
   cursor: default;
 }
 
+.dropdown-item.active {
+    background-color: #007bff; /* Bootstrap primary blue */
+    color: white;
+}
+
 /*--------------------- Table Settings ------------------------*/
 /* Ensure the table honors the column widths */
 #enrollmentsTableConfig {

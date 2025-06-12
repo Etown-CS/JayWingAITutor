@@ -399,7 +399,7 @@ if ($currentUserId) {
                                                     </div>
                                                 <?php endwhile; ?>
                                             </div>
-                                            <button type="button" class="btn btn-outline-primary w-full mt-2 add-multiple-enrollments">Add Mutiple Enrollments</button>
+                                            <button id="add-multiple-enrollments" type="button" class="btn btn-outline-primary w-full mt-2">Add Mutiple Enrollments</button>
                                         </div>
                                         <input type="hidden" id="user_id" name="user_id" required>
                                     </div>
@@ -652,6 +652,79 @@ if ($currentUserId) {
                             </select>
                         </div>
                         <button type="submit" class="btn btn-primary w-full mb-0">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Multiple Enrollments Modal -->
+    <div class="modal fade" id="multipleEnrollmentsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-lower">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Multiple Enrollments</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMultipleEnrollmentsForm">
+                        <!-- Class Multiple Dropdown -->
+                        <div class="mb-3">
+                            <label for="multiple_class_id" class="form-label">
+                                Class Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span id="selectedMultipleClassText">Select Class</span>
+                                </button>
+                                <div class="dropdown-menu w-100 p-2" id="classMultipleDropdown">
+                                    <input
+                                        type="text"
+                                        class="form-control mb-2"
+                                        id="classMultipleSearchInput"
+                                        placeholder="Search classes..."
+                                    />
+                                    <div class="class-multiple-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                        <!-- JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" id="multiple_class_id" name="multiple_class_id" required>
+                            </div>
+                        </div>
+                        <!-- User Multiple Dropdown -->
+                        <div class="mb-3">
+                            <label for="multiple_user_id" class="form-label">
+                                User <span class="text-danger">*</span>
+                            </label>
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span id="selectedMultipleUserText">Select User(s)</span>
+                                </button>
+                                <div class="dropdown-menu w-100 p-2">
+                                    <input
+                                        type="text"
+                                        class="form-control mb-2"
+                                        id="userMultipleSearchInput"
+                                        placeholder="Search users..."
+                                    />
+                                    <div class="user-multiple-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                        <!-- JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" id="multiple_user_id" name="multiple_user_id" required>
+                            </div>
+                        </div>
+                        <!-- Class Role Dropdown -->
+                        <div class="mb-3">
+                            <label for="multiple_roleOfClass" class="form-label">
+                                Role (JayWing)
+                            </label>
+                            <select class="form-select" id="multiple_roleOfClass" required>
+                                <option value="tutor">Tutor</option>
+                                <option value="tutee">Tutee</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">Save Changes</button>
                     </form>
                 </div>
             </div>

@@ -30,6 +30,23 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeSearchableClassTable();
     initializeSearchableEnrollmentTable();
     initializeSearchableDropdowns(); // This now includes loading all users for regular dropdowns
+    reloadClassDropdowns(); // Populates class dropdowns for dashboard
+    $(document).ready(function(){
+        $(".owl-carousel").owlCarousel({
+            items: 3,
+            loop: true,
+            margin: 20,
+            autoplay: true,
+            autoplayTimeout: 5000,
+            autoplayHoverPause: true,
+            smartSpeed: 700,
+            responsive: {
+            0: { items: 1 },
+            768: { items: 2 },
+            1024: { items: 3 }
+            }
+        });
+    });
 
     // Add event listener for when the multiple enrollments modal is shown
     multipleEnrollmentsModal._element.addEventListener('shown.bs.modal', function () {
@@ -505,6 +522,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// --------------------- Dashboard JavaScript ------------------------
+
 
 
 // --------------------- Class and Enrollment Management JavaScript ------------------------

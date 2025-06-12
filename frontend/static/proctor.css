@@ -254,3 +254,33 @@ header, footer {
         min-height: calc(100% - 4rem);
     }
 }
+
+/* Carousel */
+/* Lock the height of the carousel */
+.owl-carousel {
+  height: 180px !important; /* Force height */
+  overflow: hidden;
+}
+
+/* Force owl-item to inherit and not stretch the height */
+.owl-carousel .owl-item {
+  display: flex !important;
+  align-items: stretch !important;
+  height: 180px !important;
+}
+
+/* Make the .item div and its child card fill exactly */
+.owl-carousel .item {
+  flex: 1 1 auto;
+  height: 100% !important;
+  display: flex;
+}
+
+.owl-carousel .item > div {
+  flex: 1 1 auto;
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+

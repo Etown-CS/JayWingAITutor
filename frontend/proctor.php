@@ -232,25 +232,33 @@ if ($currentUserId) {
                         </div>
 
                         <!-- Bottom: Summary Cards -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-center">
-                            <!-- Liked -->
-                            <div class="bg-gray-200 p-6 rounded shadow">
-                                <h3 class="text-xl font-semibold mb-2">Liked Messages</h3>
-                                <p class="text-4xl font-bold">%%</p>
-                                <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                        <!-- Owl Carousel Wrapper -->
+                        <div class="owl-carousel owl-theme mt-8 h-full">
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48">
+                                    <h3 class="text-xl font-semibold mb-2">Disliked Messages</h3>
+                                    <p class="text-4xl font-bold">%%</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                </div>
                             </div>
-                            <!-- Total -->
-                            <div class="bg-gray-200 p-6 rounded shadow">
-                                <h3 class="text-xl font-semibold mb-2">Total Messages</h3>
-                                <p class="text-4xl font-bold">%%</p>
+
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
+                                    <h3 class="text-xl font-semibold mb-2">Total Messages</h3>
+                                    <p class="text-4xl font-bold">%%</p>
+                                </div>
                             </div>
-                            <!-- Disliked -->
-                            <div class="bg-gray-200 p-6 rounded shadow">
-                                <h3 class="text-xl font-semibold mb-2">Disliked Messages</h3>
-                                <p class="text-4xl font-bold">%%</p>
-                                <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
+                                    <h3 class="text-xl font-semibold mb-2">Liked Messages</h3>
+                                    <p class="text-4xl font-bold">%%</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                </div>
                             </div>
                         </div>
+
+
                     </div>
 
 
@@ -742,6 +750,18 @@ if ($currentUserId) {
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Owl Carousel CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g==" crossorigin="anonymous" />
+
+    <!-- Optional Theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Owl Carousel JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw==" crossorigin="anonymous"></script>
 
     <script src="static/proctor.js"></script>
 </body>

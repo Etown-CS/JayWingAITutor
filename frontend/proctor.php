@@ -148,10 +148,119 @@ if ($currentUserId) {
             
             <!-- Main area -->
             <div id="conversation" class="flex-1 overflow-y-auto space-y-4 w-full p-chat-noshow">
+<!-- Dashboard Section -->
                 <?php if($currentPage == "Dashboard") : ?>
-                    <div>
-                        <!-- TODO: Dashboard Page -->
+                    <div class="p-4 w-full h-full bg-white">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <!-- Left: Filters -->
+                            <div class="w-full">
+                                <h2 class="text-xl font-bold mb-4">Welcome <?php echo htmlspecialchars($_SESSION['username']); ?></h2>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <!-- Course Selection -->
+                                    <div class="dropdown">
+                                        <label for="class_id" class="form-label">Select Class</label>
+                                        <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span id="selectedDashboardClassText">All</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" id="classDropdown">
+                                            <input
+                                                type="text"
+                                                class="form-control mb-2"
+                                                id="classSearchInput"
+                                                placeholder="Search classes..."
+                                            />
+                                            <div class="class-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                                <!-- JavaScript -->
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="class_id" name="class_id" required>
+                                    </div>
+                                    <!-- User Selection -->
+                                    <div class="dropdown">
+                                        <label for="user_id" class="form-label">Select User</label>
+                                        <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span id="selectedDashboardUserText">All</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" id="userDropdown">
+                                            <input
+                                                type="text"
+                                                class="form-control mb-2"
+                                                id="userSearchInput"
+                                                placeholder="Search users..."
+                                            />
+                                            <div class="user-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                                <!-- JavaScript -->
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="user_id" name="user_id" required>
+                                    </div>
+                                    <!-- Start Date -->
+                                    <div>
+                                        <label for="start_date_filter" class="form-label">Start Date</label>
+                                        <input type="date" id="selectedStartDate" class="form-control bg-gray-300 text-center" />
+                                    </div>
+                                    <!-- End Date -->
+                                    <div>
+                                        <label for="end_date_filter" class="form-label">End Date</label>
+                                        <input type="date" id="selectedEndDate" class="form-control bg-gray-300 text-center" />
+                                    </div>
+                                    <!-- Q/A/QA -->
+                                    <div class="dropdown">
+                                        <label for="qa_filter" class="form-label">Contents</label>
+                                        <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span id="selectedQAFilterText">Both</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" id="qaFilterDropdown">
+                                            <div class="qa-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                                <div class="dropdown-item" data-value="Both">Both</div>
+                                                <div class="dropdown-item" data-value="Questions">Questions</div>
+                                                <div class="dropdown-item" data-value="Answers">Answers</div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="qa_filter" name="qa_filter" value="Both">
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button class="btn btn-primary w-full">Generate Report</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Word Cloud -->
+                            <div>
+                                <img src="static/img/test_word_cloud.png" alt="Word Cloud" class="w-full h-auto rounded border border-gray-300" />
+                            </div>
+                        </div>
+
+                        <!-- Bottom: Summary Cards -->
+                        <!-- Owl Carousel Wrapper -->
+                        <div class="owl-carousel owl-theme mt-8 h-full">
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48">
+                                    <h3 class="text-xl font-semibold mb-2">Disliked Messages</h3>
+                                    <p class="text-4xl font-bold">%%</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                </div>
+                            </div>
+
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
+                                    <h3 class="text-xl font-semibold mb-2">Total Messages</h3>
+                                    <p class="text-4xl font-bold">%%</p>
+                                </div>
+                            </div>
+
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
+                                    <h3 class="text-xl font-semibold mb-2">Liked Messages</h3>
+                                    <p class="text-4xl font-bold">%%</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                </div>
+                            </div>
+                        </div>
+
+
                     </div>
+
 
 <!-- Class Management Section -->
                 <?php elseif($currentPage == "Manage Classes") : ?>
@@ -652,6 +761,18 @@ if ($currentUserId) {
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Owl Carousel CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g==" crossorigin="anonymous" />
+
+    <!-- Optional Theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Owl Carousel JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw==" crossorigin="anonymous"></script>
 
     <script src="static/proctor.js"></script>
 </body>

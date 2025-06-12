@@ -18,7 +18,7 @@ CREATE TABLE courses (
     name VARCHAR(100) NOT NULL, -- Each professor can only have one course with the same name but the same course can be taught by multiple professors
     createdBy INT NOT NULL,
     filepath VARCHAR(100),
-    courseCode VARCHAR(20) UNIQUE, -- Size increased to handle "EGR/CS222" -- 20 characters should be more than enough
+    courseCode VARCHAR(20), -- Size increased to handle "EGR/CS222" -- 20 characters should be more than enough -- not unqiue due to multiple professors teaching the same course
     description TEXT
 );
 

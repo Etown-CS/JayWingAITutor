@@ -58,6 +58,8 @@ def chat_info(chatId):
     cursor.close()
     conn.close()
     print("Database query executed.")
+    print(f"Query result: {result}")
+    print(f"Chat ID: {chatId}")
     if not result:
         raise ValueError("No course found for the given chatId.")
     course_name = result[0]

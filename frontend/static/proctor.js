@@ -11,17 +11,33 @@ const classNotesId = document.getElementById('notes_class_id');
 
 const classModal = new bootstrap.Modal(document.getElementById('editClassesModal'));
 const enrollmentModal = new bootstrap.Modal(document.getElementById('editEnrollmentsModal'));
-// const multipleEnrollmentModal = new bootstrap.Modal(document.getElementById('editEnrollmentsModal'));
+const multipleEnrollmentsModal = new bootstrap.Modal(document.getElementById('multipleEnrollmentsModal'));
 
 
 // --------------------- General JavaScript ------------------------
 
+// Specific to Multiple User Selection
+const selectedUsers = new Set(); // Stores IDs of selected users
+const selectedMultipleUserText = document.getElementById('selectedMultipleUserText'); // Element to display selected users
+const multipleUserIdInput = document.getElementById('multiple_user_id'); // Hidden input to store selected user IDs
+
+// Global variable for all users, will be populated via API call
+let allUsers = [];
 
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
+    loadEnrollments(); // Ensure enrollments are loaded to populate tables
     initializeSearchableClassTable();
     initializeSearchableEnrollmentTable();
-    initializeSearchableDropdowns();
+    initializeSearchableDropdowns(); // This now includes loading all users for regular dropdowns
+
+    // Add event listener for when the multiple enrollments modal is shown
+    multipleEnrollmentsModal._element.addEventListener('shown.bs.modal', function () {
+        // Ensure the container element is available when the modal is shown
+        loadAllUsersForMultipleSelect(); // Load users when the modal opens
+        selectedUsers.clear(); // Clear selections when opening the modal for a new selection
+        updateSelectedUsersDisplay(); // Reset display text
+    });
 
     if (classNotesId) {
         const courseId = classNotesId.value;
@@ -29,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (courseId && courseName && courseName !== "Select Class") {
             loadExistingFiles();
-
         }
     }
 
@@ -40,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const searchInput = dropdownEl.querySelector('input.form-control');
             if (searchInput) {
                 searchInput.value = '';
+                // Trigger input event to re-filter if necessary (e.g., show all items again)
                 searchInput.dispatchEvent(new Event('input'));
             }
         });
@@ -49,6 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const enrollmentForm = document.getElementById('enrollmentForm');
     const editClassForm = document.getElementById('editClassForm');
     const editEnrollmentForm = document.getElementById('editEnrollmentForm');
+    const addMultipleEnrollmentsForm = document.getElementById('addMultipleEnrollmentsForm'); // Ensure this is defined
 
     // Modify loaded files when a new course is selected
     if (classNotesId) {
@@ -63,7 +80,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-
     // Add Class Form Handler (Create Class)
     if (classForm) {
         classForm.addEventListener('submit', function (e) {
@@ -72,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const courseCodeInput = document.getElementById('course_code');
             let courseCode = courseCodeInput.value.toUpperCase();
             let classDescription = document.getElementById('class_description').value;
-            const className = document.getElementById('class_name').value.trim(); // Get the class name here
+            const className = document.getElementById('class_name').value.trim();
 
             if (!(className)) {
                 showErrorBanner("Please enter a class name.");
@@ -120,12 +136,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         if (duplicateFound) {
-                            return; // Stop the form submission
+                            return;
                         }
 
                         // If no duplicates found, proceed with class creation
                         const data = {
-                            userId: userId, // Ensure userId is defined in your scope
+                            userId: userId,
                             name: className,
                             courseCode: courseCode,
                             description: classDescription
@@ -164,9 +180,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-
-    loadEnrollments();
-
     // Add Enrollment Form Handler (Create Enrollment)
     if (enrollmentForm) {
         enrollmentForm.addEventListener('submit', function(e) {
@@ -193,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
-                    allEnrollments = result.data; // Save full list globally
+                    allEnrollments = result.data;
                     console.log('All enrollments loaded:', allEnrollments);
 
                     const data = {
@@ -239,6 +252,89 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(error => console.error('Error:', error)); 
         });
     }
+
+    if (addMultipleEnrollmentsForm) {
+        addMultipleEnrollmentsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+
+            const courseId = document.getElementById('multiple_class_id').value;
+            const userIds = multipleUserIdInput.value.split(',').filter(id => id.trim() !== '');
+
+            if (!(courseId)) {
+                showErrorBanner("Please select a class in the dropdown.");
+                return;
+            }
+            if (userIds.length === 0) {
+                showErrorBanner("Please select at least one user in the dropdown.");
+                return;
+            }
+
+            let enrollmentsToCreate = [];
+            userIds.forEach(userId => {
+                enrollmentsToCreate.push({
+                    courseId: courseId,
+                    userId: userId,
+                    // roleOfClass: document.getElementById('multiple_roleOfClass').value
+                });
+            });
+
+            const createEnrollmentPromises = enrollmentsToCreate.map(data => {
+                return fetch('../backend/api/create_enrollment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success) {
+                        console.error(`Error enrolling user ${data.userId} in class ${data.courseId}:`, result.message);
+                        showErrorBanner(`Error enrolling some users: ${result.message}`);
+                    }
+                    return result;
+                })
+                .catch(error => {
+                    showErrorBanner('An unexpected error occurred during enrollment: ' + error.message);
+                    return { success: false, message: error.message };
+                });
+            });
+
+            Promise.all(createEnrollmentPromises)
+                .then(results => {
+                    const allSuccess = results.every(result => result.success);
+                    if (allSuccess) {
+                        showFeedbackBanner("Enrollments added successfully!");
+                        loadEnrollments();
+                        initializeSearchableEnrollmentTable();
+                        reloadFilterDropdowns();
+                        form.reset();
+                        selectedUsers.clear();
+                        updateSelectedUsersDisplay();
+                        // Clear selected values in main class dropdown
+                        document.getElementById('class_id').value = null;
+                        document.getElementById('selectedClassText').textContent = 'Select Class';
+                        multipleEnrollmentsModal.hide();
+                    } else {
+                        showErrorBanner("Some enrollments could not be added. Check console for details.");
+                        loadEnrollments();
+                        initializeSearchableEnrollmentTable();
+                        reloadFilterDropdowns();
+                        form.reset();
+                        selectedUsers.clear();
+                        updateSelectedUsersDisplay();
+                        // Clear selected values in main class dropdown
+                        document.getElementById('class_id').value = null;
+                        document.getElementById('selectedClassText').textContent = 'Select Class';
+                        multipleEnrollmentsModal.hide();
+                    }
+                })
+                .catch(error => {
+                    showErrorBanner('An unexpected error occurred during batch enrollment: ' + error.message);
+                });
+        });
+    }
     
     // Edit Class Form Handler
     if (editClassForm) {
@@ -248,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const courseCodeInput = document.getElementById('edit_course_code');
             let courseCodeGet = courseCodeInput.value.toUpperCase();
             let classDescription = document.getElementById('edit_class_description').value;
-            const courseIdBeingEdited = document.getElementById('edit_course_id').value; // Get the ID of the class being edited
+            const courseIdBeingEdited = document.getElementById('edit_course_id').value;
             const newClassName = document.getElementById('edit_class_name').value.trim();
 
             // Use the reusable function to validate the input
@@ -299,10 +395,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         if (duplicateFound) {
-                            return; // Stop the form submission
+                            return;
                         }
 
-                        // If no duplicates found, proceed with the update
                         const data = {
                             courseId: courseIdBeingEdited,
                             name: newClassName,
@@ -353,7 +448,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const userId = document.getElementById('edit_user_id').value;
             const roleOfClass = document.getElementById('edit_roleOfClass').value;
 
-            // Step 1: Fetch all current enrollments
             fetch('../backend/api/get_professor_enrollments.php')
                 .then(response => response.json())
                 .then(result => {
@@ -366,10 +460,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     let duplicateFound = false;
 
                     for (const enrollment of enrollments) {
-                        // Skip the current enrollment being edited
                         if (enrollment.userCoursesId == userCourseId) continue;
 
-                        // Check for same courseId + userId pair
                         if (enrollment.courseId == courseId && enrollment.userId == userId) {
                             showErrorBanner(`This user is already enrolled in the selected class.`);
                             duplicateFound = true;
@@ -478,7 +570,6 @@ function renderClassTable(classList) {
         });
 
         reloadClassDropdowns(); // Assuming this is needed
-        loadEnrollments();      // Assuming this is needed
     }
 }
 
@@ -513,8 +604,7 @@ function initializeSearchableClassTable() {
             const matches =
                 fuzzyIncludes(name, nameFilter) &&
                 fuzzyIncludes(code, codeFilter) &&
-                desc.includes(descFilter); // TODO: Algorithm for this needs updated
-
+                desc.includes(descFilter);
             row.style.display = matches ? 'table-row' : 'none';
         });
     };
@@ -626,7 +716,7 @@ function initializeSearchableEnrollmentTable() {
     });
 }
 
-// Edit Class/Enrollment and Add Multiple Enrollments
+// Edit Class/Enrollment
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('edit-class-btn')) {
         const btn = e.target;
@@ -648,23 +738,11 @@ document.addEventListener('click', function (e) {
 
         let mainDisplayText = btn.dataset.usercourseName + ' ';
         if (btn.dataset.courseCode) { mainDisplayText += '(' + (btn.dataset.courseCode) + ') '}
-        document.getElementById('selectedEditClassText').textContent = mainDisplayText + 'Created by: ' + btn.dataset.createdByUsername;
+        document.getElementById('selectedEditClassText').textContent = mainDisplayText;
         document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
 
         hideAllBanners();
         enrollmentModal.show();
-    }
-
-    if (e.target.contains('add-multiple-enrollments')) {
-        // Check that user filled required fields
-        const courseId = document.getElementById('class_id').value;
-        if (!(courseId)) {
-            showErrorBanner("Please select a class in the dropdown.");
-            return;
-        }
-
-        hideAllBanners();
-        // classModal.show();
     }
 });
 
@@ -700,6 +778,27 @@ function clearEnrollmentInputs() {
     if (roleOfClassDropdown) {
         roleOfClassDropdown.value = roleOfClassDropdown.options[0].value;
     }
+}
+
+// Add Multiple Enrollments
+const addMultipleEnrollments = document.getElementById('add-multiple-enrollments');
+if (addMultipleEnrollments) {
+    addMultipleEnrollments.addEventListener('click', function (e) {
+        hideAllBanners();
+        // Clear selected users when opening the modal for a new selection
+        selectedUsers.clear();
+
+        // Get selected values from main class dropdown
+        const selectedClassText = document.getElementById('selectedClassText').textContent.trim();
+        const selectedClassId = document.getElementById('class_id').value;
+
+        // Apply those values to the modal dropdown
+        document.getElementById('selectedMultipleClassText').textContent = selectedClassText;
+        document.getElementById('multiple_class_id').value = selectedClassId;
+
+        updateSelectedUsersDisplay(); // Update display to "Select User(s)"
+        multipleEnrollmentsModal.show();
+    })
 }
 
 // Delete Class
@@ -778,20 +877,34 @@ function deleteEnrollment(enrollmentId) {
 // --------------------- Dropdown Management JavaScript ------------------------
 
 
+// Search Inputs in Dropdowns
+const classSearchInput = document.getElementById('classSearchInput');
+const userSearchInput  = document.getElementById('userSearchInput');
+
+const classEditSearchInput = document.getElementById('classEditSearchInput');
+const userEditSearchInput  = document.getElementById('userEditSearchInput');
+
+const classNotesSearchInput  = document.getElementById('classNotesSearchInput');
+
+const classMultipleSearchInput  = document.getElementById('classMultipleSearchInput');
+const userMultipleSearchInput  = document.getElementById('userMultipleSearchInput');
+
+// Containers in Dropdowns
+const classListContainer = document.querySelector('.class-list');
+const userListContainer  = document.querySelector('.user-list');
+
+const classEditListContainer = document.querySelector('.class-edit-list');
+const userEditListContainer  = document.querySelector('.user-edit-list');
+
+const classNotesListContainer  = document.querySelector('.class-notes-list');
+
+const classMultipleListContainer  = document.querySelector('.class-multiple-list');
+const userMultipleListContainer  = document.querySelector('.user-multiple-list'); // Redefining this here is harmless but redundant with the top-level declaration
+
+
+// Initialize Dropdown Buttons
 function initializeSearchableDropdowns() {
-    // re-query these now that the DOM is ready
-    const classSearchInput = document.getElementById('classSearchInput');
-    const userSearchInput  = document.getElementById('userSearchInput');
-    const classEditSearchInput = document.getElementById('classEditSearchInput');
-    const userEditSearchInput  = document.getElementById('userEditSearchInput');
-    const classNotesSearchInput  = document.getElementById('classNotesSearchInput');
-
-    const classListContainer = document.querySelector('.class-list');
-    const userListContainer  = document.querySelector('.user-list');
-    const classEditListContainer = document.querySelector('.class-edit-list');
-    const userEditListContainer  = document.querySelector('.user-edit-list');
-    const classNotesListContainer  = document.querySelector('.class-notes-list');
-
+    
     // Prevent dropdown from closing when clicking inside the menu
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.addEventListener('click', e => e.stopPropagation());
@@ -822,8 +935,7 @@ function initializeSearchableDropdowns() {
         classEditSearchInput.addEventListener('input', function(e) {
         const searchText = e.target.value.toLowerCase();
         document.querySelectorAll('.class-edit-list .dropdown-item').forEach(item => {
-            // item.style.display = item.textContent.toLowerCase().includes(searchText) ? 'block' : 'none'; // Original method - no typos allowed
-            item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none'; // Allow typos
+            item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
         });
         });
     }
@@ -848,14 +960,38 @@ function initializeSearchableDropdowns() {
         });
     }
 
+    // “Search” filter for multiple classes
+    if (classMultipleSearchInput) {
+        classMultipleSearchInput.addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        document.querySelectorAll('.class-multiple-list .dropdown-item').forEach(item => {
+            item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
+        });
+        });
+    }
+
+    // “Search” filter for multiple users (CORRECTED fuzzyIncludes call)
+    if (userMultipleSearchInput && userMultipleListContainer) {
+        userMultipleSearchInput.addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            const items = userMultipleListContainer.querySelectorAll('.dropdown-item');
+            items.forEach(item => {
+                const userName = item.textContent.toLowerCase();
+                // CORRECTED: Call fuzzyIncludes as a global function
+                item.style.display = fuzzyIncludes(userName, searchText) ? '' : 'none';
+            });
+        });
+    }
+
+
     // Delegate click inside .class-list
     if (classListContainer) {
         classListContainer.addEventListener('click', function(e) {
             const dropdownItem = e.target.closest('.dropdown-item');
             if (dropdownItem && classListContainer.contains(dropdownItem)) {
                 const value = dropdownItem.dataset.value;
-                text  = dropdownItem.textContent;
-                text = text.replace(/Created by: .*/, '').trim(); // Remove "Created by" part
+                let text  = dropdownItem.textContent;
+                text = text.replace(/Created by: .*/, '').trim();
                 document.getElementById('class_id').value = value;
                 document.getElementById('selectedClassText').textContent = text;
 
@@ -889,7 +1025,8 @@ function initializeSearchableDropdowns() {
             const dropdownItem = e.target.closest('.dropdown-item');
             if (dropdownItem && classEditListContainer.contains(dropdownItem)) {
                 const value = dropdownItem.dataset.value;
-                const text  = dropdownItem.textContent;
+                let text  = dropdownItem.textContent;
+                text = text.replace(/Created by: .*/, '').trim();
                 document.getElementById('edit_class_id').value = value;
                 document.getElementById('selectedEditClassText').textContent = text;
 
@@ -934,6 +1071,126 @@ function initializeSearchableDropdowns() {
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
                 if (dropdownInstance) dropdownInstance.hide();
             }
+        });
+    }
+
+    // Delegate click inside .class-multiple-list
+    if (classMultipleListContainer) {
+        classMultipleListContainer.addEventListener('click', function(e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem && classMultipleListContainer.contains(dropdownItem)) {
+                const value = dropdownItem.dataset.value;
+                let text  = dropdownItem.textContent;
+                text = text.replace(/Created by: .*/, '').trim();
+                document.getElementById('multiple_class_id').value = value;
+                document.getElementById('selectedMultipleClassText').textContent = text;
+
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
+        });
+    }
+
+    // Delegate click inside .user-multiple-list
+    // This listener needs to be outside initializeSearchableDropdowns if the container is always present,
+    // or ensure it's called after the container is available.
+    // For now, it's called when the modal is shown.
+    const userMultipleListContainerForListener = document.querySelector('.user-multiple-list');
+    if (userMultipleListContainerForListener) {
+        userMultipleListContainerForListener.addEventListener('click', function(e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const userId = dropdownItem.dataset.value;
+                const userName = dropdownItem.textContent.trim();
+
+                if (selectedUsers.has(userId)) {
+                    selectedUsers.delete(userId);
+                    dropdownItem.classList.remove('active');
+                } else {
+                    selectedUsers.add(userId);
+                    dropdownItem.classList.add('active');
+                }
+                updateSelectedUsersDisplay();
+            }
+        });
+    }
+
+    // Removed direct call to renderUserMultipleList() and loadAllUsersForMultipleSelect() here
+    // as they are now called when the multipleEnrollmentsModal is shown.
+}
+
+function updateSelectedUsersDisplay() {
+    const userNames = [];
+    // Ensure userMultipleListContainer is queried again here in case it wasn't available at initial script load
+    const currentListContainer = document.querySelector('.user-multiple-list');
+    if (!currentListContainer) {
+        console.error('userMultipleListContainer not found in updateSelectedUsersDisplay');
+        return;
+    }
+
+    selectedUsers.forEach(userId => {
+        const userItem = currentListContainer.querySelector(`.dropdown-item[data-value="${userId}"]`);
+        if (userItem) {
+            userNames.push(userItem.textContent.trim());
+        }
+    });
+
+    if (userNames.length > 0) {
+        selectedMultipleUserText.textContent = userNames.join(', ');
+        multipleUserIdInput.value = Array.from(selectedUsers).join(',');
+    } else {
+        selectedMultipleUserText.textContent = 'Select User(s)';
+        multipleUserIdInput.value = '';
+    }
+}
+
+// Global variable for all users, will be populated via API call
+// let allUsers = []; // Already declared at the top
+
+function loadAllUsersForMultipleSelect() {
+    // Ensure userMultipleListContainer is available before attempting to load/render
+    const currentListContainer = document.querySelector('.user-multiple-list');
+    if (!currentListContainer) {
+        console.error('userMultipleListContainer not found in loadAllUsersForMultipleSelect');
+        return;
+    }
+
+    fetch('../backend/api/get_all_users.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                allUsers = data.data; // Populate the global allUsers array
+                renderUserMultipleList(); // Render the list after data is fetched
+            } else {
+                console.error("Failed to load users for multiple select:", data.message);
+            }
+        })
+        .catch(error => console.error("Error loading users for multiple select:", error));
+}
+
+function renderUserMultipleList() {
+    const currentListContainer = document.querySelector('.user-multiple-list');
+    if (currentListContainer) {
+        currentListContainer.innerHTML = ''; // Clear existing items
+
+        if (allUsers.length === 0) {
+            const noUsersMessage = document.createElement('div');
+            noUsersMessage.classList.add('dropdown-item', 'text-gray-500');
+            noUsersMessage.textContent = 'No users found.';
+            currentListContainer.appendChild(noUsersMessage);
+            return;
+        }
+
+        allUsers.forEach(user => {
+            const div = document.createElement('div');
+            div.classList.add('dropdown-item');
+            if (selectedUsers.has(String(user.id))) { // Ensure ID is string for comparison
+                div.classList.add('active');
+            }
+            div.dataset.value = user.id;
+            div.textContent = user.username;
+            currentListContainer.appendChild(div);
         });
     }
 }
@@ -1043,6 +1300,37 @@ function reloadClassDropdowns() {
                 }
             }
 
+            // Update dropdown menus
+            const classMultipleDropdown = document.querySelector('.class-multiple-list');
+            if (classMultipleDropdown) {
+                classMultipleDropdown.innerHTML = '';
+                if (Array.isArray(courses)) {
+                    courses.forEach(classItem => {
+                        const dropdownItem = document.createElement('div');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.dataset.value = classItem.id;
+
+                        const mainLineDiv = document.createElement('div');
+                        mainLineDiv.className = 'main-line';
+
+                        let mainDisplayText = classItem.name + ' ';
+                        if (classItem.courseCode) {
+                            mainDisplayText += `(${classItem.courseCode}) `;
+                        }
+                        mainLineDiv.textContent = mainDisplayText;
+
+                        const subheaderLineDiv = document.createElement('div');
+                        subheaderLineDiv.className = 'subheader-line';
+                        subheaderLineDiv.textContent = 'Created by: ' + classItem.createdByUsername;
+
+                        dropdownItem.appendChild(mainLineDiv);
+                        dropdownItem.appendChild(subheaderLineDiv);
+
+                        classMultipleDropdown.appendChild(dropdownItem);
+                    });
+                }
+            }
+
             // Update edit form select
             const editClassSelect = document.getElementById('edit_class_id');
             if (editClassSelect) {
@@ -1056,9 +1344,6 @@ function reloadClassDropdowns() {
                     });
                 }
             }
-
-            // Reinitialize search functionality
-            initializeSearchableDropdowns();
         });
 }
 
@@ -1181,7 +1466,8 @@ function handleFiles(event) {
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
     // if the above name call doesnt work, consider .text instead (data seemed to contain the text but maybe it doesnt always?)
     if (!selectedCourseName || selectedCourseName === "Select Class") {
-        alert("Please select a course before uploading files.");
+        // Changed from alert to showErrorBanner for better UI
+        showErrorBanner("Please select a course before uploading files."); 
         return;
     }
 
@@ -1288,7 +1574,8 @@ function removeFileFromDocsFolder(fileName) {
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
 
     if (!selectedCourseName) {
-        alert("Please select a course.");
+        // Changed from alert to showErrorBanner for better UI
+        showErrorBanner("Please select a course."); 
         return;
     }
     // console.log(fileName)

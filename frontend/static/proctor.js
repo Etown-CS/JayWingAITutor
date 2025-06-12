@@ -11,65 +11,11 @@ const classNotesId = document.getElementById('notes_class_id');
 
 const classModal = new bootstrap.Modal(document.getElementById('editClassesModal'));
 const enrollmentModal = new bootstrap.Modal(document.getElementById('editEnrollmentsModal'));
+// const multipleEnrollmentModal = new bootstrap.Modal(document.getElementById('editEnrollmentsModal'));
 
 
 // --------------------- General JavaScript ------------------------
 
-
-// Global timeout holders
-let feedbackTimeoutId = null;
-let errorTimeoutId = null;
-
-function hideAllBanners() {
-    const feedbackBanner = document.getElementById('feedback-banner');
-    const errorBanner = document.getElementById('error-banner');
-
-    if (feedbackBanner) {
-        feedbackBanner.classList.add('hidden');
-        if (feedbackTimeoutId) {
-            clearTimeout(feedbackTimeoutId);
-            feedbackTimeoutId = null;
-        }
-    }
-
-    if (errorBanner) {
-        errorBanner.classList.add('hidden');
-        if (errorTimeoutId) {
-            clearTimeout(errorTimeoutId);
-            errorTimeoutId = null;
-        }
-    }
-}
-
-function showFeedbackBanner(message) {
-    hideAllBanners(); // Hide others and clear their timeouts
-
-    const banner = document.getElementById('feedback-banner');
-    if (!banner) return;
-
-    banner.textContent = message;
-    banner.classList.remove('hidden');
-
-    feedbackTimeoutId = setTimeout(() => {
-        banner.classList.add('hidden');
-        feedbackTimeoutId = null;
-    }, 10000); // 10 seconds
-}
-
-function showErrorBanner(message) {
-    hideAllBanners(); // Hide others and clear their timeouts
-
-    const banner = document.getElementById('error-banner');
-    if (!banner) return;
-
-    banner.textContent = message;
-    banner.classList.remove('hidden');
-
-    errorTimeoutId = setTimeout(() => {
-        banner.classList.add('hidden');
-        errorTimeoutId = null;
-    }, 10000); // 10 seconds
-}
 
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
@@ -127,6 +73,11 @@ document.addEventListener('DOMContentLoaded', function () {
             let courseCode = courseCodeInput.value.toUpperCase();
             let classDescription = document.getElementById('class_description').value;
             const className = document.getElementById('class_name').value.trim(); // Get the class name here
+
+            if (!(className)) {
+                showErrorBanner("Please enter a class name.");
+                return;
+            }
 
             if (isValidCourseCode(courseCode)) {
                 console.log("Add Form: Course code is valid.");
@@ -222,6 +173,18 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const form = this;
 
+            // Check that user filled required fields
+            const courseId = document.getElementById('class_id').value;
+            const userId = document.getElementById('user_id').value;
+            if (!(courseId)) {
+                showErrorBanner("Please select a class in the dropdown.");
+                return;
+            }
+            if (!(userId)) {
+                showErrorBanner("Please select a user in the dropdown.");
+                return;
+            }
+
             fetch('../backend/api/get_professor_enrollments.php')
                 .then(response => response.json())
                 .then(result => {
@@ -232,18 +195,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     allEnrollments = result.data; // Save full list globally
                     console.log('All enrollments loaded:', allEnrollments);
-
-                    // Check that user filled required fields
-                    const courseId = document.getElementById('class_id').value;
-                    const userId = document.getElementById('user_id').value;
-                    if (!(courseId)) {
-                        showErrorBanner("Please select a class in the dropdown.");
-                        return;
-                    }
-                    if (!(userId)) {
-                        showErrorBanner("Please select a user in the dropdown.");
-                        return;
-                    }
 
                     const data = {
                         courseId: courseId,
@@ -675,8 +626,7 @@ function initializeSearchableEnrollmentTable() {
     });
 }
 
-
-// Edit Class/Enrollment
+// Edit Class/Enrollment and Add Multiple Enrollments
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('edit-class-btn')) {
         const btn = e.target;
@@ -704,7 +654,53 @@ document.addEventListener('click', function (e) {
         hideAllBanners();
         enrollmentModal.show();
     }
+
+    if (e.target.contains('add-multiple-enrollments')) {
+        // Check that user filled required fields
+        const courseId = document.getElementById('class_id').value;
+        if (!(courseId)) {
+            showErrorBanner("Please select a class in the dropdown.");
+            return;
+        }
+
+        hideAllBanners();
+        // classModal.show();
+    }
 });
+
+// Clear Class Form
+function clearClassInputs() {
+    const className = document.getElementById('class_name');
+    if (className) {
+        className.value = '';
+    }
+    const courseCode = document.getElementById('course_code');
+    if (courseCode) {
+        courseCode.value = '';
+    }
+    const classDescription = document.getElementById('class_description');
+    if (classDescription) {
+        classDescription.value = '';
+    }
+}
+
+// Clear Enrollment Form
+function clearEnrollmentInputs() {
+    const classListContainer = document.querySelector('.class-list');
+    if (classListContainer) {
+        document.getElementById('class_id').value = null;
+        document.getElementById('selectedClassText').textContent = 'Select Class';
+    }
+    const userListContainer  = document.querySelector('.user-list');
+    if (userListContainer) {
+        document.getElementById('user_id').value = null;
+        document.getElementById('selectedUserText').textContent = 'Select User';
+    }
+    const roleOfClassDropdown = document.getElementById('roleOfClass');
+    if (roleOfClassDropdown) {
+        roleOfClassDropdown.value = roleOfClassDropdown.options[0].value;
+    }
+}
 
 // Delete Class
 function deleteClass(classId) {
@@ -1354,4 +1350,63 @@ function loadExistingFiles() {
             });
         })
         .catch(err => console.error("Error loading files:", err));
+}
+
+
+// --------------------- Banner Management JavaScript ------------------------
+
+
+// Global timeout holders
+let feedbackTimeoutId = null;
+let errorTimeoutId = null;
+
+function hideAllBanners() {
+    const feedbackBanner = document.getElementById('feedback-banner');
+    const errorBanner = document.getElementById('error-banner');
+
+    if (feedbackBanner) {
+        feedbackBanner.classList.add('hidden');
+        if (feedbackTimeoutId) {
+            clearTimeout(feedbackTimeoutId);
+            feedbackTimeoutId = null;
+        }
+    }
+
+    if (errorBanner) {
+        errorBanner.classList.add('hidden');
+        if (errorTimeoutId) {
+            clearTimeout(errorTimeoutId);
+            errorTimeoutId = null;
+        }
+    }
+}
+
+function showFeedbackBanner(message) {
+    hideAllBanners(); // Hide others and clear their timeouts
+
+    const banner = document.getElementById('feedback-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    feedbackTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        feedbackTimeoutId = null;
+    }, 10000); // 10 seconds
+}
+
+function showErrorBanner(message) {
+    hideAllBanners(); // Hide others and clear their timeouts
+
+    const banner = document.getElementById('error-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    errorTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        errorTimeoutId = null;
+    }, 10000); // 10 seconds
 }

@@ -110,7 +110,7 @@ if ($currentUserId) {
         Proctor Page
     </header>
 
-    <div id="feedback-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-blue-100 text-blue-800 px-4 py-2 rounded shadow hidden text-sm">
+    <div id="feedback-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-green-100 text-green-800 px-4 py-2 rounded shadow hidden text-sm">
         <!-- JavaScript -->
     </div>
 
@@ -163,7 +163,7 @@ if ($currentUserId) {
                                     <label for="class_name" class="form-label">
                                         Class Name <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control" id="class_name" required>
+                                    <input type="text" class="form-control" id="class_name">
                                 </div>
                                 <!-- Course Code -->
                                 <div class="col-md-4 mb-3">
@@ -182,7 +182,10 @@ if ($currentUserId) {
                                     <textarea class="form-control" id="class_description" style="height: 37.6px;"></textarea>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary">Add Class</button>
+                            <div>
+                                <button type="submit" class="btn btn-primary">Add Class</button>
+                                <button type="button" onclick="clearClassInputs()" class="btn btn-danger">Clear Fields</button>
+                            </div>
                         </form>
                         
                         <!-- Classes Table -->
@@ -295,6 +298,7 @@ if ($currentUserId) {
                                                     </div>
                                                 <?php endwhile; ?>
                                             </div>
+                                            <button type="button" class="btn btn-outline-primary w-full mt-2 add-multiple-enrollments">Add Mutiple Enrollments</button>
                                         </div>
                                         <input type="hidden" id="user_id" name="user_id" required>
                                     </div>
@@ -310,7 +314,10 @@ if ($currentUserId) {
                                     </select>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary">Add Enrollment</button>
+                            <div>
+                                <button type="submit" class="btn btn-primary">Add Enrollment</button>    
+                                <button type="button" onclick="clearEnrollmentInputs()" class="btn btn-danger">Clear Fields</button>
+                            </div>
                         </form>
                         
                         <!-- Enrollments Table -->

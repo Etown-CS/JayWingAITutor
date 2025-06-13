@@ -264,232 +264,258 @@ if ($currentUserId) {
 
 <!-- Class Management Section -->
                 <?php elseif($currentPage == "Manage Classes") : ?>
-                    <div class="m-4">
-                        <form id="classForm">
-                            <div class="row">
-                                <!-- Class Name -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="class_name" class="form-label">
-                                        Class Name <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="text" class="form-control" id="class_name">
-                                </div>
-                                <!-- Course Code -->
-                                <div class="col-md-4 mb-3">
-                                    <div class="flex items-center gap-1">
-                                        <label for="course_code" class="form-label">Course Code</label>
-                                        <i
-                                            class="mb-2 fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-default"
-                                            title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
-                                        ></i>
+                    <!-- Add Classes -->
+                    <div class="card m-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Add Class</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="classForm">
+                                <div class="row">
+                                    <!-- Class Name -->
+                                    <div class="col-md-4 mb-3">
+                                        <label for="class_name" class="form-label">
+                                            Class Name <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="class_name">
                                     </div>
-                                    <input type="text" class="form-control" id="course_code" maxlength="20">
+                                    <!-- Course Code -->
+                                    <div class="col-md-4 mb-3">
+                                        <div class="flex items-center gap-1">
+                                            <label for="course_code" class="form-label">Course Code</label>
+                                            <i
+                                                class="mb-2 fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-default"
+                                                title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
+                                            ></i>
+                                        </div>
+                                        <input type="text" class="form-control" id="course_code" maxlength="20">
+                                    </div>
+                                    <!-- Class Description -->
+                                    <div class="col-md-4 mb-3">
+                                        <label for="class_description" class="form-label">Description</label>
+                                        <textarea class="form-control" id="class_description" style="height: 37.6px;"></textarea>
+                                    </div>
                                 </div>
-                                <!-- Class Description -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="class_description" class="form-label">Description</label>
-                                    <textarea class="form-control" id="class_description" style="height: 37.6px;"></textarea>
+                                <div>
+                                    <button type="submit" class="btn btn-primary">Add Class</button>
+                                    <button type="button" onclick="clearClassInputs()" class="btn btn-danger">Clear Fields</button>
                                 </div>
-                            </div>
-                            <div>
-                                <button type="submit" class="btn btn-primary">Add Class</button>
-                                <button type="button" onclick="clearClassInputs()" class="btn btn-danger">Clear Fields</button>
-                            </div>
-                        </form>
-                        
-                        <!-- Classes Table -->
-                        <div class="table-responsive mt-4">
-                            <table class="table" id="classesTableConfig">
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            Class Name
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                id="classNameTableInput"
-                                                placeholder="Search..."
-                                            />
-                                        </th>
-                                        <th>
-                                            Course Code
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                id="courseCodeTableInput"
-                                                placeholder="Search..."
-                                            />
-                                        </th>
-                                        <th>
-                                            Description
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                id="classDescriptionTableInput"
-                                                placeholder="Search..."
-                                            />
-                                        </th>
-                                        <th>
-                                            Actions
-                                            <select class="form-select bg-primary text-white" id="filter-by-btn" name="filterBy" onchange="filterCourses(this.value)">
-                                                <option value="allCourses">Filter: All</option>
-                                                <?php
-                                                    $query = "
-                                                        SELECT DISTINCT
-                                                            REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
-                                                        FROM courses
-                                                        WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
-                                                        ORDER BY discipline ASC
-                                                    ";
+                            </form>
+                        </div>
+                    </div>
 
-                                                    $stmt = $connection->prepare($query);
-                                                    $stmt->execute();
-                                                    $disciplines = $stmt->get_result();
+                    <div class="pt-1"></div>
 
-                                                    while ($discipline = $disciplines->fetch_assoc()):
-                                                ?>
-                                                    <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
-                                                <?php endwhile; ?>
-                                            </select>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="classesTable">
-                                    <!-- Filled dynamically -->
-                                </tbody>
-                            </table>
+                    <!-- Classes Table -->
+                    <div class="card m-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Current Classes</h5>
+                        </div>
+                        <div class="card-body">    
+                            <div class="table-responsive">
+                                <table class="table" id="classesTableConfig">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                Class Name
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="classNameTableInput"
+                                                    placeholder="Search..."
+                                                />
+                                            </th>
+                                            <th>
+                                                Course Code
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="courseCodeTableInput"
+                                                    placeholder="Search..."
+                                                />
+                                            </th>
+                                            <th>
+                                                Description
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="classDescriptionTableInput"
+                                                    placeholder="Search..."
+                                                />
+                                            </th>
+                                            <th>
+                                                Actions
+                                                <select class="form-select bg-primary text-white" id="filter-by-btn" name="filterBy" onchange="filterCourses(this.value)">
+                                                    <option value="allCourses">Filter: All</option>
+                                                    <?php
+                                                        $query = "
+                                                            SELECT DISTINCT
+                                                                REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
+                                                            FROM courses
+                                                            WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
+                                                            ORDER BY discipline ASC
+                                                        ";
+
+                                                        $stmt = $connection->prepare($query);
+                                                        $stmt->execute();
+                                                        $disciplines = $stmt->get_result();
+
+                                                        while ($discipline = $disciplines->fetch_assoc()):
+                                                    ?>
+                                                        <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
+                                                    <?php endwhile; ?>
+                                                </select>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="classesTable">
+                                        <!-- Filled dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
 <!-- Enrollment Management Section -->
                 <?php elseif($currentPage == "Manage Enrollments") : ?>
-                    <div class="m-4">
-                        <form id="enrollmentForm">
-                            <div class="row">
-                                <!-- Class Dropdown -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="class_id" class="form-label">
-                                        Class Name <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="dropdown">
-                                        <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span id="selectedClassText">Select Class</span>
-                                        </button>
-                                        <div class="dropdown-menu w-100 p-2" id="classDropdown">
-                                            <input
-                                                type="text"
-                                                class="form-control mb-2"
-                                                id="classSearchInput"
-                                                placeholder="Search classes..."
-                                            />
-                                            <div class="class-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <!-- JavaScript -->
+                    <!-- Add Enrollments -->
+                    <div class="card m-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Add Enrollment</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="enrollmentForm">
+                                <div class="row">
+                                    <!-- Class Dropdown -->
+                                    <div class="col-md-4 mb-3">
+                                        <label for="classDropdownBtn" class="form-label">
+                                            Class Name <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="dropdown">
+                                            <button id="classDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span id="selectedClassText">Select Class</span>
+                                            </button>
+                                            <div class="dropdown-menu w-100 p-2" id="classDropdown">
+                                                <input
+                                                    type="text"
+                                                    class="form-control mb-2"
+                                                    id="classSearchInput"
+                                                    placeholder="Search classes..."
+                                                />
+                                                <div class="class-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                                    <!-- JavaScript -->
+                                                </div>
                                             </div>
+                                            <input type="hidden" id="class_id" name="class_id" required>
                                         </div>
-                                        <input type="hidden" id="class_id" name="class_id" required>
                                     </div>
-                                </div>
-                                <!-- User Dropdown -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="user_id" class="form-label">
-                                        User <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="dropdown">
-                                        <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span id="selectedUserText">Select User</span>
-                                        </button>
-                                        <div class="dropdown-menu w-100 p-2">
-                                            <input type="text" class="form-control mb-2" id="userSearchInput" placeholder="Search users...">
-                                            <div class="user-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <?php while($user = $users->fetch_assoc()): ?>
-                                                    <div class="dropdown-item" data-value="<?= $user['id'] ?>">
-                                                        <?= htmlspecialchars($user['username']) ?>
-                                                    </div>
-                                                <?php endwhile; ?>
+                                    <!-- User Dropdown -->
+                                    <div class="col-md-4 mb-3">
+                                        <label for="userDropdownBtn" class="form-label">
+                                            User <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="dropdown">
+                                            <button id="userDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span id="selectedUserText">Select User</span>
+                                            </button>
+                                            <div class="dropdown-menu w-100 p-2">
+                                                <input type="text" class="form-control mb-2" id="userSearchInput" placeholder="Search users...">
+                                                <div class="user-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                                    <!-- JavaScript -->
+                                                </div>
+                                                <button id="add-multiple-enrollments" type="button" class="btn btn-outline-primary w-full mt-2">Add Mutiple Enrollments</button>
                                             </div>
-                                            <button id="add-multiple-enrollments" type="button" class="btn btn-outline-primary w-full mt-2">Add Mutiple Enrollments</button>
+                                            <input type="hidden" id="user_id" name="user_id" required>
                                         </div>
-                                        <input type="hidden" id="user_id" name="user_id" required>
                                     </div>
-                                </div>
-                                <!-- Class Role Dropdown -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="roleOfClass" class="form-label">
-                                        Role (JayWing)
-                                    </label>
-                                    <select class="form-select" id="roleOfClass" name="roleOfClass" required>
-                                        <option value="tutor">Tutor</option>
-                                        <option value="tutee">Tutee</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <button type="submit" class="btn btn-primary">Add Enrollment</button>    
-                                <button type="button" onclick="clearEnrollmentInputs()" class="btn btn-danger">Clear Fields</button>
-                            </div>
-                        </form>
-                        
-                        <!-- Enrollments Table -->
-                        <div class="table mt-4">
-                            <table class="table" id="enrollmentsTableConfig">
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            Class Name
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                id="classNamesTableInput"
-                                                placeholder="Search..."
-                                            />
-                                        </th>
-                                        <th>
-                                            User
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                id="userTableInput"
-                                                placeholder="Search..."
-                                            />
-                                        </th>
-                                        <th>
+                                    <!-- Class Role Dropdown -->
+                                    <div class="col-md-4 mb-3">
+                                        <label for="roleOfClass" class="form-label">
                                             Role (JayWing)
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                id="roleTableInput"
-                                                placeholder="Search..."
-                                            />
-                                        </th>
-                                        <th>
-                                            Actions
-                                            <select class="form-select bg-primary text-white" id="filter-by-btn-2" name="filterBy" onchange="filterEnrollments(this.value)">
-                                                <option value="allCourses">Filter: All</option>
-                                                <?php
-                                                    $query = "
-                                                        SELECT DISTINCT
-                                                            REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
-                                                        FROM courses
-                                                        WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
-                                                        ORDER BY discipline ASC
-                                                    ";
+                                        </label>
+                                        <select class="form-select" id="roleOfClass" name="roleOfClass" required>
+                                            <option value="tutor">Tutor</option>
+                                            <option value="tutee">Tutee</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="submit" class="btn btn-primary">Add Enrollment</button>    
+                                    <button type="button" onclick="clearEnrollmentInputs()" class="btn btn-danger">Clear Fields</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
 
-                                                    $stmt = $connection->prepare($query);
-                                                    $stmt->execute();
-                                                    $disciplines = $stmt->get_result();
+                    <div class="pt-1"></div>
 
-                                                    while ($discipline = $disciplines->fetch_assoc()):
-                                                ?>
-                                                    <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
-                                                <?php endwhile; ?>
-                                            </select>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="enrollmentsTable">
-                                    <!-- Filled dynamically -->
-                                </tbody>
-                            </table>
+                    <!-- Enrollments Table -->
+                    <div class="card m-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Current Enrollments</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table">
+                                <table class="table" id="enrollmentsTableConfig">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                Class Name
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="classNamesTableInput"
+                                                    placeholder="Search..."
+                                                />
+                                            </th>
+                                            <th>
+                                                User
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="userTableInput"
+                                                    placeholder="Search..."
+                                                />
+                                            </th>
+                                            <th>
+                                                Role (JayWing)
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="roleTableInput"
+                                                    placeholder="Search..."
+                                                />
+                                            </th>
+                                            <th>
+                                                Actions
+                                                <select class="form-select bg-primary text-white" id="filter-by-btn-2" name="filterBy" onchange="filterEnrollments(this.value)">
+                                                    <option value="allCourses">Filter: All</option>
+                                                    <?php
+                                                        $query = "
+                                                            SELECT DISTINCT
+                                                                REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
+                                                            FROM courses
+                                                            WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
+                                                            ORDER BY discipline ASC
+                                                        ";
+
+                                                        $stmt = $connection->prepare($query);
+                                                        $stmt->execute();
+                                                        $disciplines = $stmt->get_result();
+
+                                                        while ($discipline = $disciplines->fetch_assoc()):
+                                                    ?>
+                                                        <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
+                                                    <?php endwhile; ?>
+                                                </select>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="enrollmentsTable">
+                                        <!-- Filled dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -499,11 +525,11 @@ if ($currentUserId) {
                         <form id="proctorForm">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="notes_class_id" class="form-label">
+                                    <label for="classNotesDropdownBtn" class="form-label">
                                         Class Name <span class="text-danger">*</span>
                                     </label>
                                     <div class="dropdown">
-                                        <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <button id="classNotesDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             <span id="selectedNotesClassText">Select Class</span>
                                         </button>
                                         <div class="dropdown-menu w-100 p-2" id="classNotesDropdown">
@@ -514,16 +540,7 @@ if ($currentUserId) {
                                                 placeholder="Search classes..."
                                             />
                                             <div class="class-notes-list" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                                <?php while($class = $classes->fetch_assoc()): ?>
-                                                    <div class="dropdown-item" data-value="<?= $class['id'] ?>">
-                                                        <div class="main-line">
-                                                        <?= htmlspecialchars($class['name']) ?> 
-                                                        <?php if (!empty($class['courseCode'])): ?>
-                                                            (<?= htmlspecialchars($class['courseCode']) ?>)
-                                                        <?php endif; ?>
-                                                        </div>
-                                                        <div class="subheader-line">Created by: <?= htmlspecialchars($class['created_by_username']) ?></div>                                                    </div>
-                                                <?php endwhile; ?>
+                                                <!-- JavaScript -->
                                             </div>
                                         </div>
                                         <input type="hidden" id="notes_class_id" name="notes_class_id" required>
@@ -605,9 +622,9 @@ if ($currentUserId) {
                         <input type="hidden" id="edit_enrollment_id">
                         <!-- Edit Class Dropdown -->
                         <div class="mb-3">
-                            <label for="edit_class_id" class="form-label">Class Name</label>
+                            <label for="classEditDropdownBtn" class="form-label">Class Name</label>
                             <div class="dropdown">
-                                <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button id="classEditDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <span id="selectedEditClassText">Select Class</span>
                                 </button>
                                 <div class="dropdown-menu w-100 p-2" id="classEditDropdown">
@@ -626,9 +643,9 @@ if ($currentUserId) {
                         </div>
                         <!-- Edit User Dropdown -->
                         <div class="mb-3">
-                            <label for="edit_user_id" class="form-label">User</label>
+                            <label for="userEditDropdownBtn" class="form-label">User</label>
                             <div class="dropdown">
-                                <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button id="userEditDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <span id="selectedEditUserText">Select User</span>
                                 </button>
                                 <div class="dropdown-menu w-100 p-2">
@@ -639,13 +656,7 @@ if ($currentUserId) {
                                         placeholder="Search users..."
                                     />
                                     <div class="user-edit-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
-                                        <?php
-                                        $users->data_seek(0);
-                                        while($user = $users->fetch_assoc()): ?>
-                                            <div class="dropdown-item" data-value="<?= $user['id'] ?>">
-                                                <?= htmlspecialchars($user['username']) ?>
-                                            </div>
-                                        <?php endwhile; ?>
+                                        <!-- JavaScript -->
                                     </div>
                                 </div>
                                 <input type="hidden" id="edit_user_id" name="edit_user_id" required>
@@ -678,11 +689,11 @@ if ($currentUserId) {
                     <form id="addMultipleEnrollmentsForm">
                         <!-- Class Multiple Dropdown -->
                         <div class="mb-3">
-                            <label for="multiple_class_id" class="form-label">
+                            <label for="classMultipleDropdownBtn" class="form-label">
                                 Class Name <span class="text-danger">*</span>
                             </label>
                             <div class="dropdown">
-                                <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button id="classMultipleDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <span id="selectedMultipleClassText">Select Class</span>
                                 </button>
                                 <div class="dropdown-menu w-100 p-2" id="classMultipleDropdown">
@@ -701,12 +712,12 @@ if ($currentUserId) {
                         </div>
                         <!-- User Multiple Dropdown -->
                         <div class="mb-3">
-                            <label for="multiple_user_id" class="form-label">
+                            <label for="userMultipleDropdownBtn" class="form-label">
                                 User <span class="text-danger">*</span>
                             </label>
                             <div class="dropdown">
-                                <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span id="selectedMultipleUserText">Select User(s)</span>
+                                <button id="userMultipleDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span id="selectedMultipleUserText">Select Users</span>
                                 </button>
                                 <div class="dropdown-menu w-100 p-2">
                                     <input
@@ -732,7 +743,7 @@ if ($currentUserId) {
                                 <option value="tutee">Tutee</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+                        <button type="submit" class="btn btn-primary w-full">Add Enrollments</button>
                     </form>
                 </div>
             </div>

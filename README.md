@@ -33,7 +33,8 @@ The AI Tutor Platform provides a customized learning experience using AI. It all
     ```
 3. Install the dependencies:
     ```bash
-    pip install -r requirements.txt
+    cd setup
+    python setup.py
     ```
 4. Add gcloud_keys folder to backend
 5. Set up environment variables in a `.env` file for Python backend:

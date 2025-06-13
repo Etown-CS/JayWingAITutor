@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loop: true,
             margin: 20,
             autoplay: true,
-            autoplayTimeout: 5000,
+            autoplayTimeout: 500000,
             autoplayHoverPause: true,
             smartSpeed: 700,
             responsive: {

@@ -24,6 +24,11 @@ const multipleUserIdInput = document.getElementById('multiple_user_id'); // Hidd
 // Global variable for all users, will be populated via API call
 let allUsers = [];
 
+// Date selection for dashboard
+const startDateInput = document.getElementById('selectedStartDate');
+const endDateInput = document.getElementById('selectedEndDate');
+dateValidation = true; // Global variable to track date validation state
+
 document.addEventListener('DOMContentLoaded', function () {
     loadClasses();
     loadEnrollments(); // Ensure enrollments are loaded to populate tables
@@ -32,14 +37,15 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeSearchableClassTable();
     initializeSearchableEnrollmentTable();
     initializeSearchableDropdowns(); // This now includes loading all users for regular dropdowns
-    reloadClassDropdowns(); // Populates class dropdowns for dashboard
+    handleDateSelection(); // Initialize date selection for dashboard
+    generateReport(); // Initial report generation with default filters
     $(document).ready(function(){
         $(".owl-carousel").owlCarousel({
             items: 3,
             loop: true,
             margin: 20,
             autoplay: true,
-            autoplayTimeout: 500000,
+            autoplayTimeout: 10000, // 10 seconds
             autoplayHoverPause: true,
             smartSpeed: 700,
             responsive: {
@@ -79,12 +85,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-    
-    const classForm = document.getElementById('classForm');
-    const enrollmentForm = document.getElementById('enrollmentForm');
-    const editClassForm = document.getElementById('editClassForm');
-    const editEnrollmentForm = document.getElementById('editEnrollmentForm');
-    const addMultipleEnrollmentsForm = document.getElementById('addMultipleEnrollmentsForm'); // Ensure this is defined
 
     // Modify loaded files when a new course is selected
     if (classNotesId) {
@@ -96,6 +96,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
             previewDiv.innerHTML = '';
             loadExistingFiles();
+        });
+    }
+    
+    const dashFilterForm = document.getElementById('dashboardFilterForm');
+    const classForm = document.getElementById('classForm');
+    const enrollmentForm = document.getElementById('enrollmentForm');
+    const editClassForm = document.getElementById('editClassForm');
+    const editEnrollmentForm = document.getElementById('editEnrollmentForm');
+    const addMultipleEnrollmentsForm = document.getElementById('addMultipleEnrollmentsForm'); // Ensure this is defined
+
+    // Add Dashboard Filter Form Handler
+    if (dashFilterForm) {
+        dashFilterForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = document.getElementById('dashboardFilterForm');
+            console.log("Dashboard Filter Form submitted");
+
+            // Dates are automatically validated in handleDateSelection
+
+            // Get form contents
+            const formData = new FormData(form);
+
+            const classId   = formData.get('class_id');
+            const userId    = formData.get('user_id');
+            const startDate = formData.get('start_date_filter');
+            const endDate   = formData.get('end_date_filter');
+            const qaFilter  = formData.get('qa_filter');
+
+            // console.log({ classId, userId, startDate, endDate, qaFilter });
+            generateReport(classId, userId, startDate, endDate, qaFilter);
         });
     }
 
@@ -532,6 +562,94 @@ document.addEventListener('DOMContentLoaded', function () {
 // --------------------- Dashboard JavaScript ------------------------
 
 
+// Handle date selection for dashboard
+function handleDateSelection() {
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+    // Set max value to today
+    startDateInput.setAttribute('max', today);
+    endDateInput.setAttribute('max', today);
+
+    startDateInput.addEventListener('change', validateDates);
+    endDateInput.addEventListener('change', validateDates);
+}
+
+function validateDates() {
+    dataValidation = false; // Reset validation state
+
+    const start = startDateInput.value;
+    const end = endDateInput.value;
+
+    startDateInput.setCustomValidity('');
+    endDateInput.setCustomValidity('');
+
+    // Make sure start is before end
+    if (start && end) {
+        if (start > end) {
+            startDateInput.setCustomValidity('Start date must be before or equal to end date.');
+            endDateInput.setCustomValidity('End date must be after or equal to start date.');
+        } else {
+            dateValidation = true;
+        }
+    }
+
+    startDateInput.reportValidity();
+    endDateInput.reportValidity();
+}
+
+function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both') {
+    if (!dateValidation) {
+        showErrorBanner("Please select valid start and end dates.");
+        return;
+    }
+
+    // Reset the word cloud image
+    const cloud = document.getElementById('word_cloud_img');
+    const container = document.querySelector('.wordcloud-container');
+    cloud.src = 'static/img/word_cloud_placeholder.png'; // Reset to placeholder
+    container.classList.add('shimmer'); // Add shimmer effect while loading
+
+    const params = new URLSearchParams({
+        class_id: classFilter,
+        user_id: userFilter,
+        start_date: startDate,
+        end_date: endDate,
+        qa_filter: qaFilter
+    });
+
+    // Call flask API to generate report
+    fetch(`${FLASK_API}/generate-report?${params.toString()}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFeedbackBanner("Report generated successfully!");
+            // Handle the report data, e.g., display it in a table or download it
+            cloud.onload = () => {
+                container.classList.remove('shimmer');
+            };
+            cloud.src = data.image;
+        }
+        else {
+            showErrorBanner(`Error generating report: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        showErrorBanner('An unexpected error occurred while generating the report: ' + error.message);
+    });
+
+    
+    console.log("Generating report with parameters:", params.toString());
+}
+
 
 // --------------------- Class and Enrollment Management JavaScript ------------------------
 
@@ -922,6 +1040,9 @@ const classNotesSearchInput  = document.getElementById('classNotesSearchInput');
 const classMultipleSearchInput  = document.getElementById('classMultipleSearchInput');
 const userMultipleSearchInput  = document.getElementById('userMultipleSearchInput');
 
+const classSearchInputDash = document.getElementById('classSearchInputDash');
+const userSearchInputDash  = document.getElementById('userSearchInputDash');
+
 // Containers in Dropdowns
 const classListContainer = document.querySelector('.class-list');
 const userListContainer  = document.querySelector('.user-list');
@@ -934,6 +1055,11 @@ const classNotesListContainer  = document.querySelector('.class-notes-list');
 const classMultipleListContainer  = document.querySelector('.class-multiple-list');
 const userMultipleListContainer  = document.querySelector('.user-multiple-list'); // Redefining this here is harmless but redundant with the top-level declaration
 
+// Dashboard-specific dropdowns
+const classDashListContainer = document.querySelector('.class-dash-list');
+const userDashListContainer  = document.querySelector('.user-dash-list');
+const qaListContainer        = document.querySelector('.qa-list');  // static list
+
 
 // Initialize Dropdown Buttons
 function initializeSearchableDropdowns() {
@@ -942,6 +1068,24 @@ function initializeSearchableDropdowns() {
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.addEventListener('click', e => e.stopPropagation());
     });
+
+    if (classSearchInputDash) {
+        classSearchInputDash.addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            document.querySelectorAll('.class-dash-list .dropdown-item').forEach(item => {
+                item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
+            });
+        });
+    }
+
+    if (userSearchInputDash) {
+        userSearchInputDash.addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            document.querySelectorAll('.user-dash-list .dropdown-item').forEach(item => {
+                item.style.display = fuzzyIncludes(item.textContent, searchText) ? 'block' : 'none';
+            });
+        });
+    }
 
     // “Search” filter for classes
     if (classSearchInput) {
@@ -1003,7 +1147,7 @@ function initializeSearchableDropdowns() {
         });
     }
 
-    // “Search” filter for multiple users (CORRECTED fuzzyIncludes call)
+    // “Search” filter for multiple users
     if (userMultipleSearchInput && userMultipleListContainer) {
         userMultipleSearchInput.addEventListener('input', function(e) {
             const searchText = e.target.value.toLowerCase();
@@ -1026,7 +1170,11 @@ function initializeSearchableDropdowns() {
                 let text  = dropdownItem.textContent;
                 text = text.replace(/Created by: .*/, '').trim();
                 document.getElementById('class_id').value = value;
-                document.getElementById('selectedClassText').textContent = text;
+                targetLoc = document.getElementById('selectedClassText');
+                if (targetLoc) {
+                    targetLoc.textContent = text;
+                }
+                
 
                 const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
@@ -1043,7 +1191,10 @@ function initializeSearchableDropdowns() {
                 const value = dropdownItem.dataset.value;
                 const text  = dropdownItem.textContent;
                 document.getElementById('user_id').value = value;
-                document.getElementById('selectedUserText').textContent = text;
+                targetLoc = document.getElementById('selectedUserText');
+                if (targetLoc) {
+                    targetLoc.textContent = text;
+                }
 
                 const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
@@ -1148,6 +1299,60 @@ function initializeSearchableDropdowns() {
             }
         });
     }
+
+    // Dashboard Class Dropdown
+    if (classDashListContainer) {
+        classDashListContainer.addEventListener('click', function (e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const value = dropdownItem.dataset.value;
+                let text = dropdownItem.textContent.trim();
+                text = text.replace(/Created by: .*/, '').trim();
+                text = text.replace(/Includes all courses/, '').trim();
+                document.getElementById('class_id').value = value;
+                document.getElementById('selectedDashboardClassText').textContent = text;
+
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
+        });
+    }
+
+    // Dashboard User Dropdown
+    if (userDashListContainer) {
+        userDashListContainer.addEventListener('click', function (e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const value = dropdownItem.dataset.value;
+                const text = dropdownItem.textContent.trim();
+                document.getElementById('user_id').value = value;
+                document.getElementById('selectedDashboardUserText').textContent = text;
+
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
+        });
+    }
+
+    // Dashboard Q/A Filter
+    if (qaListContainer) {
+        qaListContainer.addEventListener('click', function (e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const value = dropdownItem.dataset.value;
+                const text = dropdownItem.textContent.trim();
+                document.getElementById('qa_filter').value = value;
+                document.getElementById('selectedQAFilterText').textContent = text;
+
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
+        });
+    }
+
 }
 
 function updateSelectedUsersDisplay() {
@@ -1269,6 +1474,55 @@ function reloadClassDropdowns() {
             }
 
             // Update dropdown menus
+            const classDashListContainer = document.querySelector('.class-dash-list');
+            if (classDashListContainer) {
+                classDashListContainer.innerHTML = '';
+
+                // Add "All" option
+                const allOption = document.createElement('div');
+                allOption.className = 'dropdown-item';
+                allOption.dataset.value = 'allCourses';
+
+                const mainAllDiv = document.createElement('div');
+                mainAllDiv.className = 'main-line';
+                mainAllDiv.textContent = 'All';
+
+                const subAllDiv = document.createElement('div');
+                subAllDiv.className = 'subheader-line';
+                subAllDiv.textContent = 'Includes all courses';
+
+                allOption.appendChild(mainAllDiv);
+                allOption.appendChild(subAllDiv);
+                classDashListContainer.appendChild(allOption);
+
+                if (Array.isArray(courses)) {
+                    courses.forEach(classItem => {
+                        const dropdownItem = document.createElement('div');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.dataset.value = classItem.id;
+
+                        const mainLineDiv = document.createElement('div');
+                        mainLineDiv.className = 'main-line';
+                        let mainDisplayText = classItem.name;
+                        if (classItem.courseCode) {
+                            mainDisplayText += ` (${classItem.courseCode})`;
+                        }
+                        mainLineDiv.textContent = mainDisplayText;
+
+                        const subheaderLineDiv = document.createElement('div');
+                        subheaderLineDiv.className = 'subheader-line';
+                        subheaderLineDiv.textContent = 'Created by: ' + classItem.createdByUsername;
+
+                        dropdownItem.appendChild(mainLineDiv);
+                        dropdownItem.appendChild(subheaderLineDiv);
+
+                        classDashListContainer.appendChild(dropdownItem);
+                    });
+                }
+            }
+
+
+
             const classEditDropdown = document.querySelector('.class-edit-list');
             if (classEditDropdown) {
                 classEditDropdown.innerHTML = '';
@@ -1403,6 +1657,29 @@ function reloadUserDropdowns() {
                         dropdownItem.textContent = user.username;
 
                         userEditDropdown.appendChild(dropdownItem);
+                    });
+                }
+            }
+
+            const userDashListContainer = document.querySelector('.user-dash-list');
+            if (userDashListContainer) {
+                userDashListContainer.innerHTML = '';
+
+                // Add "All" option
+                const allOption = document.createElement('div');
+                allOption.className = 'dropdown-item';
+                allOption.dataset.value = 'allUsers';
+                allOption.textContent = 'All';
+                userDashListContainer.appendChild(allOption);
+
+                if (Array.isArray(users)) {
+                    users.forEach(user => {
+                        const dropdownItem = document.createElement('div');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.dataset.value = user.id;
+                        dropdownItem.textContent = user.username;
+
+                        userDashListContainer.appendChild(dropdownItem);
                     });
                 }
             }

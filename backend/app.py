@@ -8,6 +8,19 @@ from take_prompts import generate_gpt_response
 import mysql.connector
 from dotenv import load_dotenv
 from pinecone import Pinecone
+# Report generation
+import datetime
+from bs4 import BeautifulSoup
+import re
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+
+stop_words = set(stopwords.words('english'))
+custom_stop_words = {'like', 'lets', 'one', 'something', 'start', 'begin', 'try', 'trying', 'go', 'back', 'step', 'thing', 'another', 'keep', 'much', 'done', 'dont', 'doesnt', 'didnt', 'isnt', 'possible', 'different', 'suppose', 'used'}
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost"])
@@ -605,55 +618,195 @@ def add_course():
         cursor.close()
         conn.close()
 
-# @app.route("/login", methods=["POST"])
-# def login():
-#     data = request.json
-#     username = data.get("username")
-#     password = data.get("password")
-#     role = data.get("role")  # Either "student" or "proctor"
-
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-
-#     # TODO: Modify this to work only as a login and create a separate create account function
-#     try:
-#         # Check if user exists
-#         role_value = 0 if role == 'student' else 1
-#         cursor.execute("SELECT id, password FROM users WHERE username = %s AND role = %s", (username, role_value))
-#         user = cursor.fetchone()
-
-#         if user:
-#             # User exists, check password
-#             if user[1] == password:
-#                 session["id"] = user[0] #first changing the session id and pass, making bucket if one doesnt exist
-#                 session['username'] = username
-#                 if role == 'proctor':
-#                     session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
-#                     ensure_user_folder_exists()
-#                 return jsonify({"success": True, "message": "Login successful", "route": f"/{role}"})
-#             else:
-#                 return jsonify({"success": False, "message": "Incorrect password"}), 401
-#         else:
-#             # TODO: Modify this
-#             # Temporarily send message to create account
-#             return jsonify({"success": False, "message": "User does not exist, please create an account"}), 401
-#             # User doesn't exist, create account
-#             # # If this is reimplemented, it will need updated to match new database
-#             # cursor.execute(f"INSERT INTO {table} (username, password) VALUES (%s, %s) RETURNING id", (username, password)) 
-#             # user_id = cursor.fetchone()[0]  # Fetch the new ID
-#             # conn.commit()
-
-#             # session["id"] = user_id #first changing the session id and pass, making bucket if one doesnt exist
-#             # session['username'] = username
-#             # if role == 'proctor':
-#             #         session['folder_prefix'] = f"{session.get('username')}_{session.get('id')}"
-#             #         ensure_user_folder_exists()            
-#             # return jsonify({"success": True, "message": "Account created", "route": f"/{role}"})
+@app.route('/generate-report', methods=['POST'])
+def generate_report():
+    print("Generate report endpoint hit")
+    # Get user info from headers
+    user_id, username, user_role, folder_prefix = get_user_info_from_headers()
+    if not user_id or user_role != 1:
+        return jsonify(success=False, message="Unauthorized"), 401
     
-#     finally:
-#         # Ensure the cursor and connection are closed
-#         cursor.close()
-#         conn.close()
+    # Filters have F in front to differentiate from local variables
+    FcourseId = request.args.get('class_id')
+    FuserId = request.args.get('user_id')
+    Fstart_date = request.args.get('start_date')
+    Fend_date = request.args.get('end_date')
+    Fqa_filter = request.args.get('qa_filter')
+
+    print(f"Class ID: {FcourseId}, User ID: {FuserId}, Start: {Fstart_date}, End: {Fend_date}, QA Filter: {Fqa_filter}")
+    if not FcourseId or not FuserId or not Fqa_filter:
+        return jsonify(success=False, message="Missing course, user ID, or qa filter"), 400
+    
+    # Format filters + constructing parameters for the query - MUST BE DONE IN THIS ORDER
+    params = [user_id]
+
+    # Format qa filter
+    if Fqa_filter == 'Both':
+        qa_filter = 'question, answer'
+    elif Fqa_filter == 'Questions':
+        qa_filter = 'question'
+    elif Fqa_filter == 'Answers':
+        qa_filter = 'answer'
+
+    # User filter
+    if FuserId == 'All':
+        user_filter = ""
+    else:
+        user_filter = "AND userId = %s"
+        params.append(FuserId)
+
+    # Course filter
+    if FcourseId == 'All':
+        course_filter = ""
+    else:
+        course_filter = "AND courseId = %s"
+        params.append(FcourseId)
+
+    # Format start and end dates
+    if (Fstart_date and not Fend_date):
+        # Default end date to today if only start date is provided
+        Fend_date = datetime.today().strftime('%Y-%m-%d')
+
+    if Fstart_date == 'null':
+        Fstart_date = None
+    if Fend_date == 'null':
+        Fend_date = None
+
+    if (Fend_date and Fstart_date):
+        ts_filter = "AND timestamp BETWEEN %s AND %s;"
+        params.append(Fstart_date)
+        params.append(Fend_date)
+    elif (Fstart_date and not Fend_date):
+        ts_filter = "AND timestamp >= %s;"
+        params.append(Fstart_date)
+    elif (Fend_date and not Fstart_date):
+        ts_filter = "AND timestamp <= %s;"
+        params.append(Fend_date)
+    else:
+        ts_filter = ""
+
+    # Construct the SQL query
+    query = f"""
+        SELECT {qa_filter}
+        FROM messages
+        WHERE userCoursesId IN (
+            SELECT userCoursesId
+            FROM user_courses
+            WHERE courseId IN (
+                SELECT courseId
+                FROM user_courses
+                WHERE userId = %s
+            )
+            {user_filter}
+            {course_filter}
+
+        )
+        {ts_filter}
+    """
+
+    # print(f"Executing query: {query}")
+    # print(f"With parameters: {params}")
+
+
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute(query, params)
+        results = cursor.fetchall()
+        # print(f"Query results: {results}") # Debugging line to check results
+        if not results:
+            return jsonify(success=False, message="No data found for the given filters"), 404
+        
+        # Format the results
+        combined_text = ""
+        for row in results:
+            if 'question' in row:
+                cleaned_question = clean_text(row['question'])
+                combined_text += cleaned_question + " "
+            if 'answer' in row:
+                cleaned_answer = remove_answer_stop_words(row['answer'])
+                cleaned_answer = clean_text(cleaned_answer)
+                combined_text += cleaned_answer + " "
+        combined_text = lemmatize_text(combined_text)  # Lemmatize the combined text
+        combined_text = combined_text.strip()  # Remove any leading/trailing whitespace
+        # print(f"Formatted results: {combined_text}")  # Debugging line to check formatted results
+
+        # Generate word cloud
+        wordcloud_image = generate_wordcloud(combined_text)
+        return jsonify(success=True, image=f"data:image/png;base64,{wordcloud_image}")
+
+
+
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return jsonify(success=False, message=f"Unexpected error: {str(e)}"), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+def remove_answer_stop_words(answer):
+    """
+    Remove formatting html tags from the answer.
+    """
+    soup = BeautifulSoup(answer, 'html.parser')
+    answer = soup.get_text()
+
+    # Remove any extra whitespace
+    answer = re.sub(r'\s+', ' ', answer).strip()
+
+    return answer
+
+def clean_text(text):
+    """
+    Clean the text by removing non-alphanumeric characters, extra whitespace, and stop words.
+    """
+
+    # 1. Remove non-alphanumeric characters (keep spaces)
+    text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+
+    # 2. Normalize whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    # 3. Remove nltk stop words
+    words = text.split()
+    filtered_words = [word for word in words if word.lower() not in stop_words]
+    cleaned_text = ' '.join(filtered_words)
+
+    # 4. Remove custom stop words
+    cleaned_text = ' '.join(word for word in cleaned_text.split() if word.lower() not in custom_stop_words)
+    
+    return cleaned_text
+
+def lemmatize_text(text):
+    """
+    Lemmatize the text using NLTK's WordNetLemmatizer.
+    """
+    lemmatizer = WordNetLemmatizer()
+    words = text.split()
+    lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
+    return ' '.join(lemmatized_words)
+
+def generate_wordcloud(text):
+    """
+    Generate a word cloud from the given text.
+    """
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+
+    # Save image to memory buffer
+    img_io = BytesIO()
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(img_io, format='png', bbox_inches='tight', pad_inches=0)
+    plt.close()
+    img_io.seek(0)
+
+    # Convert to base64 for easy frontend embedding
+    base64_img = base64.b64encode(img_io.read()).decode('utf-8')
+    return base64_img
 
 if __name__ == '__main__':
     app.run(debug=True)

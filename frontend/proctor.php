@@ -200,13 +200,13 @@ if ($currentUserId) {
                                         </div>
                                         <!-- Start Date -->
                                         <div>
-                                            <label for="start_date_filter" class="form-label">Start Date</label>
-                                            <input type="date" id="selectedStartDate" class="form-control bg-gray-300 text-center" />
+                                            <label for="selectedStartDate" class="form-label">Start Date</label>
+                                            <input type="date" id="selectedStartDate" name="selectedStartDate" class="form-control bg-gray-300 text-center" />
                                         </div>
                                         <!-- End Date -->
                                         <div>
-                                            <label for="end_date_filter" class="form-label">End Date</label>
-                                            <input type="date" id="selectedEndDate" class="form-control bg-gray-300 text-center" />
+                                            <label for="selectedEndDate" class="form-label">End Date</label>
+                                            <input type="date" id="selectedEndDate" name="selectedEndDate" class="form-control bg-gray-300 text-center" />
                                         </div>
                                         <!-- Q/A/QA -->
                                         <div class="dropdown">

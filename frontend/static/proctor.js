@@ -120,11 +120,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const classId   = formData.get('class_id');
             const userId    = formData.get('user_id');
-            const startDate = formData.get('start_date_filter');
-            const endDate   = formData.get('end_date_filter');
+            const startDate = formData.get('selectedStartDate');
+            const endDate   = formData.get('selectedEndDate');
             const qaFilter  = formData.get('qa_filter');
 
-            // console.log({ classId, userId, startDate, endDate, qaFilter });
+            console.log({ classId, userId, startDate, endDate, qaFilter });
             generateReport(classId, userId, startDate, endDate, qaFilter);
         });
     }
@@ -597,6 +597,7 @@ function validateDates() {
     endDateInput.reportValidity();
 }
 
+generated = false; // Global variable to track if report has been generated
 function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both') {
     if (!dateValidation) {
         showErrorBanner("Please select valid start and end dates.");
@@ -606,8 +607,10 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
     // Reset the word cloud image
     const cloud = document.getElementById('word_cloud_img');
     const container = document.querySelector('.wordcloud-container');
-    cloud.src = 'static/img/word_cloud_placeholder.png'; // Reset to placeholder
-    container.classList.add('shimmer'); // Add shimmer effect while loading
+    
+    container.classList.add('shimmer');
+
+    cloud.src = 'static/img/word_cloud_placeholder.png?ts=' + Date.now();
 
     const params = new URLSearchParams({
         class_id: classFilter,
@@ -617,6 +620,13 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
         qa_filter: qaFilter
     });
 
+    // return;
+    
+    // if (generated) {
+    //     return;
+    // }
+
+    // generated = true; // Set to true to prevent multiple calls
     // Call flask API to generate report
     fetch(`${FLASK_API}/generate-report?${params.toString()}`, {
         method: 'POST',

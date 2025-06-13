@@ -672,15 +672,19 @@ def generate_report():
     if Fend_date == 'null':
         Fend_date = None
 
+    # Include the entire end date
+    if Fend_date:
+        Fend_date += " 23:59:59"
+
     if (Fend_date and Fstart_date):
-        ts_filter = "AND timestamp BETWEEN %s AND %s;"
+        ts_filter = "AND timestamp BETWEEN %s AND %s"
         params.append(Fstart_date)
         params.append(Fend_date)
     elif (Fstart_date and not Fend_date):
-        ts_filter = "AND timestamp >= %s;"
+        ts_filter = "AND timestamp >= %s"
         params.append(Fstart_date)
     elif (Fend_date and not Fstart_date):
-        ts_filter = "AND timestamp <= %s;"
+        ts_filter = "AND timestamp <= %s"
         params.append(Fend_date)
     else:
         ts_filter = ""
@@ -704,8 +708,8 @@ def generate_report():
         {ts_filter}
     """
 
-    # print(f"Executing query: {query}")
-    # print(f"With parameters: {params}")
+    print(f"Executing query: {query}")
+    print(f"With parameters: {params}")
 
 
 

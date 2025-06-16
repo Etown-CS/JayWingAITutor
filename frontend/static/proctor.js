@@ -600,7 +600,6 @@ function validateDates() {
     endDateInput.reportValidity();
 }
 
-generated = false; // Global variable to track if report has been generated
 function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both') {
     // Only generate on dashboard (no parameters set)
     const urlParams = new URLSearchParams(window.location.search);
@@ -614,7 +613,17 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
         const cloud = document.getElementById('word_cloud_img');
         const container = document.querySelector('.wordcloud-container');
         
+        // Remove shimmer first (in case it's already there)
+        container.classList.remove('shimmer');
+        
+        // Force a reflow to ensure the removal is processed
+        container.offsetHeight;
+        
+        // Add shimmer class
         container.classList.add('shimmer');
+        
+        // Force another reflow to ensure shimmer is applied
+        container.offsetHeight;
 
         cloud.src = 'static/img/word_cloud_placeholder.png?ts=' + Date.now();
 
@@ -626,13 +635,6 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
             qa_filter: qaFilter
         });
 
-        // return;
-        
-        // if (generated) {
-        //     return;
-        // }
-
-        // generated = true; // Set to true to prevent multiple calls
         // Call flask API to generate report
         fetch(`${FLASK_API}/generate-report?${params.toString()}`, {
             method: 'POST',
@@ -648,11 +650,8 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
         .then(data => {
             if (data.success) {
                 showFeedbackBanner("Report generated successfully!");
-                // Handle the report data, e.g., display it in a table or download it
-                cloud.onload = () => {
-                    container.classList.remove('shimmer');
-                };
                 cloud.src = data.image;
+                container.classList.remove('shimmer');
             }
             else {
                 showErrorBanner(`Error generating report: ${data.message}`);

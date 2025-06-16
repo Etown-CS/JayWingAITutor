@@ -604,15 +604,8 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
     if (classFilter === 'All' && userFilter === 'All' && !startDate && !endDate && qaFilter === 'Both') {
         document.getElementById('carousel-description').textContent = "*Showing stats for all prof's courses";
     } else {
-        if (qaFilter !== 'Both') {
-            if (classFilter === 'All' && userFilter === 'All' && !startDate && !endDate) {
-                description = `*Showing ${qaFilter} stats for all prof's courses`;
-            } else {
-                description = `*Showing ${qaFilter} `;
-            }
-        } else {
-            description = "*Showing stats for ";
-        }
+        description = "*Showing stats for ";
+        
         if (classFilter !== 'All') {
             className = document.getElementById('selectedDashboardClassText').textContent;
             // Strip course code if present

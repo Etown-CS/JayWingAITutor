@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loop: true,
             margin: 20,
             autoplay: true,
-            autoplayTimeout: 10000, // 10 seconds
+            autoplayTimeout: 5000, // 5 seconds
             autoplayHoverPause: true,
             smartSpeed: 700,
             responsive: {
@@ -601,6 +601,36 @@ function validateDates() {
 }
 
 function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both') {
+    if (classFilter === 'All' && userFilter === 'All' && !startDate && !endDate && qaFilter === 'Both') {
+        document.getElementById('carousel-description').textContent = "*Showing stats for all prof's courses";
+    } else {
+        if (qaFilter !== 'Both') {
+            if (classFilter === 'All' && userFilter === 'All' && !startDate && !endDate) {
+                description = `*Showing ${qaFilter} stats for all prof's courses`;
+            } else {
+                description = `*Showing ${qaFilter} `;
+            }
+        } else {
+            description = "*Showing stats for ";
+        }
+        if (classFilter !== 'All') {
+            className = document.getElementById('selectedDashboardClassText').textContent;
+            // Strip course code if present
+            if (className.includes('(')) {
+                className = className.split('(')[0].trim();
+            }
+            description += `class ${className} `;
+        }
+        if (userFilter !== 'All') {
+            selectedUser = document.getElementById('selectedDashboardUserText').textContent;
+            description += `for user ${selectedUser} `;
+        }
+        if (startDate && endDate) {
+            description += `from ${startDate} to ${endDate} `;
+        }
+        
+        document.getElementById('carousel-description').textContent = description;
+    }
     // Only generate on dashboard (no parameters set)
     const urlParams = new URLSearchParams(window.location.search);
     if ([...urlParams].length === 0) {
@@ -608,6 +638,26 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
             showErrorBanner("Please select valid start and end dates.");
             return;
         }
+
+        // It makes sense to do this but does not seem to work in practice because a hole in the carousel is created
+        // Remove cards based on filters
+        // const mostActiveCourseCards = document.querySelectorAll('.most-active-course-card');
+
+        // if (classFilter !== 'All') {
+        //     console.log("Hiding most active course card");
+        //     mostActiveCourseCards.forEach(card => {
+        //         card.style.display = 'none';
+        //     });
+        // } else {
+        //     console.log("Showing most active course card");
+        //     mostActiveCourseCards.forEach(card => {
+        //         card.style.display = '';
+        //     });
+        // }
+
+        // // Optional: Refresh OwlCarousel to reflow layout
+        // $('.owl-carousel').trigger('refresh.owl.carousel');
+
 
         // Reset the word cloud image
         const cloud = document.getElementById('word_cloud_img');
@@ -652,9 +702,43 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
                 showFeedbackBanner("Report generated successfully!");
                 cloud.src = data.image;
                 container.classList.remove('shimmer');
+
+                // Load carousel data
+                fetch(`../backend/api/get_carousel.php?${params}`)
+                    .then(response => response.json())
+                    .then(stats => {
+                        if (!stats.success) {
+                            console.error('Error loading carousel data:', stats.message);
+                            return;
+                        }
+                        console.log('Dashboard summary data:', stats);
+                        const data = stats.data;
+                        document.querySelectorAll('.liked-count').forEach(el => {
+                            el.textContent = data.message_counts.liked_messages;
+                        });
+                        document.querySelectorAll('.disliked-count').forEach(el => {
+                            el.textContent = data.message_counts.disliked_messages;
+                        });
+                        document.querySelectorAll('.total-count').forEach(el => {
+                            el.textContent = data.message_counts.message_count;
+                        });
+                        document.querySelectorAll('.active-day').forEach(el => {
+                            el.textContent = data.most_active_day?.day ?? 'N/A';
+                        });
+                        document.querySelectorAll('.active-course').forEach(el => {
+                            el.textContent = data.most_active_course?.course_name ?? 'N/A';
+                        });
+                        // document.querySelectorAll('.recommended-topics').forEach(el => {
+                        //     el.textContent = data.recommended_topics?.join(', ') ?? 'N/A';
+                        // });
+                    })
+                    .catch(error => {
+                        console.error('Error loading dashboard summary:', error);
+                    });
             }
             else {
                 showErrorBanner(`Error generating report: ${data.message}`);
+                container.classList.remove('shimmer');
             }
         })
         .catch(error => {
@@ -664,6 +748,10 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
         
         console.log("Generating report with parameters:", params.toString());
     }
+
+    // Update carousel
+    // WORKING HERE
+    
     
 }
 
@@ -1498,7 +1586,7 @@ function reloadClassDropdowns() {
                 // Add "All" option
                 const allOption = document.createElement('div');
                 allOption.className = 'dropdown-item';
-                allOption.dataset.value = 'allCourses';
+                allOption.dataset.value = 'All';
 
                 const mainAllDiv = document.createElement('div');
                 mainAllDiv.className = 'main-line';
@@ -1685,7 +1773,7 @@ function reloadUserDropdowns() {
                 // Add "All" option
                 const allOption = document.createElement('div');
                 allOption.className = 'dropdown-item';
-                allOption.dataset.value = 'allUsers';
+                allOption.dataset.value = 'All';
                 allOption.textContent = 'All';
                 userDashListContainer.appendChild(allOption);
 

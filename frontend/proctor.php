@@ -242,9 +242,17 @@ if ($currentUserId) {
                         <!-- Owl Carousel Wrapper -->
                         <div class="owl-carousel owl-theme mt-8 h-full">
                             <div class="item w-full flex flex-col">
-                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
+                                    <h3 class="text-xl font-semibold mb-2">Liked Messages</h3>
+                                    <p class="text-4xl font-bold liked-count">%%</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                </div>
+                            </div>
+
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
                                     <h3 class="text-xl font-semibold mb-2">Disliked Messages</h3>
-                                    <p class="text-4xl font-bold">%%</p>
+                                    <p class="text-4xl font-bold disliked-count">%%</p>
                                     <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
                                 </div>
                             </div>
@@ -252,21 +260,39 @@ if ($currentUserId) {
                             <div class="item w-full flex flex-col">
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
                                     <h3 class="text-xl font-semibold mb-2">Total Messages</h3>
-                                    <p class="text-4xl font-bold">%%</p>
+                                    <p class="text-4xl font-bold total-count">%%</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block"></a>
                                 </div>
                             </div>
 
                             <div class="item w-full flex flex-col">
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
-                                    <h3 class="text-xl font-semibold mb-2">Liked Messages</h3>
-                                    <p class="text-4xl font-bold">%%</p>
-                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                    <h3 class="text-xl font-semibold mb-2">Most Active Day</h3>
+                                    <p class="text-4xl font-bold active-day">MM-DD-YYYY</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block"></a>
+                                </div>
+                            </div>
+
+                            <div class="item w-full flex flex-col">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
+                                    <h3 class="text-xl font-semibold mb-2">Recommended Review Topics</h3>
+                                    <p class="text-3xl font-bold recommended-topics">(Placeholder, Placeholder...)</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View AI Report</a>
+                                </div>
+                            </div>
+
+                            <div class="item w-full flex flex-col most-active-course-card">
+                                <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
+                                    <h3 class="text-xl font-semibold mb-2">Most Active Course</h3>
+                                    <p class="text-3xl font-bold active-course">(Placeholder)</p>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block"></a>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="carousel-description" class="text-xs text-gray-500">*Showing stats for all <?php echo htmlspecialchars($_SESSION['username']); ?> courses </div>
-                        
+
+                        <div id="carousel-description" class="text-xs text-gray-500">*Showing stats for all <?php echo htmlspecialchars($_SESSION['username']); ?>'s courses </div>
+
                     </div>
 
 

@@ -330,4 +330,6 @@ header, footer {
   z-index: 1;
 }
 
-
+.hover\:bg-gray-250:hover {
+    background-color: #d8dbe3;
+}

@@ -123,17 +123,19 @@ if ($currentUserId) {
 <!-- Sidebar with Proctor Management Links -->
         <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full max-w-xs w-full overflow-hidden">
             <div id="sidebar-options" class="space-y-2 flex-grow p-3 overflow-y-auto overflow-x-hidden sidebar-content-hide p-sidebar-noshow">
-                <div id="chat-div" class="d-grid gap-2">
-                    <a href="proctor.php" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Dashboard" ? 'bg-gray-200' : ''; ?> message-container w-full overflow-hidden">
+                <div id="sidebar-div" class="d-grid gap-2">
+                    <a href="proctor.php" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Dashboard" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container w-full overflow-hidden">
                         <div class="font-medium truncate">Dashboard</div>
                     </a>
-                    <a href="?manageclasses" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Classes" ? 'bg-gray-200' : ''; ?> message-container w-full overflow-hidden">
+                    <a href="?manageclasses" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Classes" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container w-full overflow-hidden">
                         <div class="font-medium truncate">Manage Classes</div>
                     </a>
-                    <a href="?manageenrollments" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Enrollments" ? 'bg-gray-200' : ''; ?> message-container w-full overflow-hidden">
+
+                    <a href="?manageenrollments" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Enrollments" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container w-full overflow-hidden">
                         <div class="font-medium truncate">Manage Enrollments</div>
                     </a>
-                    <a href="?manageproctornotes" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Proctor Notes" ? 'bg-gray-200' : ''; ?> message-container w-full overflow-hidden">
+
+                    <a href="?manageproctornotes" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Proctor Notes" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container w-full overflow-hidden">
                         <div class="font-medium truncate">Manage Proctor Notes</div>
                     </a>
                 </div>

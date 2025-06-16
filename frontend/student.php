@@ -192,7 +192,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
             <div id="sidebar-courses" class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto overflow-x-hidden sidebar-content-hide p-sidebar-noshow">
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
-                        // Need courseName, chatId, latestQuestion, lastInteracted
                         // Getting discipline filter
                         $filterBy = $_GET['filterBy'] ?? 'allCourses';
                         if ($filterBy !== 'allCourses') {

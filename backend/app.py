@@ -18,6 +18,8 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
+import random
+
 
 stop_words = set(stopwords.words('english'))
 custom_stop_words = {'like', 'lets', 'one', 'something', 'start', 'begin', 'try', 'trying', 'go', 'back', 'step', 'thing', 'another', 'keep', 'much', 'done', 'dont', 'doesnt', 'didnt', 'isnt', 'possible', 'different', 'suppose', 'used'}
@@ -800,7 +802,7 @@ def generate_wordcloud(text):
     """
     Generate a word cloud from the given text.
     """
-    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+    wordcloud = WordCloud(width=800, height=400, background_color='white', color_func=etown_color_func).generate(text)
 
     # Save image to memory buffer
     img_io = BytesIO()
@@ -815,6 +817,17 @@ def generate_wordcloud(text):
     # Convert to base64 for easy frontend embedding
     base64_img = base64.b64encode(img_io.read()).decode('utf-8')
     return base64_img
+
+def etown_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+    """
+    Return a color based on Elizabethtown College's branding.
+    """
+    colors = [
+        "#00529B",  # Royal Blue
+        "#A7A8AA",  # Gray
+        "#003865"   # Darker Blue Accent
+    ]
+    return random.choice(colors)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -265,7 +265,8 @@ if ($currentUserId) {
                             </div>
                         </div>
 
-
+                        <div id="carousel-description" class="text-xs text-gray-500">*Showing stats for all <?php echo htmlspecialchars($_SESSION['username']); ?> courses </div>
+                        
                     </div>
 
 

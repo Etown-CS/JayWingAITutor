@@ -283,8 +283,10 @@ def delete_course():
 
         # Check if the index exists first
         existing_indexes = pc.list_indexes()
+        
+        exists = any(index["name"] == index_name for index in existing_indexes)
 
-        if index_name in existing_indexes:
+        if exists:
             index = pc.Index(index_name)
 
             # Extract namespace from filepath
@@ -302,8 +304,10 @@ def delete_course():
                     index.delete(delete_all=True, namespace=namespace)
                 else:
                     print(f"Namespace '{namespace}' does not exist in Pinecone. Skipping deletion.")
+                return jsonify(success=True, message="Course deleted successfully")
             else:
                 print(f"Invalid filepath format: {filepath}. Cannot extract namespace.")
+                return jsonify(success=False, message="Invalid filepath format. Cannot extract namespace."), 400
         else:
             print(f"Pinecone index '{index_name}' does not exist. Skipping namespace deletion.")
             return jsonify(success=True, message="Course deleted successfully")

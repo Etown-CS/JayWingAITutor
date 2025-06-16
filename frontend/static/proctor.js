@@ -567,11 +567,14 @@ function handleDateSelection() {
     const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
     // Set max value to today
-    startDateInput.setAttribute('max', today);
-    endDateInput.setAttribute('max', today);
-
-    startDateInput.addEventListener('change', validateDates);
-    endDateInput.addEventListener('change', validateDates);
+    if (startDateInput) {
+        startDateInput.setAttribute('max', today);
+        startDateInput.addEventListener('change', validateDates);
+    }
+    if (endDateInput) {
+        endDateInput.setAttribute('max', today);
+        endDateInput.addEventListener('change', validateDates);
+    }
 }
 
 function validateDates() {
@@ -599,65 +602,70 @@ function validateDates() {
 
 generated = false; // Global variable to track if report has been generated
 function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both') {
-    if (!dateValidation) {
-        showErrorBanner("Please select valid start and end dates.");
-        return;
+    // Only generate on dashboard (no parameters set)
+    const urlParams = new URLSearchParams(window.location.search);
+    if ([...urlParams].length === 0) {
+        if (!dateValidation) {
+            showErrorBanner("Please select valid start and end dates.");
+            return;
+        }
+
+        // Reset the word cloud image
+        const cloud = document.getElementById('word_cloud_img');
+        const container = document.querySelector('.wordcloud-container');
+        
+        container.classList.add('shimmer');
+
+        cloud.src = 'static/img/word_cloud_placeholder.png?ts=' + Date.now();
+
+        const params = new URLSearchParams({
+            class_id: classFilter,
+            user_id: userFilter,
+            start_date: startDate,
+            end_date: endDate,
+            qa_filter: qaFilter
+        });
+
+        // return;
+        
+        // if (generated) {
+        //     return;
+        // }
+
+        // generated = true; // Set to true to prevent multiple calls
+        // Call flask API to generate report
+        fetch(`${FLASK_API}/generate-report?${params.toString()}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': userId,
+                'X-User-Role': userRole,
+                'X-Username': username
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showFeedbackBanner("Report generated successfully!");
+                // Handle the report data, e.g., display it in a table or download it
+                cloud.onload = () => {
+                    container.classList.remove('shimmer');
+                };
+                cloud.src = data.image;
+            }
+            else {
+                showErrorBanner(`Error generating report: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            showErrorBanner('An unexpected error occurred while generating the report: ' + error.message);
+        });
+
+        
+        console.log("Generating report with parameters:", params.toString());
     }
-
-    // Reset the word cloud image
-    const cloud = document.getElementById('word_cloud_img');
-    const container = document.querySelector('.wordcloud-container');
     
-    container.classList.add('shimmer');
-
-    cloud.src = 'static/img/word_cloud_placeholder.png?ts=' + Date.now();
-
-    const params = new URLSearchParams({
-        class_id: classFilter,
-        user_id: userFilter,
-        start_date: startDate,
-        end_date: endDate,
-        qa_filter: qaFilter
-    });
-
-    // return;
-    
-    // if (generated) {
-    //     return;
-    // }
-
-    // generated = true; // Set to true to prevent multiple calls
-    // Call flask API to generate report
-    fetch(`${FLASK_API}/generate-report?${params.toString()}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-User-Id': userId,
-            'X-User-Role': userRole,
-            'X-Username': username
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showFeedbackBanner("Report generated successfully!");
-            // Handle the report data, e.g., display it in a table or download it
-            cloud.onload = () => {
-                container.classList.remove('shimmer');
-            };
-            cloud.src = data.image;
-        }
-        else {
-            showErrorBanner(`Error generating report: ${data.message}`);
-        }
-    })
-    .catch(error => {
-        showErrorBanner('An unexpected error occurred while generating the report: ' + error.message);
-    });
-
-    
-    console.log("Generating report with parameters:", params.toString());
 }
 
 

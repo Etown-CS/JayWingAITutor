@@ -194,48 +194,124 @@ try {
         $stmt->close();
     }
     
-    // Query for most active course
-    $mostActiveCourseQuery = "
-        SELECT 
-            c.name AS course_name, COUNT(*) AS total_messages
-        FROM messages m
-        JOIN user_courses uc ON m.userCoursesId = uc.userCoursesId
-        JOIN courses c ON uc.courseId = c.id
-        WHERE m.userCoursesId IN (
-            SELECT userCoursesId
-            FROM user_courses
-            WHERE courseId IN (
+    // Determine which query to do next based on course and user filters
+    if ($userFilter !== 'All' && $classFilter !== 'All') {
+        // Average words per message for user in a specific course
+        $avgMessageQuery = "
+            SELECT
+                ROUND(AVG(CHAR_LENGTH(m.question) - CHAR_LENGTH(REPLACE(m.question, ' ', '')) + 1), 1) AS student_avg_words,
+                (
+                    SELECT ROUND(AVG(CHAR_LENGTH(m2.question) - CHAR_LENGTH(REPLACE(m2.question, ' ', '')) + 1), 1)
+                    FROM messages m2
+                    JOIN user_courses uc2 ON m2.userCoursesId = uc2.userCoursesId
+                    WHERE uc2.courseId = ?
+                ) AS course_avg_words
+            FROM messages m
+            JOIN user_courses uc ON m.userCoursesId = uc.userCoursesId
+            WHERE uc.userId = ? AND uc.courseId = ?
+            ";
+
+        $stmt = $connection->prepare($avgMessageQuery);
+        $stmt->bind_param("iii", $classFilter, $userFilter, $classFilter);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $avgMessages = $result->fetch_assoc();
+        
+        $stats['average_words_per_message'] = [
+            'student_avg_words' => (float)$avgMessages['student_avg_words'],
+            'course_avg_words' => (float)$avgMessages['course_avg_words']
+        ];
+
+        $stmt->close();
+    } else if ($userFilter === 'All' && $classFilter !== 'All') {
+        // Only class filter is applied so multiple users can be queried
+        // Query for most active user in a specific course
+        $mostActiveUserQuery = "
+            SELECT 
+                u.id AS user_id,
+                u.username AS user_name,
+                COUNT(m.messageId) AS total_messages
+            FROM messages m
+            JOIN user_courses uc ON m.userCoursesId = uc.userCoursesId
+            JOIN users u ON uc.userId = u.id
+            WHERE uc.courseId IN (
                 SELECT courseId
                 FROM user_courses
-                WHERE userId = ? -- prof user
-            )
-            $userCondition
+                WHERE userId = ? -- professor's user ID
+            ) -- Maybe not necessary
             $classCondition
-        )
-        $dateCondition
-        GROUP BY c.id
-        ORDER BY total_messages DESC
-        LIMIT 1;
-    ";
-    $stmt = $connection->prepare($mostActiveCourseQuery);
-    if (!$stmt) {
-        throw new Exception("Prepare failed: " . $connection->error);
+            $dateCondition
+            GROUP BY u.id, u.username
+            ORDER BY total_messages DESC
+            LIMIT 1;
+        ";
+        $stmt = $connection->prepare($mostActiveUserQuery);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connection->error);
+        }
+        $stmt->bind_param($paramTypes, ...$params);
+        if (!$stmt->execute()) {
+            throw new Exception("Execution failed: " . $stmt->error);
+        }
+        $result = $stmt->get_result();
+        if (!$result) {
+            throw new Exception("Query failed: " . $stmt->error);
+        }
+        $mostActiveUser = $result->fetch_assoc();
+        $stats['most_active_user'] = [
+            'user_id' => (int)$mostActiveUser['user_id'],
+            'user_name' => $mostActiveUser['user_name'],
+            'total_messages' => (int)$mostActiveUser['total_messages']
+        ];
+        $stmt->close();
+    } else {
+        // No specific filters applied, most active course query
+        $mostActiveCourseQuery = "
+            SELECT 
+                c.name AS course_name, COUNT(*) AS total_messages
+            FROM messages m
+            JOIN user_courses uc ON m.userCoursesId = uc.userCoursesId
+            JOIN courses c ON uc.courseId = c.id
+            WHERE m.userCoursesId IN (
+                SELECT userCoursesId
+                FROM user_courses
+                WHERE courseId IN (
+                    SELECT courseId
+                    FROM user_courses
+                    WHERE userId = ? -- prof user
+                )
+                $userCondition
+                $classCondition
+            )
+            $dateCondition
+            GROUP BY c.id
+            ORDER BY total_messages DESC
+            LIMIT 1;
+        ";
+        $stmt = $connection->prepare($mostActiveCourseQuery);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connection->error);
+        }
+        $stmt->bind_param($paramTypes, ...$params);
+        if (!$stmt->execute()) {
+            throw new Exception("Execution failed: " . $stmt->error);
+        }
+        $result = $stmt->get_result();
+        if (!$result) {
+            throw new Exception("Query failed: " . $stmt->error);
+        }
+        $mostActiveCourse = $result->fetch_assoc();
+        $stats['most_active_course'] = [
+            'course_name' => $mostActiveCourse['course_name'],
+            'total_messages' => (int)$mostActiveCourse['total_messages']
+        ];
+        $stmt->close();
     }
-    $stmt->bind_param($paramTypes, ...$params);
-    if (!$stmt->execute()) {
-        throw new Exception("Execution failed: " . $stmt->error);
-    }
-    $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Query failed: " . $stmt->error);
-    }
-    $mostActiveCourse = $result->fetch_assoc();
-    $stats['most_active_course'] = [
-        'course_name' => $mostActiveCourse['course_name'],
-        'total_messages' => (int)$mostActiveCourse['total_messages']
-    ];
-    $stmt->close();
+        
+        
 
+    
+    
     echo json_encode([
         'success' => true,
         'data' => $stats

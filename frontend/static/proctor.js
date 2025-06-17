@@ -705,6 +705,14 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
                         document.querySelectorAll('.active-day').forEach(el => {
                             if (data.most_active_day) {
                                 el.textContent = data.most_active_day.day ?? 'N/A';
+                                if (el.textContent !== 'N/A') {
+                                    document.querySelectorAll('.active-day-title').forEach(titleEl => {
+                                        titleEl.textContent = 'Most Active Day';
+                                    });
+                                    document.querySelectorAll('.active-day-subtext').forEach(subtext => {
+                                        subtext.textContent = 'Messages: ' + data.most_active_day.total_messages ?? 'N/A';
+                                    });
+                                }
                             } else {
                                 el.textContent = data.most_active_hour.hour ?? 'N/A';
                                 if (el.textContent !== 'N/A') {
@@ -714,12 +722,45 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
                                     document.querySelectorAll('.active-day-title').forEach(titleEl => {
                                         titleEl.textContent = 'Most Active Hour';
                                     });
+                                    document.querySelectorAll('.active-day-subtext').forEach(subtext => {
+                                        subtext.textContent = 'Messages: ' + data.most_active_hour.total_messages ?? 'N/A';
+                                    });
                                 }
                             }
                         });
                         document.querySelectorAll('.active-course').forEach(el => {
-                            el.textContent = data.most_active_course?.course_name ?? 'N/A';
+                            if (data.most_active_course) {
+                                el.textContent = data.most_active_course.course_name ?? 'N/A';
+                                if (el.textContent !== 'N/A') {
+                                    document.querySelectorAll('.active-course-title').forEach(titleEl => {
+                                        titleEl.textContent = 'Most Active Course';
+                                    });
+                                    document.querySelectorAll('.active-course-subtext').forEach(subtext => {
+                                        subtext.textContent = 'Messages: ' + data.most_active_course.total_messages ?? 'N/A';
+                                    });
+                                }
+                            } else if (data.most_active_user) {
+                                el.textContent = data.most_active_user.user_name ?? 'N/A';
+                                if (el.textContent !== 'N/A') {
+                                    document.querySelectorAll('.active-course-title').forEach(titleEl => {
+                                        titleEl.textContent = 'Most Active User';
+                                    });
+                                    document.querySelectorAll('.active-course-subtext').forEach(subtext => {
+                                        subtext.textContent = 'Messages: ' + data.most_active_user.total_messages ?? 'N/A';
+                                    });
+                                }
+                            } else if (data.average_words_per_message) {
+                                el.textContent = data.average_words_per_message.student_avg_words + ' words';
+                                document.querySelectorAll('.active-course-title').forEach(titleEl => {
+                                    titleEl.textContent = 'Average Message Length';
+                                });
+                                document.querySelectorAll('.active-course-subtext').forEach(subtext => {
+                                    subtext.textContent = 'Class Average: ' + data.average_words_per_message.course_avg_words + ' words';
+                                });
+                            }
+                            
                         });
+                        // TODO: Future implementation
                         // document.querySelectorAll('.recommended-topics').forEach(el => {
                         //     el.textContent = data.recommended_topics?.join(', ') ?? 'N/A';
                         // });

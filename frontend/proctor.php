@@ -269,23 +269,25 @@ if ($currentUserId) {
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
                                     <h3 class="text-xl font-semibold mb-2 active-day-title">Most Active Day</h3>
                                     <p class="text-4xl font-bold active-day">MM-DD-YYYY</p>
-                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block"></a>
+                                    <p class="text-sm mt-2 inline-block active-day-subtext"></p>
                                 </div>
                             </div>
 
-                            <div class="item w-full flex flex-col">
+                            <!-- TODO: Future implementation -->
+                            <!-- Use AI to get recommended review topics based on student queries -->
+                            <!-- <div class="item w-full flex flex-col">
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
                                     <h3 class="text-xl font-semibold mb-2">Recommended Review Topics</h3>
                                     <p class="text-3xl font-bold recommended-topics">(Placeholder, Placeholder...)</p>
                                     <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View AI Report</a>
                                 </div>
-                            </div>
+                            </div> -->
 
                             <div class="item w-full flex flex-col most-active-course-card">
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
-                                    <h3 class="text-xl font-semibold mb-2">Most Active Course</h3>
+                                    <h3 class="text-xl font-semibold mb-2 active-course-title">Most Active Course</h3>
                                     <p class="text-3xl font-bold active-course">(Placeholder)</p>
-                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block"></a>
+                                    <p class="text-sm mt-2 inline-block active-course-subtext"></p>
                                 </div>
                             </div>
                         </div>

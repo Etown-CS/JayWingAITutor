@@ -781,11 +781,81 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
         
         console.log("Generating report with parameters:", params.toString());
     }
+}
 
-    // Update carousel
-    // WORKING HERE
-    
-    
+function openFeedbackModal(feedbackRating) {
+    const classId = document.getElementById('class_id').value || 'All';
+    const userId = document.getElementById('user_id').value || 'All';
+    const startDate = document.getElementById('selectedStartDate').value || null;
+    const endDate = document.getElementById('selectedEndDate').value || null;
+
+    const params = new URLSearchParams({
+        class_id: classId,
+        user_id: userId,
+        start_date: startDate,
+        end_date: endDate,
+        rating: feedbackRating
+    });
+
+    fetch(`../backend/api/get_feedback.php?${params.toString()}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': userId,
+            'X-User-Role': userRole,
+            'X-Username': username
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Feedback data:', data);
+
+        const container = document.getElementById('feedbackModalBody');
+        container.innerHTML = '';
+
+        if (!data.success || data.entries.length === 0) {
+            container.innerHTML = `<p class="text-muted">No feedback found for this filter.</p>`;
+            return;
+        }
+
+        data.entries.forEach(entry => {
+            const card = document.createElement('div');
+            card.className = 'p-3 mb-3 border rounded bg-white';
+
+            const answerId = `answer-${entry.messageId}`;
+
+            const answerBlock = `
+                <div class="answer-snippet" id="${answerId}">
+                    ${entry.answer}
+                </div>
+                <a href="#" class="toggle-answer text-blue-600 text-sm" data-target="${answerId}">Show More</a>
+            `;
+
+            card.innerHTML = `
+                <div><strong>🧠 Question:</strong> ${entry.question}</div>
+                <div><strong>💬 AI Answer:</strong> ${answerBlock}</div>
+                <div><strong>📝 Feedback:</strong> ${entry.feedbackExplanation || '<em>No comment provided</em>'}</div>
+                <div class="text-muted text-sm mt-2">👤 ${entry.username} | 📅 ${entry.messageTimestamp}</div>
+            `;
+
+            container.appendChild(card);
+        });
+
+        document.querySelectorAll('.toggle-answer').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = e.target.dataset.target;
+                const snippet = document.getElementById(targetId);
+                const isExpanded = snippet.classList.toggle('expanded');
+                e.target.textContent = isExpanded ? 'Show Less' : 'Show More';
+            });
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+        modal.show();
+
+    });
 }
 
 

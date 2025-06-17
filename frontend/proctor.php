@@ -245,7 +245,7 @@ if ($currentUserId) {
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
                                     <h3 class="text-xl font-semibold mb-2">Liked Messages</h3>
                                     <p class="text-4xl font-bold liked-count">%%</p>
-                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block" onclick="openFeedbackModal('up')">View Feedback</a>
                                 </div>
                             </div>
 
@@ -253,7 +253,7 @@ if ($currentUserId) {
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
                                     <h3 class="text-xl font-semibold mb-2">Disliked Messages</h3>
                                     <p class="text-4xl font-bold disliked-count">%%</p>
-                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block">View Feedback</a>
+                                    <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block" onclick="openFeedbackModal('down')">View Feedback</a>
                                 </div>
                             </div>
 
@@ -785,6 +785,22 @@ if ($currentUserId) {
             </div>
         </div>
     </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="feedbackModalLabel">Feedback on AI Responses</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="feedbackModalBody">
+            <!-- Feedback cards inserted here dynamically -->
+        </div>
+        </div>
+    </div>
+    </div>
+
 
     <!-- <footer>
         <p> 2024 AI Tutor Proctor Page</p>

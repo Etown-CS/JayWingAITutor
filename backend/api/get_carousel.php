@@ -29,7 +29,6 @@ try {
     } else {
         $endDate = $endDate . ' 23:59:59';
     }
-    $qa_filter = $_GET['qa_filter'] ?? 'Both'; // Might not be used here?
 
     $paramTypes = 'i'; // For loggedInUserId
     $params = [$loggedInUserId];
@@ -307,10 +306,6 @@ try {
         ];
         $stmt->close();
     }
-        
-        
-
-    
     
     echo json_encode([
         'success' => true,

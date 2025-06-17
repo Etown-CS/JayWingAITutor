@@ -332,3 +332,35 @@ header, footer {
 .hover\:bg-gray-250:hover {
     background-color: #d8dbe3;
 }
+
+/* Modal */
+.answer-snippet {
+  max-height: 8em;
+  overflow: hidden;
+  position: relative;
+  display: block;
+  transition: max-height 0.3s ease;
+}
+
+.answer-snippet::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2em;
+  background: linear-gradient(to top, white, rgba(255, 255, 255, 0));
+}
+
+.answer-snippet.expanded {
+  max-height: none;
+}
+
+.toggle-answer {
+  display: inline-block;
+  color: #2563eb;
+  font-size: 0.85rem;
+  margin-top: 0.5em;
+  cursor: pointer;
+}
+

@@ -605,7 +605,9 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
     if (endDate === '') endDate = null;
 
     if (classFilter === 'All' && userFilter === 'All' && !startDate && !endDate && qaFilter === 'Both') {
-        document.getElementById('carousel-description').textContent = "*Showing stats for all prof's courses";
+        if (document.getElementById('carousel-description')) {
+            document.getElementById('carousel-description').textContent = "*Showing stats for all prof's courses";
+        }
     } else {
         description = "*Showing stats for ";
         

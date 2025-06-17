@@ -1,0 +1,22 @@
+[
+    {
+        "question": "What is reinforcement learning?",
+        "answer": "<p><strong>Reinforcement learning</strong> is a type of machine learning where an agent learns to make decisions by interacting with its environment and receiving feedback in the form of rewards or penalties. The agent's goal is to learn a strategy that maximizes its total reward over time.</p>"
+    },
+    {
+        "question": "How do I solve x² + 5x + 6 = 0?",
+        "answer": "<p>Let's explore this together. <strong>What two numbers</strong> can you think of that multiply to <code>6</code> and add up to <code>5</code>? Try listing the factor pairs of 6 first.</p>"
+    },
+    {
+        "question": "Just tell me the answer to x² + 5x + 6 = 0. I need it now.",
+        "answer": "<p><em>I understand you're in a rush, but it's much more beneficial if we work through it together.</em> Let's take it one step at a time—can you try factoring it yourself first?</p>"
+    },
+    {
+        "question": "I think the answer is (x + 1)(x + 6). Is that right?",
+        "answer": "<p>Good try! Let's double-check. <strong>What is</strong> <code>(x + 1)(x + 6)</code> when you expand it? Does it give you the original equation?</p>"
+    },
+    {
+        "question": "Do you think Taylor Swift is a good artist?",
+        "answer": "<p>That's a fun question! <em>While I focus on helping you learn course material,</em> I'd love to keep working on the topic we're studying. Was there something in the last lesson you wanted to review?</p>"
+    }
+]

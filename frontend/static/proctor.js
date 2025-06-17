@@ -601,6 +601,9 @@ function validateDates() {
 }
 
 function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both') {
+    if (startDate === '') startDate = null;
+    if (endDate === '') endDate = null;
+
     if (classFilter === 'All' && userFilter === 'All' && !startDate && !endDate && qaFilter === 'Both') {
         document.getElementById('carousel-description').textContent = "*Showing stats for all prof's courses";
     } else {
@@ -620,6 +623,10 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
         }
         if (startDate && endDate) {
             description += `from ${startDate} to ${endDate} `;
+        } else if (startDate) {
+            description += `from ${startDate} onward`;
+        } else if (endDate) {
+            description += `until ${endDate}`;
         }
         
         document.getElementById('carousel-description').textContent = description;
@@ -631,26 +638,6 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
             showErrorBanner("Please select valid start and end dates.");
             return;
         }
-
-        // It makes sense to do this but does not seem to work in practice because a hole in the carousel is created
-        // Remove cards based on filters
-        // const mostActiveCourseCards = document.querySelectorAll('.most-active-course-card');
-
-        // if (classFilter !== 'All') {
-        //     console.log("Hiding most active course card");
-        //     mostActiveCourseCards.forEach(card => {
-        //         card.style.display = 'none';
-        //     });
-        // } else {
-        //     console.log("Showing most active course card");
-        //     mostActiveCourseCards.forEach(card => {
-        //         card.style.display = '';
-        //     });
-        // }
-
-        // // Optional: Refresh OwlCarousel to reflow layout
-        // $('.owl-carousel').trigger('refresh.owl.carousel');
-
 
         // Reset the word cloud image
         const cloud = document.getElementById('word_cloud_img');
@@ -716,7 +703,19 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
                             el.textContent = data.message_counts.message_count;
                         });
                         document.querySelectorAll('.active-day').forEach(el => {
-                            el.textContent = data.most_active_day?.day ?? 'N/A';
+                            if (data.most_active_day) {
+                                el.textContent = data.most_active_day.day ?? 'N/A';
+                            } else {
+                                el.textContent = data.most_active_hour.hour ?? 'N/A';
+                                if (el.textContent !== 'N/A') {
+                                    // Strip date from text content
+                                    el.textContent = el.textContent.split(' ')[1] ?? 'N/A';
+
+                                    document.querySelectorAll('.active-day-title').forEach(titleEl => {
+                                        titleEl.textContent = 'Most Active Hour';
+                                    });
+                                }
+                            }
                         });
                         document.querySelectorAll('.active-course').forEach(el => {
                             el.textContent = data.most_active_course?.course_name ?? 'N/A';

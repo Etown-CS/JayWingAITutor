@@ -23,8 +23,11 @@ try {
         $startDate = null; // Handle 'null' string as null
     }
     $endDate = $_GET['end_date'] ?? null;
+    $ogEndDate = $endDate; // Store original end date for later use
     if ($endDate === 'null') {
         $endDate = null; // Handle 'null' string as null
+    } else {
+        $endDate = $endDate . ' 23:59:59';
     }
     $qa_filter = $_GET['qa_filter'] ?? 'Both'; // Might not be used here?
 
@@ -106,47 +109,91 @@ try {
     ];
     $stmt->close();
 
-    // Query for most active day
-    $mostActiveDayQuery = "
-        SELECT 
-            DATE(m.timestamp) AS message_day, COUNT(*) AS total_messages
-        FROM messages m
-        WHERE m.userCoursesId IN (
-            SELECT userCoursesId
-            FROM user_courses
-            WHERE courseId IN (
-                SELECT courseId
+    // Determine which query to do next based on date filters
+    if ($startDate === $ogEndDate && $endDate !== null) { // Make sure they are equal and not null
+        // Query for most active hour
+        $mostActiveHourQuery = "
+            SELECT 
+                DATE_FORMAT(m.timestamp, '%Y-%m-%d %H:00:00') AS message_hour, COUNT(*) AS total_messages
+            FROM messages m
+            WHERE m.userCoursesId IN (
+                SELECT userCoursesId
                 FROM user_courses
-                WHERE userId = ? -- prof user
+                WHERE courseId IN (
+                    SELECT courseId
+                    FROM user_courses
+                    WHERE userId = ? -- prof user
+                )
+                $userCondition
+                $classCondition
             )
-            $userCondition
-            $classCondition
-        )
-        $dateCondition
-        GROUP BY message_day
-        ORDER BY total_messages DESC
-        LIMIT 1;
-    ";
+            $dateCondition
+            GROUP BY message_hour
+            ORDER BY total_messages DESC
+            LIMIT 1;
+        ";
 
-    $stmt = $connection->prepare($mostActiveDayQuery);
-    if (!$stmt) {
-        throw new Exception("Prepare failed: " . $connection->error);
-    }
-    $stmt->bind_param($paramTypes, ...$params);
-    if (!$stmt->execute()) {
-        throw new Exception("Execution failed: " . $stmt->error);
-    }
-    $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Query failed: " . $stmt->error);
-    }
-    $mostActiveDay = $result->fetch_assoc();
-    $stats['most_active_day'] = [
-        'day' => $mostActiveDay['message_day'],
-        'total_messages' => (int)$mostActiveDay['total_messages']
-    ];
-    $stmt->close();
+        $stmt = $connection->prepare($mostActiveHourQuery);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connection->error);
+        }
+        $stmt->bind_param($paramTypes, ...$params);
+        if (!$stmt->execute()) {
+            throw new Exception("Execution failed: " . $stmt->error);
+        }
+        $result = $stmt->get_result();
+        if (!$result) {
+            throw new Exception("Query failed: " . $stmt->error);
+        }
+        $mostActiveHour = $result->fetch_assoc();
+        $stats['most_active_hour'] = [
+            'hour' => $mostActiveHour['message_hour'],
+            'total_messages' => (int)$mostActiveHour['total_messages']
+        ];
+        $stmt->close();
+    } else {
+        // Query for most active day
+        $mostActiveDayQuery = "
+            SELECT 
+                DATE(m.timestamp) AS message_day, COUNT(*) AS total_messages
+            FROM messages m
+            WHERE m.userCoursesId IN (
+                SELECT userCoursesId
+                FROM user_courses
+                WHERE courseId IN (
+                    SELECT courseId
+                    FROM user_courses
+                    WHERE userId = ? -- prof user
+                )
+                $userCondition
+                $classCondition
+            )
+            $dateCondition
+            GROUP BY message_day
+            ORDER BY total_messages DESC
+            LIMIT 1;
+        ";
 
+        $stmt = $connection->prepare($mostActiveDayQuery);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connection->error);
+        }
+        $stmt->bind_param($paramTypes, ...$params);
+        if (!$stmt->execute()) {
+            throw new Exception("Execution failed: " . $stmt->error);
+        }
+        $result = $stmt->get_result();
+        if (!$result) {
+            throw new Exception("Query failed: " . $stmt->error);
+        }
+        $mostActiveDay = $result->fetch_assoc();
+        $stats['most_active_day'] = [
+            'day' => $mostActiveDay['message_day'],
+            'total_messages' => (int)$mostActiveDay['total_messages']
+        ];
+        $stmt->close();
+    }
+    
     // Query for most active course
     $mostActiveCourseQuery = "
         SELECT 

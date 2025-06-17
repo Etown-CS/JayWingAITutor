@@ -208,7 +208,7 @@ if ($currentUserId) {
                                         <!-- End Date -->
                                         <div>
                                             <label for="selectedEndDate" class="form-label">End Date</label>
-                                            <input type="date" id="selectedEndDate" name="selectedEndDate" class="form-control bg-gray-300 text-center" />
+                                            <input type="date" id="selectedEndDate" name="selectedEndDate" class="form-control bg-gray-300 text-center"/>
                                         </div>
                                         <!-- Q/A/QA -->
                                         <div class="dropdown">
@@ -267,7 +267,7 @@ if ($currentUserId) {
 
                             <div class="item w-full flex flex-col">
                                 <div class="bg-gray-200 p-6 rounded shadow text-center flex flex-col justify-between h-48 w-full">
-                                    <h3 class="text-xl font-semibold mb-2">Most Active Day</h3>
+                                    <h3 class="text-xl font-semibold mb-2 active-day-title">Most Active Day</h3>
                                     <p class="text-4xl font-bold active-day">MM-DD-YYYY</p>
                                     <a href="#" class="text-blue-600 underline text-sm mt-2 inline-block"></a>
                                 </div>

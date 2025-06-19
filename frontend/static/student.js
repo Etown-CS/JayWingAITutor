@@ -277,6 +277,9 @@ function askPresetQuestion(chatId, question, answer) {
                 typingIndicatorElement.remove();
                 typingIndicatorElement = null;
             }
+        })
+        .finally(() => {
+            generating = false; // Reset generating flag after fetch completes
         });
 };
 

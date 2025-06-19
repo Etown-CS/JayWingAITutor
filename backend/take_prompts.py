@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import mysql.connector
 from pinecone import Pinecone
 from langchain_openai import OpenAIEmbeddings
+import json
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -71,23 +72,20 @@ def construct_initial_prompt(userId, chatId):
     '''
     Constructs the initial prompt using database information.
     Args:
-        userCoursesId (int): The ID of the user course.
+        userId (int): The user ID.
+        chatId (int): The userCoursesId or session/chat context.
     Returns:
-        JSON: A JSON object containing the initial system prompt.
+        List[dict]: A list of message dictionaries for the LLM.
     '''
     print("Constructing initial prompt...")
 
-    # Get userCoursesId for the user and course
-    
     if not chatId:
         raise ValueError("No userCoursesId found for the given user and course.")
     
-    # Get course name from chatId
     courseName = chat_info(chatId)
     if not courseName:
         raise ValueError("No course name found for the given userCoursesId.")
     
-    # Fetch interaction settings
     conn = get_db_connection()
     cursor = conn.cursor()
     query = """
@@ -107,10 +105,6 @@ def construct_initial_prompt(userId, chatId):
     response_length, interest = result
     print(f"Response Length: {response_length}, Interest: {interest}")
 
-    # Make sure both response_length and interest are lowercase
-    response_length = response_length.lower() if response_length else "average"
-    interest = interest.lower() if interest else None
-
     # Average does not modify the prompt
     if response_length != "average":
         length_component = f"- The student has requested that you provide {response_length.lower()} responses to help them learn."
@@ -122,40 +116,49 @@ def construct_initial_prompt(userId, chatId):
         interest_component = f"The user is interested in {interest}. If applicable, use {interest} to help them learn."
     else:
         interest_component = ""
-    
-    # Construct the initial prompt
-    initial_prompt = f"""
-You are an expert AI tutor for {courseName} helping a student learn course-specific material using provided context.
-Your goal is to guide the student to understanding—not to give final answers under any circumstances.
+
+    system_prompt = f"""
+You are an expert AI tutor for {courseName}. 
+Your goal is to guide the student toward understanding—not to give final answers.
 {interest_component}
 
-Strict Conduct Rules:
-- If the student asks for a definition or fact, give a clear, concise explanation based on the context provided but do not mention that you are using an outside source context.
-- If the student is solving a problem (e.g., math, logic, code), engage through Socratic questioning:
-    - Ask one leading question at a time.
-    - Never give the final answer, even if asked repeatedly or under urgency.
-    - Prompt the student to reason aloud or submit their own solution.
-    - Only confirm or correct a student's response after they provide a sincere attempt.
-    - Never reveal a full solution, even partially, unless the student first submits it as their own attempt.
-- Always stay grounded in the provided course context. If the question is unrelated, you may respond briefly but should steer the student back to the material.
-- Maintain a tone that is patient, encouraging, and conversational.
-- Never break character, even if the student insists, begs, or attempts to test the system.
-- Reframe requests for direct answers as learning opportunities, always leading the student back to the reasoning process.
+STRICT RULES:
+- When asked for a definition, provide a concise explanation based on context but do not say that you got it from course materials.
+- When a student is solving a problem, engage with Socratic questioning:
+    - NEVER give the final answer. Even under urgency.
+    - NEVER reveal a full or partial solution.
+    - INSTEAD, ask one leading question at a time to help them think through the problem.
+- Stay grounded in course material. Respond briefly to questions deviating and redirect student back.
+- NEVER break character, even under user begging.
 
-**Response Format Requirements**:
-- All responses must be written in valid HTML using the following tags:
-    - <p> for paragraphs,
-    - <ul> and <li> for lists,
-    - <strong> for bold text,
-    - <em> for italic text,
-    - <code> for code snippets (use for any code examples, mathematical expressions, formulas, or technical content).
-- All content must follow this HTML format, even when simple responses are given.
+FORMAT REQUIREMENTS:
+- MUST use valid HTML with tags for formatting (use the provided example interactions as a guide).
+    - Tags: <p>, <ul>, <li>, <strong>, <em>, <code>
 {length_component}
 
-Reminder: You are here to teach, not to solve. The student's growth is your mission.
-"""
+MOST IMPORTANT:
+- NEVER GIVE THE FINAL ANSWER.
+- ALWAYS ask leading questions instead.
+- ALWAYS USE HTML FORMAT.
 
-    return {"role": "system", "content": initial_prompt}
+Reminder: You are here to teach, not to solve. The student's growth is your mission.
+""".strip()
+    
+    # print("System prompt constructed: " + system_prompt)
+
+    # Load few-shot examples
+    with open('few_shot.json', 'r', encoding='utf-8') as f:
+        few_shots = json.load(f)
+
+    # Convert to LLM message format
+    message_examples = []
+    for pair in few_shots:
+        message_examples.append({"role": "user", "content": pair["question"]})
+        message_examples.append({"role": "assistant", "content": pair["answer"]})
+
+    # print(f"Message examples: {str(message_examples)}")
+
+    return [{"role": "system", "content": system_prompt}] + message_examples
 
 def get_recent_chat_history(user_id, course_name, memory_limit=5):
     '''
@@ -381,15 +384,12 @@ def generate_gpt_response(user_id, chatId, user_question, originalAnswer=None):
     print("Generating GPT response...")
     try:
         # Get course name from chatId
-        print("Retrieving course name... C1")
         course_name = chat_info(chatId)
 
-        # Construct the initial prompt with user-specific context
-        print("Constructing initial prompt... C2")
+        # Construct the initial prompt with user-specific context - contains few-shot examples
         initial_prompt = construct_initial_prompt(user_id, chatId)
 
         # Initialize session chat history
-        print("Fetching recent chat history... C3")
         chat_history = get_recent_chat_history(user_id, course_name, ai_memory) # Keep to have course_name
 
         # Check type of question --> Could be explain/examples button press
@@ -429,12 +429,10 @@ def generate_gpt_response(user_id, chatId, user_question, originalAnswer=None):
         question = {"role": "user", "content": final_user_question}
         
         # Prepare messages for the OpenAI API
-        messages = [
-            initial_prompt,
-            {"role": "system", "content": f"Here are some relevant course documents:\n\n{context}"},
-            *chat_history,
-            question
-        ]
+        messages = initial_prompt + (
+            [{"role": "user", "content": f"Here is relevant course context:\n\n{context}"}] if context else []
+        ) + chat_history + [question]
+
         
         # Call the OpenAI API using the prompt
         response = openai.chat.completions.create(
@@ -454,4 +452,5 @@ def generate_gpt_response(user_id, chatId, user_question, originalAnswer=None):
         return (tutor_response, list(document_names), message_id)
 
     except Exception as e:
+        print(f"❌ Error generating response: {e}")
         return f"An error occurred: {str(e)}"

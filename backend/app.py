@@ -802,7 +802,8 @@ def generate_wordcloud(text):
     """
     Generate a word cloud from the given text.
     """
-    wordcloud = WordCloud(width=800, height=400, background_color='white', color_func=etown_color_func).generate(text)
+    # Uncertain on whether to include collocations or not, but set to False for now
+    wordcloud = WordCloud(width=800, height=400, background_color='white', color_func=etown_color_func, collocations=False).generate(text)
 
     # Save image to memory buffer
     img_io = BytesIO()

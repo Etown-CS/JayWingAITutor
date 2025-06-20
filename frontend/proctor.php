@@ -232,9 +232,15 @@ if ($currentUserId) {
                                             <input type="hidden" id="qa_filter" name="qa_filter" value="Both">
                                         </div>
                                         <div class="flex items-end">
-                                            <button type="submit" class="btn btn-primary w-full">Generate Report</button>
+                                            <button type="button" class="btn btn-danger w-full" onclick="clearDashboardFilters()">Clear Filters</button>
                                         </div>
                                     </div>
+                                    
+                                    <div class="flex items-end mt-4">
+                                        <button type="submit" class="btn btn-primary w-full">Generate Report</button>
+                                    </div>
+                                    
+
                                 </form>
                             </div>
 
@@ -392,13 +398,16 @@ if ($currentUserId) {
                                                     <?php
                                                         $query = "
                                                             SELECT DISTINCT
-                                                                REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
-                                                            FROM courses
-                                                            WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
-                                                            ORDER BY discipline ASC
+                                                                REGEXP_SUBSTR(c.courseCode, '^[A-Z]+') AS discipline
+                                                            FROM courses c
+                                                            JOIN user_courses uc ON uc.courseId = c.id
+                                                            WHERE c.courseCode REGEXP '^[A-Z]+[0-9]+$'
+                                                            AND uc.userId = ?
+                                                            ORDER BY discipline DESC;
                                                         ";
 
                                                         $stmt = $connection->prepare($query);
+                                                        $stmt->bind_param("i", $userId);
                                                         $stmt->execute();
                                                         $disciplines = $stmt->get_result();
 

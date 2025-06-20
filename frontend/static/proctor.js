@@ -785,6 +785,28 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
     }
 }
 
+function clearDashboardFilters() {
+    document.getElementById('classSearchInputDash').value = '';
+    document.getElementById('userSearchInputDash').value = '';
+    document.getElementById('selectedStartDate').value = '';
+    document.getElementById('selectedEndDate').value = '';
+    document.getElementById('qa_filter').value = 'Both';
+
+    // Reset hidden values
+    document.getElementById('class_id').value = 'All';
+    document.getElementById('user_id').value = 'All';
+    document.getElementById('qa_filter').value = 'Both';
+
+    // Reset visible labels
+    document.getElementById('selectedDashboardClassText').innerText = 'All';
+    document.getElementById('selectedDashboardUserText').innerText = 'All';
+    document.getElementById('selectedQAFilterText').innerText = 'Both';
+
+    // Regenerate report with default parameters
+    generateReport('All', 'All', null, null, 'Both');
+}
+
+
 function openFeedbackModal(feedbackRating) {
     const classId = document.getElementById('class_id').value || 'All';
     const userId = document.getElementById('user_id').value || 'All';
@@ -957,7 +979,7 @@ function initializeSearchableClassTable() {
 
             const matches =
                 fuzzyIncludes(name, nameFilter) &&
-                fuzzyIncludes(code, codeFilter) &&
+                code.includes(codeFilter) &&
                 desc.includes(descFilter);
             row.style.display = matches ? 'table-row' : 'none';
         });

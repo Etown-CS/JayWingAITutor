@@ -606,7 +606,7 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
 
     if (classFilter === 'All' && userFilter === 'All' && !startDate && !endDate && qaFilter === 'Both') {
         if (document.getElementById('carousel-description')) {
-            document.getElementById('carousel-description').textContent = "*Showing stats for all prof's courses";
+            document.getElementById('carousel-description').textContent = `*Showing stats for all ${username}'s courses`;
         }
     } else {
         description = "*Showing stats for ";
@@ -785,6 +785,22 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
     }
 }
 
+function clearDashboardFilters() {
+    // Reset hidden values
+    document.getElementById('class_id').value = 'All';
+    document.getElementById('user_id').value = 'All';
+    document.getElementById('qa_filter').value = 'Both';
+
+    // Reset visible labels
+    document.getElementById('selectedDashboardClassText').innerText = 'All';
+    document.getElementById('selectedDashboardUserText').innerText = 'All';
+    document.getElementById('selectedQAFilterText').innerText = 'Both';
+
+    // Regenerate report with default parameters
+    generateReport('All', 'All', null, null, 'Both');
+}
+
+
 function openFeedbackModal(feedbackRating) {
     const classId = document.getElementById('class_id').value || 'All';
     const userId = document.getElementById('user_id').value || 'All';
@@ -957,7 +973,7 @@ function initializeSearchableClassTable() {
 
             const matches =
                 fuzzyIncludes(name, nameFilter) &&
-                fuzzyIncludes(code, codeFilter) &&
+                code.includes(codeFilter) &&
                 desc.includes(descFilter);
             row.style.display = matches ? 'table-row' : 'none';
         });

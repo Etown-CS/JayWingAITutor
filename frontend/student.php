@@ -155,7 +155,8 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <option value="allCourses">All</option>
                     <!-- List disciplines -->
                     <?php
-                        $stmt = $connection->prepare("SELECT courseCode FROM courses ORDER BY courseCode ASC");
+                        $stmt = $connection->prepare("SELECT c.courseCode FROM courses c JOIN user_courses uc ON uc.courseId = c.id WHERE uc.userId = ? ORDER BY c.courseCode DESC");
+                        $stmt->bind_param("i", $userId);
                         $stmt->execute();
                         $result = $stmt->get_result();
                         $uniqueDisciplines = [];
@@ -167,6 +168,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             }
                             // Escape course code for HTML output
                             $courseCode = htmlspecialchars($row['courseCode'], ENT_QUOTES, 'UTF-8');
+                            
                             // Extract discipline from course code
                             if (preg_match('/^([A-Z]{2,3})(\d{3})$/i', $courseCode, $matches)) {
                                 $discipline = $matches[1]; // "CSC"
@@ -249,9 +251,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
                         while ($chat = $chats->fetch_assoc()):
                             $courseName = $chat['courseName'];
-                            if (in_array($courseName, $displayedCourses)) {
-                                continue; // Skip if course already displayed
-                            }
+                            // I don't remember why we needed this?
+                            // if (in_array($courseName, $displayedCourses)) { 
+                            //     continue; // Skip if course already displayed
+                            // }
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
                     <div class="relative group bg-gray-100 p-3 rounded <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> w-full overflow-hidden hover:bg-gray-250">

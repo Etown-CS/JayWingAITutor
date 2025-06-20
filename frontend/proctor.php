@@ -106,6 +106,12 @@ if ($currentUserId) {
         }
     </style>
 
+    <script>
+        const userId = "<?php echo $_SESSION['user_id']; ?>";
+        const username = "<?php echo $_SESSION['username']; ?>";
+        const userRole = "<?php echo $_SESSION['admin']; ?>"; // 1 = proctor, 0 = student
+    </script>
+
     <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
         Proctor Page
     </header>
@@ -226,9 +232,15 @@ if ($currentUserId) {
                                             <input type="hidden" id="qa_filter" name="qa_filter" value="Both">
                                         </div>
                                         <div class="flex items-end">
-                                            <button type="submit" class="btn btn-primary w-full">Generate Report</button>
+                                            <button type="button" class="btn btn-danger w-full" onclick="clearDashboardFilters()">Clear Filters</button>
                                         </div>
                                     </div>
+                                    
+                                    <div class="flex items-end mt-4">
+                                        <button type="submit" class="btn btn-primary w-full">Generate Report</button>
+                                    </div>
+                                    
+
                                 </form>
                             </div>
 
@@ -386,13 +398,16 @@ if ($currentUserId) {
                                                     <?php
                                                         $query = "
                                                             SELECT DISTINCT
-                                                                REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
-                                                            FROM courses
-                                                            WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
-                                                            ORDER BY discipline ASC
+                                                                REGEXP_SUBSTR(c.courseCode, '^[A-Z]+') AS discipline
+                                                            FROM courses c
+                                                            JOIN user_courses uc ON uc.courseId = c.id
+                                                            WHERE c.courseCode REGEXP '^[A-Z]+[0-9]+$'
+                                                            AND uc.userId = ?
+                                                            ORDER BY discipline DESC;
                                                         ";
 
                                                         $stmt = $connection->prepare($query);
+                                                        $stmt->bind_param("i", $userId);
                                                         $stmt->execute();
                                                         $disciplines = $stmt->get_result();
 
@@ -788,17 +803,17 @@ if ($currentUserId) {
 
     <!-- Feedback Modal -->
     <div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="feedbackModalLabel">Feedback on AI Responses</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feedbackModalLabel">Feedback on AI Responses</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="feedbackModalBody">
+                    <!-- Feedback cards inserted here dynamically -->
+                </div>
+            </div>
         </div>
-        <div class="modal-body" id="feedbackModalBody">
-            <!-- Feedback cards inserted here dynamically -->
-        </div>
-        </div>
-    </div>
     </div>
 
 
@@ -806,11 +821,7 @@ if ($currentUserId) {
         <p> 2024 AI Tutor Proctor Page</p>
     </footer> -->
 
-    <script>
-        const userId = "<?php echo $_SESSION['user_id']; ?>";
-        const username = "<?php echo $_SESSION['username']; ?>";
-        const userRole = "<?php echo $_SESSION['admin']; ?>"; // 1 = proctor, 0 = student
-    </script>
+    
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

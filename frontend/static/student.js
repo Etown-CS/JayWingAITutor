@@ -33,11 +33,14 @@ function archiveCourse(userCoursesId) {
             if (chatItem) chatItem.remove();
 
             // If this was the currently selected chat, redirect to blank view
-            if (userCoursesId == currentChatId) {
+            if (typeof currentChatId !== 'undefined' && userCoursesId == currentChatId) {
                 // Redirect to the same page without the chatId
                 const urlParams = new URLSearchParams(window.location.search);
-                urlParams.delete('chatId');
-                window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+                if (urlParams.has('chatId')) {
+                    // Remove chatId from URL
+                    urlParams.delete('chatId');
+                    window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+                }
             }
         } else {
             alert("Error: " + data.message);
@@ -680,24 +683,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });        
     }
 
-    sendButton.addEventListener('click', (event) => {
-        if (!textarea || textarea.value.trim() === '') {
-            return;
-        }
+    if (sendButton) {
+        sendButton.addEventListener('click', (event) => {
+            if (!textarea || textarea.value.trim() === '') {
+                return;
+            }
 
-        event.preventDefault();
+            event.preventDefault();
 
-        if (generating) {
-            alert("Please wait for the current response to finish.");
-            return;
-        }
+            if (generating) {
+                alert("Please wait for the current response to finish.");
+                return;
+            }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        askQuestion(urlParams.get('chatId'));
-        textarea.value = '';
-        autoResizeTextarea();
-    });
-
+            const urlParams = new URLSearchParams(window.location.search);
+            askQuestion(urlParams.get('chatId'));
+            textarea.value = '';
+            autoResizeTextarea();
+        });
+    }
     // Response Buttons Row Logic
     // Thumbs up/down button logic for each AI response
     const thumbsUpButtons = document.querySelectorAll('.thumbs-up');

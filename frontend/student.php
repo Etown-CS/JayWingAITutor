@@ -249,9 +249,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
                         while ($chat = $chats->fetch_assoc()):
                             $courseName = $chat['courseName'];
-                            if (in_array($courseName, $displayedCourses)) {
-                                continue; // Skip if course already displayed
-                            }
+                            // I don't remember why we needed this?
+                            // if (in_array($courseName, $displayedCourses)) { 
+                            //     continue; // Skip if course already displayed
+                            // }
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
                     <div class="relative group bg-gray-100 p-3 rounded <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> w-full overflow-hidden hover:bg-gray-250">

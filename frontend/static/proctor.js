@@ -786,12 +786,6 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
 }
 
 function clearDashboardFilters() {
-    document.getElementById('classSearchInputDash').value = '';
-    document.getElementById('userSearchInputDash').value = '';
-    document.getElementById('selectedStartDate').value = '';
-    document.getElementById('selectedEndDate').value = '';
-    document.getElementById('qa_filter').value = 'Both';
-
     // Reset hidden values
     document.getElementById('class_id').value = 'All';
     document.getElementById('user_id').value = 'All';

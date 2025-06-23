@@ -61,7 +61,7 @@ body {
     overflow: hidden; /* Crucial for containing content and preventing unwanted scrollbars */
 }
 
-#sidebar {
+#left-sidebar {
     /* Initial state, its width is managed by the grid-template-columns of #my-content */
     flex-shrink: 0; /* Prevents sidebar from shrinking horizontally beyond its content */
     height: 100%; /* Ensures sidebar fills its grid cell vertically */
@@ -78,25 +78,25 @@ body {
 
 /* --- Collapsed States --- */
 
-#my-content.collapsed-sidebar {
+#my-content.left-collapsed {
     /* When collapsed, set the grid to a fixed width for the sidebar and 1fr for chat */
     grid-template-columns: 60px 1fr 250px !important; /* Force sidebar to 60px */
 }
 
-#sidebar.collapsed {
+#left-sidebar.collapsed {
     /* This width is set to match the grid column for consistency */
     width: 60px !important;
 }
 
 /* --- Hiding Sidebar Content --- */
 
-#sidebar.collapsed .sidebar-content-hide {
+#left-sidebar.collapsed .left-sidebar-content-hide {
     display: none !important; /* Force hide the elements */
 }
 
 /* --- Toggle Button Styling within Collapsed Sidebar --- */
 
-#sidebar #toggle-sidebar {
+#left-sidebar #toggle-left-sidebar {
     display: block !important;
     margin-left: auto; /* Push button to the right, in conjunction with flexbox parent */
     margin-right: auto; /* Center it within the small width */
@@ -104,7 +104,7 @@ body {
     padding-right: 0.5rem;
 }
 
-#sidebar.collapsed .px-3.pt-3.d-flex.align-items-center.w-full {
+#left-sidebar.collapsed .px-3.pt-3.d-flex.align-items-center.w-full {
     padding-left: 0; /* Remove horizontal padding from the button's parent div */
     padding-right: 0;
     justify-content: center; /* Center content (the button) in the collapsed state */
@@ -127,7 +127,7 @@ body {
 }
 
 /* When both sidebars are collapsed */
-#my-content.collapsed-sidebar.right-collapsed {
+#my-content.left-collapsed.right-collapsed {
     grid-template-columns: 60px 1fr 60px !important;
 }
 

@@ -894,8 +894,8 @@ async function getMessageContent(messageId) {
 
 
 // Left sidebar toggle button logic
-const sidebar = document.getElementById('sidebar');
-const toggleBtn = document.getElementById('toggle-sidebar');
+const sidebar = document.getElementById('left-sidebar');
+const toggleBtn = document.getElementById('toggle-left-sidebar');
 const content = document.getElementById('my-content');
 const archiveButton = document.getElementById('archive-button');
 
@@ -904,9 +904,9 @@ if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
         console.log("Toggle button clicked!");
         sidebar.classList.toggle('collapsed');
-        content.classList.toggle('collapsed-sidebar');
+        content.classList.toggle('left-collapsed');
         archiveButton.style.display = archiveButton.style.display === 'none' ? '' : 'none'; // For some reason this was more complicated that others
-        console.log("Sidebar classes:", sidebar.classList);
+        console.log("Left sidebar classes:", sidebar.classList);
         console.log("Content classes:", content.classList);
         console.log("Archive button classes:", archiveButton.classList);
     });

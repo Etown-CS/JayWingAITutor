@@ -123,15 +123,15 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <div id="my-content" class="right-collapsed flex flex-row flex-grow w-full mt-0 overflow-hidden">
         
         <!-- Left sidebar with chats list -->
-        <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
+        <div id="left-sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
             <div class="flex justify-between items-center mb-4">
                 <!-- Chat Search Bar -->
                 <div class="px-3 pt-3 d-flex align-items-center w-full">
                     <input
                         type="text"
                         id="searchBar"
-                        class="form-control flex-grow-1 me-2 sidebar-content-hide"
-                        placeholder="🔍 Search Chats..."
+                        class="form-control flex-grow-1 me-2 left-sidebar-content-hide"
+                        placeholder="⌕ Search Chats..."
                         aria-label="ChatSearch"
                         aria-describedby="basic-addon1"
                         oninput="filterChats()"
@@ -139,14 +139,14 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <button
                         type="button"
                         class="block p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300"
-                        id="toggle-sidebar"
-                        aria-label="Toggle Sidebar"
+                        id="toggle-left-sidebar"
+                        aria-label="Toggle Left Sidebar"
                     >≣</button>
                 </div>
             </div>
 
             <!-- Sorts/Filters -->
-            <div class="d-flex gap-2 px-3 pb-3 sidebar-content-hide">
+            <div class="d-flex gap-2 px-3 pb-3 left-sidebar-content-hide">
                 <select class="form-select bg-primary text-white w-75" id="sort-by-btn" name="sortBy">
                     <option value="sortRecent">Sort by: Recent</option>
                     <option value="sortAlphabetical">Sort by: Alphabetical</option>
@@ -191,7 +191,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
             </div>
 
             <!-- List of existing chats -->
-            <div id="sidebar-courses" class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto overflow-x-hidden sidebar-content-hide p-sidebar-noshow">
+            <div id="sidebar-courses" class="space-y-2 flex-grow ps-3 pb-3 overflow-y-auto overflow-x-hidden left-sidebar-content-hide p-sidebar-noshow">
                 <div id="chat-div" class="d-grid gap-2">
                     <?php
                         // Getting discipline filter
@@ -367,7 +367,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                 </div>
                                             <?php endif; ?>
                                             <!-- Feedback button row -->
-                                            <div class="flex gap-2 mt-2 text-xs text-gray-600">
+                                            <div class="flex flex-wrap gap-2 mt-2 text-xs text-gray-600">
                                                 <button class="thumbs-up px-2 py-1 text-xs rounded transition-colors duration-150 <?php 
                                                     if ($message['feedbackRating'] === 'up') {
                                                         echo 'bg-green-600 hover:bg-green-700 rounded-full text-white';
@@ -388,18 +388,19 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                 title="This response was not helpful"
                                                 data-message-id="<?php echo $message['messageId']; ?>">👎</button>
 
-                                                <button class="simplify px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                                                        title="Simplify this response"
-                                                        data-message-id="<?php echo $message['messageId']; ?>">Simplify</button>
+                                                <div class="flex gap-2 w-full sm:w-auto">
+                                                    <button class="simplify px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                                                            title="Simplify this response"
+                                                            data-message-id="<?php echo $message['messageId']; ?>">Simplify</button>
 
-                                                <button class="examples px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                                                        title="Get more examples"
-                                                        data-message-id="<?php echo $message['messageId']; ?>">Examples</button>
-                                                
-                                                <button class="explain px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                                                        title="Get a deeper explanation"
-                                                        data-message-id="<?php echo $message['messageId']; ?>">Explain</button>
-                                                
+                                                    <button class="examples px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                                                            title="Get more examples"
+                                                            data-message-id="<?php echo $message['messageId']; ?>">Examples</button>
+                                                    
+                                                    <button class="explain px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
+                                                            title="Get a deeper explanation"
+                                                            data-message-id="<?php echo $message['messageId']; ?>">Explain</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -448,7 +449,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
             <!-- Top bar: Hamburger and Title -->
             <div class="px-3 pt-3 d-flex align-items-center w-full gap-2">
-                <button type="button" class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300" id="toggle-right-sidebar" aria-label="Toggle Right Sidebar">≣</button>
+                <button type="button" class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300" id="toggle-right-sidebar" aria-label="Toggle Right Sidebar">⛭</button>
                 <h2 class="text-lg font-semibold text-gray-800 mb-0 right-sidebar-content-hide">Chat Options</h2>
             </div>
 

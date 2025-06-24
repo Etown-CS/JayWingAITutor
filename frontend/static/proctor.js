@@ -16,6 +16,20 @@ const multipleEnrollmentsModal = new bootstrap.Modal(document.getElementById('mu
 
 // --------------------- General JavaScript ------------------------
 
+
+// Home button
+document.getElementById('home').addEventListener('click', function () {
+    const currentPath = window.location.pathname;
+    const query = window.location.search;
+
+    // Find everything after '/frontend/' in the pathname
+    const match = currentPath.match(/\/frontend\/(.+)$/);
+    if (match) {
+        const relativePath = match[1] + query;
+        window.location.href = '/jaywingaitutor/frontend/';
+    }
+});
+
 // Specific to Multiple User Selection
 const selectedUsers = new Set(); // Stores IDs of selected users
 const selectedMultipleUserText = document.getElementById('selectedMultipleUserText'); // Element to display selected users

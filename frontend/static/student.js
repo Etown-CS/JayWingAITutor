@@ -17,6 +17,19 @@ function scrollToBottom() {
     }
 }
 
+// Home Button
+document.getElementById('home').addEventListener('click', function () {
+    const currentPath = window.location.pathname;
+    const query = window.location.search;
+
+    // Find everything after '/frontend/' in the pathname
+    const match = currentPath.match(/\/frontend\/(.+)$/);
+    if (match) {
+        const relativePath = match[1] + query;
+        window.location.href = '/jaywingaitutor/frontend/';
+    }
+});
+
 function archiveCourse(userCoursesId) {
     // if (!confirm("Are you sure you want to archive this course?")) return; // Removed confirmation dialog for simplicity
 
@@ -363,7 +376,7 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
 
     // Button row
     const buttonRow = document.createElement('div');
-    buttonRow.className = "flex gap-2 mt-2 text-xs text-gray-600";
+    buttonRow.className = "flex flex-wrap gap-2 mt-2 text-xs text-gray-600";
     
     const thumbsUpBtn = document.createElement('button');
     thumbsUpBtn.textContent = "👍";
@@ -375,20 +388,23 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
     thumbsDownBtn.title = "This response was not helpful";
     thumbsDownBtn.className = "px-2 py-1 text-xs rounded hover:bg-red-100 transition-colors duration-150";
 
+    const buttonSubRow = document.createElement('div');
+    buttonSubRow.className = "flex gap-2 w-full md:w-auto";
+
     const simplifyBtn = document.createElement('button');
     simplifyBtn.textContent = "Simplify";
     simplifyBtn.title = "Simplify this response";
-    simplifyBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
+    simplifyBtn.className = "simplify px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
 
     const examplesBtn = document.createElement('button');
     examplesBtn.textContent = "Examples";
     examplesBtn.title = "Get more examples";
-    examplesBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
+    examplesBtn.className = "examples px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
 
     const explainBtn = document.createElement('button');
     explainBtn.textContent = "Explain";
     explainBtn.title = "Get a deeper explanation";
-    explainBtn.className = "px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
+    explainBtn.className = "explain px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150";
 
     // Button event listeners
     thumbsUpBtn.onclick = () => {
@@ -531,9 +547,10 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
     // Append buttons
     buttonRow.appendChild(thumbsUpBtn);
     buttonRow.appendChild(thumbsDownBtn);
-    buttonRow.appendChild(simplifyBtn);
-    buttonRow.appendChild(examplesBtn);
-    buttonRow.appendChild(explainBtn);
+    buttonSubRow.appendChild(simplifyBtn);
+    buttonSubRow.appendChild(examplesBtn);
+    buttonSubRow.appendChild(explainBtn);
+    buttonRow.appendChild(buttonSubRow);
     newMessageBubble.appendChild(buttonRow);
 
     // Finalize and attach to DOM
@@ -893,19 +910,50 @@ async function getMessageContent(messageId) {
 
 
 
-// Left sidebar toggle button logic
+// --------------------- Left Sidebar JavaScript ------------------------
+
+
 const sidebar = document.getElementById('left-sidebar');
 const toggleBtn = document.getElementById('toggle-left-sidebar');
+const showBtnMobile = document.getElementById('show-left-sidebar-mobile');
+const hideBtnMobile = document.getElementById('hide-left-sidebar-mobile');
 const content = document.getElementById('my-content');
+const chatContainer = document.getElementById('chat-container');
 const archiveButton = document.getElementById('archive-button');
 
-
+// Left Sidebar Button Toggle
 if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
         console.log("Toggle button clicked!");
         sidebar.classList.toggle('collapsed');
         content.classList.toggle('left-collapsed');
-        archiveButton.style.display = archiveButton.style.display === 'none' ? '' : 'none'; // For some reason this was more complicated that others
+        console.log("Left sidebar classes:", sidebar.classList);
+        console.log("Content classes:", content.classList);
+        console.log("Archive button classes:", archiveButton.classList);
+    });
+}
+
+// Left Sidebar Button Show Mobile
+if (showBtnMobile) {
+    showBtnMobile.addEventListener('click', () => {
+        console.log("Toggle button clicked!");
+        sidebar.classList.toggle('collapsed');
+        chatContainer.classList.toggle('hidden');
+        sidebar.classList.toggle('hidden');
+        if (hideLeftSidebar.classList.contains('hidden')) { hideLeftSidebar.classList.remove('hidden'); }
+        console.log("Left sidebar classes:", sidebar.classList);
+        console.log("Content classes:", content.classList);
+        console.log("Archive button classes:", archiveButton.classList);
+    });
+}
+
+// Left Sidebar Button Hide Mobile
+if (hideBtnMobile) {
+    hideBtnMobile.addEventListener('click', () => {
+        console.log("Toggle button clicked!");
+        sidebar.classList.toggle('collapsed');
+        chatContainer.classList.toggle('hidden');
+        sidebar.classList.toggle('hidden');
         console.log("Left sidebar classes:", sidebar.classList);
         console.log("Content classes:", content.classList);
         console.log("Archive button classes:", archiveButton.classList);
@@ -1016,17 +1064,47 @@ archiveModal.addEventListener('click', (e) => {
     }
 });
 
-// Right sidebar toggle logic
+
+// --------------------- Right Sidebar JavaScript ------------------------
+
+
 const rightSidebar = document.getElementById('right-sidebar');
 const toggleRightBtn = document.getElementById('toggle-right-sidebar');
+const showRightBtnMobile = document.getElementById('show-right-sidebar-mobile');
+const hideRightBtnMobile = document.getElementById('hide-right-sidebar-mobile');
 
+// Right Sidebar Button Toggle
 if (toggleRightBtn) {
     toggleRightBtn.addEventListener('click', () => {
-        console.log("Right sidebar toggle clicked!");
+        console.log("Toggle button clicked!");
         rightSidebar.classList.toggle('collapsed');
         content.classList.toggle('right-collapsed');
-        console.log("Right Sidebar classes:", rightSidebar.classList);
-        console.log("Main content layout:", content.classList);
+        console.log("Right sidebar classes:", rightSidebar.classList);
+        console.log("Content classes:", content.classList);
+    });
+}
+
+// Right Sidebar Button Show Mobile
+if (showRightBtnMobile) {
+    showRightBtnMobile.addEventListener('click', () => {
+        console.log("Toggle button clicked!");
+        rightSidebar.classList.toggle('collapsed');
+        chatContainer.classList.toggle('hidden');
+        rightSidebar.classList.toggle('hidden');
+        console.log("Right sidebar classes:", rightSidebar.classList);
+        console.log("Content classes:", content.classList);
+    });
+}
+
+// Right Sidebar Button Hide Mobile
+if (hideRightBtnMobile) {
+    hideRightBtnMobile.addEventListener('click', () => {
+        console.log("Toggle button clicked!");
+        rightSidebar.classList.toggle('collapsed');
+        chatContainer.classList.toggle('hidden');
+        rightSidebar.classList.toggle('hidden');
+        console.log("Right sidebar classes:", rightSidebar.classList);
+        console.log("Content classes:", content.classList);
     });
 }
 
@@ -1067,6 +1145,97 @@ if (saveBtn) {
 }
 
 
+// --------------------- Window Screen Size JavaScript ------------------------
+
+
+function handleResize() {
+    const leftSidebar = document.getElementById('left-sidebar');
+    const rightSidebar = document.getElementById('right-sidebar');
+    const header = document.getElementById('chat-header');
+    const content = document.getElementById('my-content');
+    const chatContainer = document.getElementById('chat-container');
+    const chatLocation = document.getElementById('chat-location');
+    const inputContainer = document.getElementById('input-container');
+    const toggleLeftSidebar = document.getElementById('toggle-left-sidebar');
+    const hideLeftSidebar = document.getElementById('hide-left-sidebar-mobile');
+    const toggleRightSidebar = document.getElementById('toggle-right-sidebar');
+    const hideRightSidebar = document.getElementById('hide-right-sidebar-mobile');
+
+    if (window.innerWidth >= 1024) {
+        // Large screen or larger
+        // Left and Right sidebars are visible
+        leftSidebar.classList.remove('hidden', 'mobile');
+        leftSidebar.classList.add('max-w-sm');
+        rightSidebar.classList.remove('hidden', 'mobile');
+        rightSidebar.classList.add('max-w-sm');
+        // Un-collapse left sidebar and collapse right sidebar
+        if (content.classList.contains('left-collapsed')) { content.classList.remove('left-collapsed'); }
+        leftSidebar.classList.remove('collapsed');
+        // Sets the correct sidebar button to be visible
+        if (toggleLeftSidebar.classList.contains('hidden')) { toggleLeftSidebar.classList.remove('hidden'); }
+        if (!hideLeftSidebar.classList.contains('hidden')) { hideLeftSidebar.classList.add('hidden'); }
+        if (toggleRightSidebar.classList.contains('hidden')) { toggleRightSidebar.classList.remove('hidden'); }
+        if (!hideRightSidebar.classList.contains('hidden')) { hideRightSidebar.classList.add('hidden'); }
+        // Always Shows chat container
+        if (chatContainer.classList.contains('hidden')) { chatContainer.classList.remove('hidden'); }
+        // Changes the header styling
+        header.className = "flex items-center justify-between p-3 w-full border-b-4 border-gray-50";
+        // Removes one column layout
+        content.classList.remove('mobile');
+        // Removes mobile padding
+        chatLocation.classList.remove('px-2');
+        inputContainer.classList.remove('px-2');
+    }
+    else {
+        // Small screen
+        // Left and Right sidebars are not visible, seperate buttons for these sidebars are visible
+        leftSidebar.classList.add('hidden', 'mobile');
+        leftSidebar.classList.remove('max-w-sm');
+        rightSidebar.classList.add('hidden', 'mobile');
+        rightSidebar.classList.remove('max-w-sm');
+        // Sets the correct sidebar button to be visible
+        if (!toggleLeftSidebar.classList.contains('hidden')) { toggleLeftSidebar.classList.add('hidden'); }
+        if (hideLeftSidebar.classList.contains('hidden')) { hideLeftSidebar.classList.remove('hidden'); }
+        if (!toggleRightSidebar.classList.contains('hidden')) { toggleRightSidebar.classList.add('hidden'); }
+        if (hideRightSidebar.classList.contains('hidden')) { hideRightSidebar.classList.remove('hidden'); }
+        // Auto collapses sidebars
+        if (!leftSidebar.classList.contains('collapsed')) { leftSidebar.classList.add('collapsed'); }
+        if (!rightSidebar.classList.contains('collapsed')) { rightSidebar.classList.add('collapsed'); }
+        if (!content.classList.contains('right-collapsed')) { content.classList.add('right-collapsed'); }
+        // Always Shows chat container
+        if (chatContainer.classList.contains('hidden')) { chatContainer.classList.remove('hidden'); }
+        // Changes the header styling
+        if (header) header.className = "flex items-center justify-between p-3 w-full bg-gray-100 border-b-4 border-gray-200";
+        // Sets to one column layout
+        content.classList.add('mobile');
+        // Adds extra padding for readability
+        if (window.innerWidth < 576) {
+            if (chatLocation) chatLocation.classList.add('px-2');
+            if (inputContainer) inputContainer.classList.add('px-2');
+        } else {
+            if (chatLocation) chatLocation.classList.remove('px-2');
+            if (inputContainer) inputContainer.classList.remove('px-2');
+        }
+        if (!header) {
+            console.log("Page opened on Mobile");
+            leftSidebar.classList.toggle('collapsed');
+            chatContainer.classList.toggle('hidden');
+            leftSidebar.classList.toggle('hidden');
+            if (!hideLeftSidebar.classList.contains('hidden')) { hideLeftSidebar.classList.add('hidden'); }
+            console.log("Left sidebar classes:", leftSidebar.classList);
+            console.log("Content classes:", content.classList);
+            console.log("Archive button classes:", archiveButton.classList);
+        }
+    }
+}
+
+// Run on resize
+window.addEventListener('resize', handleResize);
+
+// Run once on initial load
+handleResize();
+
+
 // Change the way different courses are sorted
 document.getElementById('sort-by-btn').addEventListener('change', function () {
     const sortBy = this.value;
@@ -1083,6 +1252,8 @@ document.getElementById('sort-by-btn').addEventListener('change', function () {
     if (chatId) {
         newUrl += '&chatId=' + encodeURIComponent(chatId);
     }
+
+    localStorage.setItem('sidebarShouldReopen', 'true');
 
     window.location.href = newUrl;
 });
@@ -1108,6 +1279,8 @@ if (filterByButton) {
         if (chatId) {
             newUrl += '&chatId=' + encodeURIComponent(chatId);
         }
+
+        localStorage.setItem('sidebarShouldReopen', 'true');
 
         window.location.href = newUrl; // Reload page with new filter
     });
@@ -1203,3 +1376,16 @@ function adjustSidebarCoursesPadding() {
 window.addEventListener('load', adjustSidebarCoursesPadding);
 // Run on resize
 window.addEventListener('resize', adjustSidebarCoursesPadding);
+
+document.addEventListener('DOMContentLoaded', function () {
+    const shouldReopen = localStorage.getItem('sidebarShouldReopen');
+
+    if (shouldReopen === 'true') {
+        // Simulate a click to open sidebar
+        const showBtnMobile = document.getElementById('show-left-sidebar-mobile');
+        if (showBtnMobile) showBtnMobile.click();
+
+        // Clear the flag
+        localStorage.removeItem('sidebarShouldReopen');
+    }
+});

@@ -111,9 +111,19 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
 </head>
 <body class="flex flex-col h-screen gap-0 overflow-hidden">
-    <header id="header" class="d-flex justify-content-center py-3 bg-primary text-white w-full mb-0">
-        Student Page
+    <header id="header" class="position-relative d-flex justify-content-center align-items-center py-3 bg-primary text-white w-100 mb-0">
+        <button
+            type="button"
+            class="position-absolute start-0 ms-3 rounded bg-primary text-white"
+            id="home"
+            aria-label="Home">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 17.5H15M4.5 20.9982V9.99998L11.2705 3.77816C11.6655 3.35674 12.3345 3.35674 12.7295 3.77816L19.5 9.99998V20.9982H4.5Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <span>Student Page</span>
     </header>
+
 
     <div id="feedback-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-blue-100 text-blue-800 px-4 py-2 rounded shadow hidden z-50 text-sm">
         Thank you for your feedback!
@@ -123,7 +133,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
     <div id="my-content" class="right-collapsed flex flex-row flex-grow w-full mt-0 overflow-hidden">
         
         <!-- Left sidebar with chats list -->
-        <div id="left-sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
+        <div id="left-sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden w-full">
             <div class="flex justify-between items-center mb-4">
                 <!-- Chat Search Bar -->
                 <div class="px-3 pt-3 d-flex align-items-center w-full">
@@ -140,8 +150,22 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         type="button"
                         class="block p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300"
                         id="toggle-left-sidebar"
-                        aria-label="Toggle Left Sidebar"
-                    >≣</button>
+                        aria-label="Toggle Left Sidebar">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 5H21" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 12H21" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 19H21" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button
+                        type="button"
+                        class="block p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300 hidden"
+                        id="hide-left-sidebar-mobile"
+                        aria-label="Hide Left Sidebar Mobile">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18M18 18L6 6" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -276,19 +300,19 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     </div>
                     <?php endwhile; ?>
                 </div>
-            </div>
-            <!-- Horizontal Separator -->
-            <hr class="border-t border-gray-300 mx-4 my-2">
+                <!-- Horizontal Separator -->
+                <hr class="border-t-2 border-gray-300 mx-2 my-2">
 
-            <!-- Archive Button -->
-            <div id="archive-button" class="archive-button relative bg-gray-100 p-3 rounded mx-4 mb-4 hover:bg-gray-200 cursor-pointer flex items-center gap-2">
-                <div class="archive-icon w-6 h-6"></div>
-                <span class="text-gray-700 font-medium text-lg">Archived</span>
+                <!-- Archive Button -->
+                <div id="archive-button" class="archive-button relative bg-gray-100 p-3 rounded mx-0 mb-4 hover:bg-gray-200 cursor-pointer flex items-center gap-2">
+                    <div class="archive-icon w-6 h-6"></div>
+                    <span class="text-gray-700 font-medium text-lg">Archived</span>
+                </div>
             </div>
         </div>
 
         <!-- Main chat area JAYWING -->
-        <div id="chat-container" class="flex flex-col bg-white py-2 overflow-hidden">
+        <div id="chat-container" class="flex flex-col bg-white pb-2 overflow-hidden">
             <?php if ($currentChat): ?>
                 <?php
                 // Get chat details
@@ -299,8 +323,29 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                 ?>
                 
                     <!-- Chat header -->
-                    <div class="align-self-start px-3 py-2 w-full border-b-4 border-gray-50">
-                        <h2 class="text-xl font-bold text-left"><?php echo "$chatCourseName"; ?></h2>
+                    <div id="chat-header" class="flex items-center justify-between p-3 w-full border-b-4 border-gray-50">
+                        <button
+                            type="button"
+                            class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300 lg:hidden"
+                            id="show-left-sidebar-mobile"
+                            aria-label="Toggle Left Sidebar Mobile">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 5H21" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3 12H21" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3 19H21" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <h2 class="text-xl font-bold text-left m-0"><?php echo "$chatCourseName"; ?></h2>
+                        <button
+                            type="button"
+                            class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300 lg:hidden"
+                            id="show-right-sidebar-mobile"
+                            aria-label="Toggle Right Sidebar Mobile">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.07699 14.3816L3.59497 13.9054C3.24043 13.7915 3 13.4617 3 13.0894V10.9106C3 10.5383 3.24043 10.2085 3.59497 10.0946L5.07699 9.61845C5.52769 9.47366 5.77568 8.99091 5.63089 8.54021C5.60187 8.44991 5.55808 8.36505 5.50127 8.28908L4.86839 7.44272C4.61323 7.10148 4.64746 6.62461 4.94875 6.32332L6.32332 4.94875C6.62461 4.64746 7.10148 4.61323 7.44272 4.86839L8.28908 5.50127C8.6682 5.78476 9.20535 5.70724 9.48884 5.32812C9.54564 5.25216 9.58944 5.1673 9.61845 5.07699L10.0946 3.59497C10.2085 3.24043 10.5383 3 10.9106 3L13.0894 3C13.4617 3 13.7915 3.24043 13.9054 3.59497L14.3816 5.07699C14.5263 5.52769 15.0091 5.77568 15.4598 5.63089C15.5501 5.60187 15.635 5.55808 15.7109 5.50127L16.5573 4.86839C16.8985 4.61323 17.3754 4.64746 17.6767 4.94875L19.0512 6.32332C19.3525 6.62461 19.3868 7.10148 19.1316 7.44272L18.4987 8.28908C18.2152 8.6682 18.2928 9.20535 18.6719 9.48884C18.7478 9.54564 18.8327 9.58944 18.923 9.61845L20.405 10.0946C20.7596 10.2085 21 10.5383 21 10.9106V13.0894C21 13.4617 20.7596 13.7915 20.405 13.9054L18.923 14.3816C18.4723 14.5263 18.2243 15.0091 18.3691 15.4598C18.3981 15.5501 18.4419 15.635 18.4987 15.7109L19.1316 16.5573C19.3868 16.8985 19.3525 17.3754 19.0512 17.6767L17.6767 19.0512C17.3754 19.3525 16.8985 19.3868 16.5573 19.1316L15.7109 18.4987C15.3318 18.2152 14.7947 18.2928 14.5112 18.6719C14.4544 18.7478 14.4106 18.8327 14.3816 18.923L13.9054 20.405C13.7915 20.7596 13.4617 21 13.0894 21H10.9106C10.5383 21 10.2085 20.7596 10.0946 20.405L9.61845 18.923C9.47366 18.4723 8.99091 18.2243 8.54021 18.3691C8.44991 18.3981 8.36505 18.4419 8.28908 18.4987L7.44272 19.1316C7.10148 19.3868 6.62461 19.3525 6.32332 19.0512L4.94875 17.6767C4.64746 17.3754 4.61323 16.8985 4.86839 16.5573L5.50127 15.7109C5.78476 15.3318 5.70724 14.7947 5.32812 14.5112C5.25216 14.4544 5.1673 14.4106 5.07699 14.3816Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M14.1213 9.87868C12.9497 8.70711 11.0503 8.70711 9.87868 9.87868C8.70711 11.0503 8.70711 12.9497 9.87868 14.1213C11.0503 15.2929 12.9497 15.2929 14.1213 14.1213C15.2929 12.9497 15.2929 11.0503 14.1213 9.87868Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
                     </div>
                     
                     <!-- Messages area -->
@@ -388,7 +433,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                 title="This response was not helpful"
                                                 data-message-id="<?php echo $message['messageId']; ?>">👎</button>
 
-                                                <div class="flex gap-2 w-full sm:w-auto">
+                                                <div class="flex gap-2 w-full md:w-auto">
                                                     <button class="simplify px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"
                                                             title="Simplify this response"
                                                             data-message-id="<?php echo $message['messageId']; ?>">Simplify</button>
@@ -414,28 +459,35 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <!-- Message input -->
                     <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full pr-4">
                         <input type="hidden" name="action" value="send_message">
-                        <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36">
+
+                        <!-- Wrap textarea in a relative container -->
+                        <div id="input-container" class="flex gap-2 sm:px-3 md:px-12 lg:px-24 xl:px-36 w-full">
+                            <div class="relative w-full">
+                            <!-- Textarea -->
                             <textarea
                                 id="student-question"
                                 name="message"
-                                class="flex-1 border rounded-lg p-2 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words resize-none overflow-y-auto max-h-48"
+                                class="w-full border rounded-lg py-2 pr-12 m-0 focus:outline-none focus:ring-2 focus:ring-blue-500 break-words resize-none overflow-y-auto max-h-48"
                                 placeholder="Ask a question..."
                                 rows="1"
                                 required
                             ></textarea>
-                            <!-- Send Button -->
-                            <button id="send-button" type="submit"
-                                class="p-0 m-0 bg-transparent transition-opacity duration-150"
-                            >
-                                <div class="w-10 h-10 flex items-center justify-center rounded-full
-                                            bg-white border-2 border-gray-800 text-gray-800 shadow-md
-                                            hover:bg-gray-800 hover:text-white hover:border-gray-800
+
+                            <!-- Floating Send Button -->
+                            <button id="send-button" type="submit" class="absolute bottom-2 right-4 p-0 bg-transparent transition-opacity duration-150">
+                                <div class="w-8 h-8 flex items-center justify-center rounded-full
+                                            border-2 border-blue-600 text-blue-600 shadow-md
+                                            hover:bg-blue-600 hover:text-white active:bg-blue-900 active:border-blue-900
                                             transition-colors duration-200">
-                                    <i class="fas fa-arrow-up"></i>
+                                <i class="fas fa-arrow-up"></i>
                                 </div>
                             </button>
+                            </div>
                         </div>
-                        <div class="text-xs text-center text-gray-500 pb-2">AI Tutor can make mistakes. Chat is logged and viewable by teachers.</div>
+
+                        <div class="text-xs text-center text-gray-500 pb-2">
+                            AI Tutor can make mistakes. Chat is logged and viewable by teachers.
+                        </div>
                     </form>
             <?php else: ?>
                 <div class="h-[600px] flex items-center justify-center text-gray-500">
@@ -445,11 +497,29 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
         </div>
 
         <!-- Right sidebar with chat options -->
-        <div id="right-sidebar" class="collapsed d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden max-w-sm w-full">
+        <div id="right-sidebar" class="collapsed d-flex flex-column flex-shrink-0 bg-gray-100 h-full overflow-hidden w-full">
 
             <!-- Top bar: Hamburger and Title -->
-            <div class="px-3 pt-3 d-flex align-items-center w-full gap-2">
-                <button type="button" class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300" id="toggle-right-sidebar" aria-label="Toggle Right Sidebar">⛭</button>
+            <div class="pl-3 pt-3 d-flex align-items-center w-full gap-2">
+                <button
+                    type="button"
+                    class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300"
+                    id="toggle-right-sidebar"
+                    aria-label="Toggle Right Sidebar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.07699 14.3816L3.59497 13.9054C3.24043 13.7915 3 13.4617 3 13.0894V10.9106C3 10.5383 3.24043 10.2085 3.59497 10.0946L5.07699 9.61845C5.52769 9.47366 5.77568 8.99091 5.63089 8.54021C5.60187 8.44991 5.55808 8.36505 5.50127 8.28908L4.86839 7.44272C4.61323 7.10148 4.64746 6.62461 4.94875 6.32332L6.32332 4.94875C6.62461 4.64746 7.10148 4.61323 7.44272 4.86839L8.28908 5.50127C8.6682 5.78476 9.20535 5.70724 9.48884 5.32812C9.54564 5.25216 9.58944 5.1673 9.61845 5.07699L10.0946 3.59497C10.2085 3.24043 10.5383 3 10.9106 3L13.0894 3C13.4617 3 13.7915 3.24043 13.9054 3.59497L14.3816 5.07699C14.5263 5.52769 15.0091 5.77568 15.4598 5.63089C15.5501 5.60187 15.635 5.55808 15.7109 5.50127L16.5573 4.86839C16.8985 4.61323 17.3754 4.64746 17.6767 4.94875L19.0512 6.32332C19.3525 6.62461 19.3868 7.10148 19.1316 7.44272L18.4987 8.28908C18.2152 8.6682 18.2928 9.20535 18.6719 9.48884C18.7478 9.54564 18.8327 9.58944 18.923 9.61845L20.405 10.0946C20.7596 10.2085 21 10.5383 21 10.9106V13.0894C21 13.4617 20.7596 13.7915 20.405 13.9054L18.923 14.3816C18.4723 14.5263 18.2243 15.0091 18.3691 15.4598C18.3981 15.5501 18.4419 15.635 18.4987 15.7109L19.1316 16.5573C19.3868 16.8985 19.3525 17.3754 19.0512 17.6767L17.6767 19.0512C17.3754 19.3525 16.8985 19.3868 16.5573 19.1316L15.7109 18.4987C15.3318 18.2152 14.7947 18.2928 14.5112 18.6719C14.4544 18.7478 14.4106 18.8327 14.3816 18.923L13.9054 20.405C13.7915 20.7596 13.4617 21 13.0894 21H10.9106C10.5383 21 10.2085 20.7596 10.0946 20.405L9.61845 18.923C9.47366 18.4723 8.99091 18.2243 8.54021 18.3691C8.44991 18.3981 8.36505 18.4419 8.28908 18.4987L7.44272 19.1316C7.10148 19.3868 6.62461 19.3525 6.32332 19.0512L4.94875 17.6767C4.64746 17.3754 4.61323 16.8985 4.86839 16.5573L5.50127 15.7109C5.78476 15.3318 5.70724 14.7947 5.32812 14.5112C5.25216 14.4544 5.1673 14.4106 5.07699 14.3816Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M14.1213 9.87868C12.9497 8.70711 11.0503 8.70711 9.87868 9.87868C8.70711 11.0503 8.70711 12.9497 9.87868 14.1213C11.0503 15.2929 12.9497 15.2929 14.1213 14.1213C15.2929 12.9497 15.2929 11.0503 14.1213 9.87868Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300 hidden"
+                    id="hide-right-sidebar-mobile"
+                    aria-label="Hide Right Sidebar Mobile">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M18 18L6 6" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
                 <h2 class="text-lg font-semibold text-gray-800 mb-0 right-sidebar-content-hide">Chat Options</h2>
             </div>
 
@@ -520,7 +590,9 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <!-- Dynamically populated list -->
                 </div>
                 <button id="close-archive-modal" class="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl">
-                    &times;
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M18 18L6 6" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </button>
             </div>
         </div>

@@ -1,20 +1,4 @@
-/* Padding Adjustments for Main Chat Area */
-.p-chat-scroll {
-    padding-right: 0rem; /* When scrollbar is visible */
-}
-
-.p-chat-noshow {
-    padding-right: 1rem; /* When scrollbar is not visible */
-}
-
-/* Padding Adjustments for Sidebar */
-.p-sidebar-scroll {
-    padding-right: 0rem; /* When scrollbar is visible */
-}
-
-.p-sidebar-noshow {
-    padding-right: 1rem; /* When scrollbar is not visible */
-}
+/* --------------------- General CSS Styling ------------------------ */
 
 
 html, body {
@@ -50,6 +34,32 @@ body {
 #header {
     flex-shrink: 0; /* Prevents header from shrinking */
 }
+
+
+/* --------------------- Scrollbar Padding Adjustment CSS Styling ------------------------ */
+
+
+/* Padding Adjustments for Main Chat Area */
+.p-chat-scroll {
+    padding-right: 0rem; /* When scrollbar is visible */
+}
+
+.p-chat-noshow {
+    padding-right: 1rem; /* When scrollbar is not visible */
+}
+
+/* Padding Adjustments for Sidebar */
+.p-sidebar-scroll {
+    padding-right: 0rem; /* When scrollbar is visible */
+}
+
+.p-sidebar-noshow {
+    padding-right: 1rem; /* When scrollbar is not visible */
+}
+
+
+/* --------------------- Sidebar and Chat Window CSS Styling ------------------------ */
+
 
 #my-content {
     display: grid;
@@ -97,7 +107,6 @@ body {
 /* --- Toggle Button Styling within Collapsed Sidebar --- */
 
 #left-sidebar #toggle-left-sidebar {
-    display: block !important;
     margin-left: auto; /* Push button to the right, in conjunction with flexbox parent */
     margin-right: auto; /* Center it within the small width */
     padding-left: 0.5rem; /* Adjust internal padding if icon isn't centered */
@@ -110,7 +119,6 @@ body {
     justify-content: center; /* Center content (the button) in the collapsed state */
 }
 
-/* Right Sidebar (added later) */
 /* When right sidebar is collapsed */
 #right-sidebar.collapsed {
     width: 60px !important;
@@ -131,8 +139,22 @@ body {
     grid-template-columns: 60px 1fr 60px !important;
 }
 
+/* When screen size is small */
+#my-content.mobile {
+    grid-template-columns: 1fr !important;
+}
+#left-sidebar.mobile {
+    grid-template-columns: 1fr !important;
+}
+#right-sidebar.mobile {
+    grid-template-columns: 1fr !important;
+}
 
-/* --- Existing Styles (keep as is) --- */
+
+
+/* --------------------- User Text Input CSS Styling ------------------------ */
+
+
 textarea {
     resize: none;
     overflow: hidden;
@@ -256,6 +278,10 @@ textarea:focus {
     background-color: #d8dbe3;
 }
 
+
+/* --------------------- Archival CSS Styling ------------------------ */
+
+
 .archive-icon {
     background-image: url('../static/img/archive.png');
     background-size: contain;
@@ -291,18 +317,11 @@ textarea:focus {
     background-image: url('../static/img/open_archive.png');
 }
 
+
+/* --------------------- Other CSS Styling ------------------------ */
+
+
 .hidden {
     display: none !important;
 }
 
-#send-button div {
-  background-color: white !important;
-  color: #1f2937 !important; /* Tailwind's gray-800 */
-  border-color: #1f2937 !important;
-}
-
-#send-button:hover div {
-  background-color: #1f2937 !important; /* Tailwind's gray-800 */
-  color: white !important;
-  border-color: #1f2937 !important;
-}

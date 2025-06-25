@@ -1204,7 +1204,7 @@ function handleResize() {
     const toggleRightSidebar = document.getElementById('toggle-right-sidebar');
     const hideRightSidebar = document.getElementById('hide-right-sidebar-mobile');
 
-    if (window.innerWidth >= 1024) {
+    if (normalSize()) {
         // Large screen or larger
         // Left and Right sidebars are visible
         leftSidebar.classList.remove('hidden', 'mobile');
@@ -1222,12 +1222,12 @@ function handleResize() {
         // Always Shows chat container
         if (chatContainer.classList.contains('hidden')) { chatContainer.classList.remove('hidden'); }
         // Changes the header styling
-        header.className = "flex items-center justify-between p-3 w-full border-b-4 border-gray-50";
+        if (header) header.className = "flex items-center justify-between p-3 w-full border-b-4 border-gray-50";
         // Removes one column layout
         content.classList.remove('mobile');
         // Removes mobile padding
-        chatLocation.classList.remove('px-2');
-        inputContainer.classList.remove('px-2');
+        if (chatLocation) chatLocation.classList.remove('px-2');
+        if (inputContainer) inputContainer.classList.remove('px-2');
     }
     else {
         // Small screen
@@ -1272,6 +1272,10 @@ function handleResize() {
     }
 }
 
+function normalSize() {
+    return window.innerWidth >= 1024;
+}
+
 // Run on resize
 window.addEventListener('resize', handleResize);
 
@@ -1296,7 +1300,7 @@ document.getElementById('sort-by-btn').addEventListener('change', function () {
         newUrl += '&chatId=' + encodeURIComponent(chatId);
     }
 
-    localStorage.setItem('sidebarShouldReopen', 'true');
+    if (!normalSize()) localStorage.setItem('sidebarShouldReopen', 'true');
 
     window.location.href = newUrl;
 });
@@ -1323,7 +1327,7 @@ if (filterByButton) {
             newUrl += '&chatId=' + encodeURIComponent(chatId);
         }
 
-        localStorage.setItem('sidebarShouldReopen', 'true');
+        if (!normalSize()) localStorage.setItem('sidebarShouldReopen', 'true');
 
         window.location.href = newUrl; // Reload page with new filter
     });

@@ -118,9 +118,7 @@ if ($currentUserId) {
             class="position-absolute start-0 ms-3 rounded bg-primary text-white"
             id="home"
             aria-label="Home">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 17.5H15M4.5 20.9982V9.99998L11.2705 3.77816C11.6655 3.35674 12.3345 3.35674 12.7295 3.77816L19.5 9.99998V20.9982H4.5Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <i class="fas fa-house"></i>
         </button>
         <span>Proctor Page</span>
     </header>

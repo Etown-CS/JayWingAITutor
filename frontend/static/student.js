@@ -174,6 +174,13 @@ function askQuestion(chatId) {
     const question = document.getElementById('student-question').value;
     updateConversationUser(question);
 
+    const sendButton = document.getElementById('send-button');
+    const sendCircle = document.getElementById('send-circle');
+    const sendIcon = document.getElementById('send-icon');
+    sendButton.disabled = true; // disable button
+    sendCircle.classList.add('bg-blue-600', 'text-white'); 
+    sendIcon.className = "fas fa-square"; // disable icon
+
     typingIndicatorElement = addTypingIndicator();
 
     fetch(`${FLASK_API}/ask-question`, {
@@ -200,6 +207,11 @@ function askQuestion(chatId) {
 
                 // Update conversation with AI response
                 updateConversationAI(data.response, data.sourceName, currentCourseName, data.messageId);
+
+                // Reset send button
+                sendCircle.classList.remove('bg-blue-600', 'text-white');
+                sendIcon.className = "fas fa-arrow-up"; // send icon
+                sendButton.disabled = false; // disable button
             } else {
                 console.error("Error in response:", data.message);
                 // Remove typing indicator
@@ -208,6 +220,10 @@ function askQuestion(chatId) {
                     typingIndicatorElement = null;
                 }
 
+                // Reset send button
+                sendCircle.classList.remove('bg-blue-600', 'text-white');
+                sendIcon.className = "fas fa-arrow-up"; // send icon
+                sendButton.disabled = false; // disable button
             }
         })
         .catch(err => {
@@ -217,6 +233,11 @@ function askQuestion(chatId) {
                 typingIndicatorElement.remove();
                 typingIndicatorElement = null;
             }
+
+            // Reset send button
+            sendCircle.classList.remove('bg-blue-600', 'text-white');
+            sendIcon.className = "fas fa-arrow-up"; // send icon
+            sendButton.disabled = false; // disable button
         })
         .finally(() => {
             generating = false; // Reset generating flag after fetch completes
@@ -671,11 +692,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Text area expands with text when typed
     if (textarea) {
         function autoResizeTextarea() {
-            // Reset height to 'auto' to correctly calculate scrollHeight
+            const textarea = document.getElementById('student-question'); // Get the textarea element
+
+            // Get the computed max-height of the textarea in pixels
+            const computedStyle = getComputedStyle(textarea);
+            const maxHeight = parseFloat(computedStyle.maxHeight); // Convert to number
+
             textarea.style.height = 'auto';
-            // Set height to scrollHeight (content height)
             textarea.style.height = textarea.scrollHeight + 'px';
+
+            if (textarea.scrollHeight >= maxHeight) {
+                textarea.classList.add('overflow-y-auto');
+                // If content is still growing beyond maxHeight, cap the height
+                textarea.style.height = maxHeight + 'px';
+            } else {
+                textarea.classList.remove('overflow-y-auto');
+            }
         }
+
+        // Attach the function to the input event of the textarea
+        document.addEventListener('DOMContentLoaded', () => {
+            const textarea = document.getElementById('student-question');
+            if (textarea) {
+                textarea.addEventListener('input', autoResizeTextarea);
+                // Call it once on load in case there's pre-filled content
+                autoResizeTextarea();
+            }
+        });
 
         // Adjust height on input (typing, pasting, cutting)
         textarea.addEventListener('input', autoResizeTextarea);

@@ -673,6 +673,19 @@ function showFeedbackBanner(messageId) {
     };
 }
 
+function showErrorBanner(message) {
+    const banner = document.getElementById('error-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    errorTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        errorTimeoutId = null;
+    }, 10000); // 10 seconds
+}
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -730,15 +743,20 @@ document.addEventListener('DOMContentLoaded', () => {
         textarea.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                if (generating) {
-                    alert("Please wait for the current response to finish.");
+                if (textarea.value.trim() === '') {
+                    showErrorBanner('Please enter a question to ask the chatbot');
                     return;
-                }
+                } else {
+                    if (generating) {
+                        alert("Please wait for the current response to finish.");
+                        return;
+                    }
 
-                const urlParams = new URLSearchParams(window.location.search);
-                askQuestion(urlParams.get('chatId'));
-                textarea.value = '';
-                autoResizeTextarea();
+                    const urlParams = new URLSearchParams(window.location.search);
+                    askQuestion(urlParams.get('chatId'));
+                    textarea.value = '';
+                    autoResizeTextarea();
+                }
             }
         });        
     }
@@ -746,6 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sendButton) {
         sendButton.addEventListener('click', (event) => {
             if (!textarea || textarea.value.trim() === '') {
+                showErrorBanner('Please enter a question to ask the chatbot');
                 return;
             }
 

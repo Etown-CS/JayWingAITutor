@@ -128,6 +128,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
         <button id="add-comment-btn" class="ml-2 underline hover:text-blue-900">Add a comment?</button>
     </div>
 
+    <div id="error-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-red-100 text-red-800 px-4 py-2 rounded shadow hidden text-sm">
+        <!-- JavaScript -->
+    </div>
+
     <div id="my-content" class="right-collapsed flex flex-row flex-grow w-full mt-0 overflow-hidden">
         
         <!-- Left sidebar with chats list -->
@@ -455,7 +459,6 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                 class="w-full border rounded-lg py-2 pr-12 m-0 break-words resize-none max-h-48"
                                 placeholder="Ask a question..."
                                 rows="1"
-                                required
                             ></textarea>
 
                             <!-- Floating Send Button -->

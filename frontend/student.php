@@ -446,7 +446,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
                     
                     <!-- Message input -->
-                    <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full pr-4">
+                    <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full">
                         <input type="hidden" name="action" value="send_message">
 
                         <!-- Wrap textarea in a relative container -->

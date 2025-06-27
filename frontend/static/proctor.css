@@ -170,6 +170,132 @@ header, footer {
     width: 15%;
 }
 
+tr.hidden {
+        display: none !important; /* This will hide the row regardless of other display properties */
+    }
+
+@media (max-width: 1024px) {
+    /* Main table display for mobile (card-like layout) */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: none !important;
+        display: block !important; /* Table acts as a block */
+    }
+
+    /* Override table-responsive to prevent horizontal scrolling */
+    .table-responsive {
+        overflow-x: hidden !important; /* Prevents horizontal scrolling within the card */
+    }
+
+    /* Table header (thead) styling for vertical stacking */
+    table thead {
+        display: block !important; /* Make thead itself a block to contain stacked rows */
+        width: 100% !important;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6 !important;
+    }
+
+    table thead tr {
+        display: block !important; /* Make the header row a block, so its children (th) can stack */
+        margin-bottom: 0.5rem !important; /* Add some space between stacked header items */
+        border: 1px solid #e2e8f0 !important; /* Optional: Give headers a card-like look too */
+        border-radius: 0.25rem !important;
+        padding: 0.5rem !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Apply general layout for th elements within your tables */
+    #classesTableConfig th,
+    #enrollmentsTableConfig th {
+        display: block !important; /* Each header cell (th) takes its own line */
+        width: 100% !important; /* Each header cell takes full width */
+        padding: 0.5rem !important; /* Adjust padding as needed */
+        text-align: left !important; /* Align content to the left */
+        vertical-align: top !important; /* Align content to top */
+        position: relative !important;
+        
+        /* TRUNCATION PROPERTIES REMOVED HERE, NOW HANDLED BY JAVASCRIPT */
+        /* white-space: nowrap !important; */
+        /* overflow: hidden !important; */
+        /* text-overflow: ellipsis !important; */
+        /* word-wrap: normal !important; */
+
+        border-bottom: none !important;
+        font-size: 0.875rem !important;
+        color: #4a5568 !important;
+    }
+
+    /* Adjust input within th for better mobile appearance */
+    table th input.form-control {
+        margin-top: 0.5rem !important; /* Space between header text and input */
+        width: 100% !important; /* Ensure input takes full width within th */
+    }
+
+    /* Table body (tbody) and data rows (tr) styling for card layout */
+    table tbody {
+        display: block !important; /* Make tbody a block */
+        width: 100% !important;
+    }
+
+    table tr { /* This targets tr within tbody as well, ensuring card layout */
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: 1rem !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 0.25rem !important;
+        padding: 0.5rem !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Apply general layout for td elements within your tables */
+    #classesTableConfig td,
+    #enrollmentsTableConfig td {
+        display: block !important;
+        width: 100% !important;
+        padding: 0.5rem !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        position: relative !important;
+        min-height: 2.5rem !important;
+        padding-left: 120px !important; /* Space for ::before label */
+        text-align: right !important; /* Text content aligns right */
+        
+        /* TRUNCATION PROPERTIES REMOVED HERE, NOW HANDLED BY JAVASCRIPT */
+        /* white-space: nowrap !important; */
+        /* overflow: hidden !important; */
+        /* text-overflow: ellipsis !important; */
+        /* word-wrap: normal !important; */
+    }
+
+    table td::before {
+        content: attr(data-label) !important;
+        display: block !important;
+        position: absolute !important;
+        left: 0.5rem !important;
+        width: 100px !important;
+        
+        /* --- Truncation properties for the label itself (still in CSS) --- */
+        white-space: nowrap !important; /* Keep this nowrap for data labels */
+        overflow: hidden !important; /* Hide overflowing label text */
+        text-overflow: ellipsis !important; /* Add ellipsis for label truncation */
+
+        text-align: left !important;
+        font-weight: bold !important;
+        color: #4a5568 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+    }
+
+    table tr td:last-child {
+        border-bottom: 0 !important;
+    }
+
+    table td .main-line,
+    table td .subheader-line {
+        width: 100% !important;
+    }
+}
+
 
 /*--------------------- File Preview Settings ------------------------*/
 /* Preview Styles */
@@ -364,3 +490,18 @@ header, footer {
   cursor: pointer;
 }
 
+/*--------------------- Responsive Design Settings ------------------------*/
+
+#my-content {
+  display: grid;
+  grid-template-columns: 288px 1fr;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* When screen size is small */
+#my-content.mobile {
+  grid-template-columns: 1fr !important;
+}

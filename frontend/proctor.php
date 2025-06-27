@@ -131,11 +131,12 @@ if ($currentUserId) {
         <!-- JavaScript -->
     </div>
 
-    <div class="flex flex-grow w-full mt-0 overflow-hidden">
+    <div id="my-content" class="flex flex-grow w-full mt-0 overflow-hidden">
 
 <!-- Sidebar with Proctor Management Links -->
-        <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full max-w-xs w-full overflow-hidden">
-            <div id="sidebar-options" class="space-y-2 flex-grow p-3 overflow-y-auto overflow-x-hidden sidebar-content-hide p-sidebar-noshow">
+        <div id="sidebar" class="d-flex flex-column flex-shrink-0 bg-gray-100 h-full max-w-2xs w-full overflow-hidden">
+            <div id="sidebar-options" class="space-y-2 flex-grow p-3 overflow-y-auto overflow-x-hidden">
+        
                 <div id="sidebar-div" class="d-grid gap-2">
                     <a href="proctor.php" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Dashboard" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container w-full overflow-hidden">
                         <div class="font-medium truncate">Dashboard</div>
@@ -155,10 +156,36 @@ if ($currentUserId) {
             </div>
         </div>
 
-        <div id="chat-container" class="flex flex-col bg-white py-2 h-full w-full overflow-hidden">
+        <div id="chat-container" class="flex flex-col bg-white pb-2 overflow-hidden">
             <!-- Chat header -->
-            <div class="align-self-start px-3 py-2 w-full border-b-4 border-gray-50">
-                <h2 class="text-xl font-bold text-left"> <?php echo htmlspecialchars($currentPage); ?> </h2>
+            <div id="chat-header" class="flex items-center justify-start p-3 w-full gap-2 border-b-4 border-gray-50">
+                <button
+                    type="button"
+                    class="p-2 rounded bg-gray-100 hover:bg-gray-250 active:bg-gray-300 lg:hidden"
+                    id="toggle-dropdown-mobile"
+                    aria-label="Toggle Dropdown Mobile">
+                    <i id="toggle-dropdown-mobile-icon" class="fas fa-caret-down"></i>
+                </button>
+                <h2 id="chat-header-text" class="text-xl font-bold text-left m-0"> <?php echo htmlspecialchars($currentPage); ?> </h2>
+            </div>
+
+            <!-- Outer scrollable container -->
+            <div id="dropdown-sidebar" class="hidden bg-gray-100 overflow-x-auto p-2">
+            <!-- Inner flex container that centers content when there's room -->
+            <div class="flex flex-row gap-2 min-w-max justify-center">
+                <a href="proctor.php" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Dashboard" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container flex-shrink-0">
+                    <div class="font-medium">Dashboard</div>
+                </a>
+                <a href="?manageclasses" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Classes" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container flex-shrink-0">
+                    <div class="font-medium">Manage Classes</div>
+                </a>
+                <a href="?manageenrollments" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Enrollments" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container flex-shrink-0">
+                    <div class="font-medium">Manage Enrollments</div>
+                </a>
+                <a href="?manageproctornotes" class="block p-3 rounded bg-gray-100 <?php echo $currentPage == "Manage Proctor Notes" ? 'bg-gray-200' : ''; ?> hover:bg-gray-250 message-container flex-shrink-0">
+                    <div class="font-medium">Manage Proctor Notes</div>
+                </a>
+            </div>
             </div>
             
             <!-- Main area -->
@@ -513,7 +540,7 @@ if ($currentUserId) {
                             <h5 class="mb-0">Current Enrollments</h5>
                         </div>
                         <div class="card-body">
-                            <div class="table">
+                            <div class="table-responsive">
                                 <table class="table" id="enrollmentsTableConfig">
                                     <thead>
                                         <tr>
@@ -613,7 +640,7 @@ if ($currentUserId) {
                             </div>
 
                             <!-- Preview Section -->
-                            <div id="preview-div">
+                            <div id="preview-div" class="flex justify-center lg:justify-start flex-wrap gap-2">
                                 <!-- Thumbnails of uploaded files will appear here -->
                             </div>
                         </form>

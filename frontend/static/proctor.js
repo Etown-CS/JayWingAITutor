@@ -926,7 +926,7 @@ function renderClassTable(classList) {
         classList.forEach(classItem => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>
+                <td data-label="Class Name">
                     <div class="main-line">
                         ${classItem.name}
                     </div>
@@ -934,9 +934,9 @@ function renderClassTable(classList) {
                         Created by: ${classItem.createdByUsername}
                     </div>
                 </td>
-                <td>${classItem.courseCode || ''}</td>
-                <td>${classItem.description || ''}</td>
-                <td>
+                <td data-label="Course Code">${classItem.courseCode || ''}</td>
+                <td data-label="Description">${classItem.description || ''}</td>
+                <td data-label="Actions">
                     <button class="btn btn-sm btn-primary m-0 edit-class-btn"
                         data-class-id="${classItem.id}"
                         data-class-name="${classItem.name}"
@@ -978,7 +978,12 @@ function initializeSearchableClassTable() {
         const codeFilter = courseCodeTableInput?.value.toLowerCase() || '';
         const descFilter = classDescriptionTableInput?.value.toLowerCase() || '';
 
-        const rows = document.querySelectorAll('#classesTable tr');
+        // *** FIX IS HERE: Target the table by its ID 'classesTableConfig' ***
+        // Then select the tbody and its rows within that table.
+        const rows = document.querySelectorAll('#classesTableConfig tbody tr');
+
+        const isMobileView = () => window.innerWidth < 1024;
+        const displayStyleForMatchedRow = isMobileView() ? 'block' : 'table-row';
 
         rows.forEach(row => {
             const name = row.children[0]?.textContent.toLowerCase() || '';
@@ -989,13 +994,17 @@ function initializeSearchableClassTable() {
                 fuzzyIncludes(name, nameFilter) &&
                 code.includes(codeFilter) &&
                 desc.includes(descFilter);
-            row.style.display = matches ? 'table-row' : 'none';
+
+            row.classList.toggle('hidden', !matches);
         });
     };
 
     [classNameTableInput, courseCodeTableInput, classDescriptionTableInput].forEach(input => {
         if (input) input.addEventListener('input', filterTable);
     });
+
+    filterTable();
+    window.addEventListener('resize', filterTable);
 }
 
 // Load Enrollments
@@ -1019,13 +1028,13 @@ function loadEnrollments() {
 function renderEnrollmentTable(userCourses) {
     const tbodyenrollments = document.getElementById('enrollmentsTable');
     if (tbodyenrollments) {
-        tbodyenrollments.innerHTML = '';
+        tbodyenrollments.innerHTML = ''; // Clears existing rows
 
         userCourses.forEach(userCourse => {
             const tr = document.createElement('tr');
             const courseCodeDisplay = userCourse.courseCode ? ` (${userCourse.courseCode})` : '';
             tr.innerHTML = `
-                <td>
+                <td data-label="Class Name">
                     <div class="main-line">
                         ${userCourse.name}${courseCodeDisplay}
                     </div>
@@ -1033,9 +1042,9 @@ function renderEnrollmentTable(userCourses) {
                         Created by: ${userCourse.createdByUsername}
                     </div>
                 </td>
-                <td>${userCourse.username}</td>
-                <td>${userCourse.role}</td>
-                <td>
+                <td data-label="User">${userCourse.username}</td>
+                <td data-label="Role (JayWing)">${userCourse.role}</td>
+                <td data-label="Actions">
                     <button class="btn btn-sm btn-primary m-0 edit-enrollment-btn"
                         data-usercourse-id="${userCourse.userCoursesId}"
                         data-usercourse-name="${userCourse.name}"
@@ -1054,8 +1063,8 @@ function renderEnrollmentTable(userCourses) {
             tbodyenrollments.appendChild(tr);
         });
 
-        reloadClassDropdowns(); // Assuming this is needed
-    }
+        reloadClassDropdowns(); 
+        }
 }
 
 function filterEnrollments(discipline) {
@@ -1079,7 +1088,13 @@ function initializeSearchableEnrollmentTable() {
         const userFilter = userTableInput?.value.toLowerCase() || '';
         const roleFilter = roleTableInput?.value.toLowerCase() || '';
 
-        const rows = document.querySelectorAll('#enrollmentsTable tr');
+        // *** IMPORTANT: Make sure your <table> for enrollments has the ID 'enrollmentsTableConfig' ***
+        // If your <table> has a different ID, replace 'enrollmentsTableConfig' with that ID.
+        // If your <table> does not have an ID, give it one.
+        const rows = document.querySelectorAll('#enrollmentsTableConfig tbody tr');
+
+        const isMobileView = () => window.innerWidth < 1024;
+        const displayStyleForMatchedRow = isMobileView() ? 'block' : 'table-row';
 
         rows.forEach(row => {
             const name = row.children[0]?.textContent.toLowerCase() || '';
@@ -1091,13 +1106,19 @@ function initializeSearchableEnrollmentTable() {
                 fuzzyIncludes(user, userFilter) &&
                 role.includes(roleFilter); // No point to fuzzy match roles - allowing for a one character typo prevents any filtering at all
 
-            row.style.display = matches ? 'table-row' : 'none';
+            row.classList.toggle('hidden', !matches);
         });
     };
 
+    // Attach event listeners to the input fields
     [classNamesTableInput, userTableInput, roleTableInput].forEach(input => {
         if (input) input.addEventListener('input', filterTable);
     });
+
+    // Run filter on initial page load
+    filterTable();
+    // Re-run filter on window resize to adjust visibility based on mobile/desktop layout
+    window.addEventListener('resize', filterTable);
 }
 
 // Edit Class/Edit Enrollment
@@ -2276,3 +2297,68 @@ function showErrorBanner(message) {
         errorTimeoutId = null;
     }, 10000); // 10 seconds
 }
+
+
+// --------------------- Left Sidebar and Responsive Design JavaScript ------------------------
+
+
+const dropdown = document.getElementById('dropdown-sidebar');
+const toggleBtnMobile = document.getElementById('toggle-dropdown-mobile');
+const toggleIconMobile = document.getElementById('toggle-dropdown-mobile-icon');
+const content = document.getElementById('my-content');
+const chatContainer = document.getElementById('chat-container');
+
+// Left Sidebar Button Show Mobile
+if (toggleBtnMobile) {
+    toggleBtnMobile.addEventListener('click', () => {
+        console.log("Toggle button clicked!");
+        dropdown.classList.toggle('hidden');
+        if (toggleIconMobile.classList.contains('fa-caret-down')) {
+            toggleIconMobile.classList.remove('fa-caret-down');
+            toggleIconMobile.classList.add('fa-xmark');
+        } else {
+            toggleIconMobile.classList.remove('fa-xmark');
+            toggleIconMobile.classList.add('fa-caret-down');
+        }
+        console.log("Left sidebar classes:", sidebar.classList);
+        console.log("Content classes:", content.classList);
+    });
+}
+
+function handleResize() {
+    const sidebar = document.getElementById('sidebar');
+    const header = document.getElementById('chat-header');
+    const headerText = document.getElementById('chat-header-text');
+    const content = document.getElementById('my-content');
+
+    if (normalSize()) {
+        // Large screen or larger
+        // Left and Right sidebars are visible
+        sidebar.classList.remove('hidden');
+        // Changes the header styling
+        if (header) header.className = "flex items-center justify-start p-3 w-full gap-2 border-b-4 border-gray-50";
+        if (headerText) headerText.className = "text-xl font-bold text-left m-0";
+        // Removes one column layout
+        content.classList.remove('mobile');
+    }
+    else {
+        // Small screen
+        // Left and Right sidebars are not visible, seperate buttons for these sidebars are visible
+        sidebar.classList.add('hidden');
+        // Changes the header styling
+        if (header) header.className = "flex items-center p-3 w-full bg-gray-100 border-b-4 border-gray-200";
+        if (headerText) headerText.className = "text-xl font-bold text-center m-0 flex-grow-1 pr-8";
+        // Sets to one column layout
+        content.classList.add('mobile');
+    }
+}
+
+function normalSize() {
+    return window.innerWidth >= 1024;
+}
+
+// Run on resize
+window.addEventListener('resize', handleResize);
+
+// Run once on initial load
+handleResize();

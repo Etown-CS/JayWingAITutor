@@ -1319,7 +1319,11 @@ document.getElementById('sort-by-btn').addEventListener('change', function () {
         newUrl += '&chatId=' + encodeURIComponent(chatId);
     }
 
-    if (!normalSize()) localStorage.setItem('sidebarShouldReopen', 'true');
+    const leftSidebar = document.getElementById('left-sidebar');
+    // Only set the flag if the sidebar is currently NOT hidden on mobile
+    if (!normalSize() && !leftSidebar.classList.contains('hidden')) {
+        localStorage.setItem('sidebarShouldReopen', 'true');
+    }
 
     window.location.href = newUrl;
 });
@@ -1346,7 +1350,12 @@ if (filterByButton) {
             newUrl += '&chatId=' + encodeURIComponent(chatId);
         }
 
-        if (!normalSize()) localStorage.setItem('sidebarShouldReopen', 'true');
+        const leftSidebar = document.getElementById('left-sidebar');
+        // Only set the flag if the sidebar is currently NOT hidden on mobile
+        if (!normalSize() && !leftSidebar.classList.contains('hidden')) {
+            localStorage.setItem('sidebarShouldReopen', 'true');
+        }
+
 
         window.location.href = newUrl; // Reload page with new filter
     });

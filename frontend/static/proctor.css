@@ -22,6 +22,11 @@ header, footer {
     padding: 20px;
 }
 
+/* Tooltip left align */
+.tooltip-left-align .tooltip-inner {
+    text-align: left;
+  }
+
 /*--------------------- Button Dropdown Settings ------------------------*/
 .dropdown {
     border: none;

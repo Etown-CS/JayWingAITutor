@@ -367,7 +367,9 @@ if ($currentUserId) {
                                             <label for="course_code" class="form-label">Course Code</label>
                                             <i
                                                 class="mb-2 fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-default"
-                                                title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
+                                                data-bs-toggle="tooltip"
+                                                data-bs-html="true"
+                                                title="Course codes must have a department code and be followed by numbers (Ex: EN100, PYS200, CS/EGR222)."
                                             ></i>
                                         </div>
                                         <input type="text" class="form-control" id="course_code" maxlength="20">
@@ -685,7 +687,9 @@ if ($currentUserId) {
                                 <label for="edit_course_code" class="form-label">Course Code</label>
                                 <i
                                     class="mb-2 fas fa-question-circle text-gray-500 hover:text-gray-700 cursor-default"
-                                    title="Format your course code like 'EN100' or 'CS/EGR222', or leave it blank."
+                                    data-bs-toggle="tooltip"
+                                    data-bs-html="true"
+                                    title="Course codes must have a department code and be followed by numbers (Ex: EN100, PYS200, CS/EGR222)."
                                 ></i>
                             </div>
                             <input type="text" class="form-control" id="edit_course_code" maxlength="20">

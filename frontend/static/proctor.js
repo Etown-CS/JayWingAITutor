@@ -70,6 +70,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Bootstrap Tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) {
+      new bootstrap.Tooltip(el, {
+        customClass: 'tooltip-left-align'
+      });
+    });
+
     // Add event listener for when the multiple enrollments modal is shown
     multipleEnrollmentsModal._element.addEventListener('shown.bs.modal', function () {
         // Ensure the container element is available when the modal is shown
@@ -237,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .catch(error => console.error('Error fetching classes for validation:', error));
 
             } else {
-                showErrorBanner("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
+                showErrorBanner("Invalid course code format. Course codes must have a department code and be followed by numbers (Ex: EN100, PYS200, CS/EGR222). Please format correctly or leave blank.");
                 courseCodeInput.focus();
             }
         });
@@ -504,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .catch(error => console.error('Error fetching classes for validation:', error));
 
             } else {
-                showErrorBanner("Invalid course code format. Please use formats like 'EN100' or 'CS/EGR222', or leave it blank.");
+                showErrorBanner("Invalid course code format. Course codes must have a department code and be followed by numbers (Ex: EN100, PYS200, CS/EGR222). Please format correctly or leave blank.");
                 courseCodeInput.focus();
             }
         });

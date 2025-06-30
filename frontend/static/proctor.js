@@ -2024,7 +2024,7 @@ function reloadFilterDropdowns() {
                 // Add "All" option
                 const allOption = document.createElement('option');
                 allOption.value = 'allCourses';
-                allOption.textContent = 'All';
+                allOption.textContent = 'Filter: All';
                 dropdown.appendChild(allOption);
 
                 // Add discipline options

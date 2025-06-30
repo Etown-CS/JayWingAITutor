@@ -372,7 +372,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                 <?php if (!empty($message['answer'])): ?>
                                     <div class="flex py-2 justify-start">
                                         <div class="max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2">
-                                            <div class="text-sm font-medium">AI Tutor</div>
+                                            <div class="text-sm font-medium">JayBot</div>
                                             <div class="ai-message-content">
                                                 <?php echo $message['answer']; ?>
                                             </div>
@@ -450,7 +450,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
 
                     
                     <!-- Message input -->
-                    <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full">
+                    <form id="message-input" method="POST" name="messageForm" class="mt-auto w-full pr-4">
                         <input type="hidden" name="action" value="send_message">
 
                         <!-- Wrap textarea in a relative container -->
@@ -478,13 +478,14 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         </div>
 
                         <div class="text-xs text-center text-gray-500 pb-2">
-                            AI Tutor can make mistakes. Chat is logged and viewable by teachers.
+                            JayBot can make mistakes. Chat is logged and viewable by teachers.
                         </div>
                     </form>
             <?php else: ?>
-                <div class="h-[600px] flex items-center justify-center text-gray-500">
+                <div class="h-20 flex items-center justify-center text-gray-500">
                     Select a chat to start messaging
                 </div>
+                <img src="static/img/etownEngineeringCSSticker.png" alt="ETown CS Sticker" class="h-full object-contain m-36">
             <?php endif; ?>
         </div>
 

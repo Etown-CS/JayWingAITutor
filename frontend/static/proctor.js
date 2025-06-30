@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    showFeedbackBanner("Class added successfully!");
+                                    showSuccessBanner("Class added successfully!");
                                     loadClasses();
                                     reloadClassDropdowns();
                                     initializeSearchableClassTable();
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showFeedbackBanner("Enrollment added successfully!");
+                            showSuccessBanner("Enrollment added successfully!");
                             loadEnrollments();
                             initializeSearchableEnrollmentTable();
                             reloadFilterDropdowns();
@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(results => {
                     const allSuccess = results.every(result => result.success);
                     if (allSuccess) {
-                        showFeedbackBanner("Enrollments added successfully!");
+                        showSuccessBanner("Enrollments added successfully!");
                         loadEnrollments();
                         initializeSearchableEnrollmentTable();
                         reloadFilterDropdowns();
@@ -495,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                showFeedbackBanner("Class updated successfully!");
+                                showSuccessBanner("Class updated successfully!");
                                 loadClasses();
                                 reloadFilterDropdowns();
                                 initializeSearchableClassTable();
@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showFeedbackBanner("Enrollment updated successfully!");
+                            showSuccessBanner("Enrollment updated successfully!");
                             loadEnrollments();
                             initializeSearchableEnrollmentTable();
                             reloadFilterDropdowns();
@@ -708,7 +708,7 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showFeedbackBanner("Report generated successfully!");
+                showSuccessBanner("Report generated successfully!");
                 cloud.src = data.image;
                 container.classList.remove('shimmer');
 
@@ -1232,7 +1232,7 @@ if (addMultipleEnrollments) {
 function deleteClass(classId) {
     if (confirm('Are you sure? This will also delete all enrollments for this class.')) {
         document.getElementById('loading-spinner').classList.remove('hidden');
-        showFeedbackBanner("Deleting class...");
+        showSuccessBanner("Deleting class...");
         // First delete all files from class
         fetch(`${FLASK_API}/delete-course`, {
             method: 'DELETE',
@@ -1272,7 +1272,7 @@ function deleteClass(classId) {
             });
         })
         .finally(() => {
-            showFeedbackBanner("Class deleted.");
+            showSuccessBanner("Class deleted.");
             document.getElementById('loading-spinner').classList.add('hidden');
         });
     }
@@ -1291,7 +1291,7 @@ function deleteEnrollment(enrollmentId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showFeedbackBanner("Enrollment deleted.");
+                showSuccessBanner("Enrollment deleted.");
                 initializeSearchableEnrollmentTable();
                 reloadFilterDropdowns();
                 loadEnrollments();
@@ -2312,18 +2312,18 @@ function loadExistingFiles() {
 
 
 // Global timeout holders
-let feedbackTimeoutId = null;
+let successTimeoutId = null;
 let errorTimeoutId = null;
 
 function hideAllBanners() {
-    const feedbackBanner = document.getElementById('feedback-banner');
+    const successBanner = document.getElementById('success-banner');
     const errorBanner = document.getElementById('error-banner');
 
-    if (feedbackBanner) {
-        feedbackBanner.classList.add('hidden');
-        if (feedbackTimeoutId) {
-            clearTimeout(feedbackTimeoutId);
-            feedbackTimeoutId = null;
+    if (successBanner) {
+        successBanner.classList.add('hidden');
+        if (successTimeoutId) {
+            clearTimeout(successTimeoutId);
+            successTimeoutId = null;
         }
     }
 
@@ -2336,18 +2336,18 @@ function hideAllBanners() {
     }
 }
 
-function showFeedbackBanner(message) {
+function showSuccessBanner(message) {
     hideAllBanners(); // Hide others and clear their timeouts
 
-    const banner = document.getElementById('feedback-banner');
+    const banner = document.getElementById('success-banner');
     if (!banner) return;
 
     banner.textContent = message;
     banner.classList.remove('hidden');
 
-    feedbackTimeoutId = setTimeout(() => {
+    successTimeoutId = setTimeout(() => {
         banner.classList.add('hidden');
-        feedbackTimeoutId = null;
+        successTimeoutId = null;
     }, 10000); // 10 seconds
 }
 

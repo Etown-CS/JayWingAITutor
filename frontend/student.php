@@ -128,6 +128,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
         <button id="add-comment-btn" class="ml-2 underline hover:text-blue-900">Add a comment?</button>
     </div>
 
+    <div id="success-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-green-100 text-green-800 px-4 py-2 rounded shadow hidden text-sm">
+        Changes saved successfully!
+    </div>
+
     <div id="error-banner" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 bg-red-100 text-red-800 px-4 py-2 rounded shadow hidden text-sm">
         <!-- JavaScript -->
     </div>

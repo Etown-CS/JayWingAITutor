@@ -139,7 +139,7 @@ function addTypingIndicator() {
     typingDiv.className = "flex py-2 justify-start";
 
     const bubble = document.createElement('div');
-    bubble.className = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2";
+    bubble.className = "max-w-3xl bg-gray-100 text-gray-900 rounded-lg p-2";
 
     const from = document.createElement('div');
     from.className = "text-sm font-medium";
@@ -330,7 +330,7 @@ function updateConversationUser(text) {
     newMessageAlignment.className = "flex py-2 justify-end";
     
     const newMessageBubble = document.createElement('div');
-    newMessageBubble.className = "max-w-2xl bg-blue-500 text-white rounded-lg p-2";
+    newMessageBubble.className = "max-w-3xl bg-blue-500 text-white rounded-lg p-2";
 
     const newMessageFrom = document.createElement('div');
     newMessageFrom.className = "text-sm font-medium";
@@ -356,7 +356,7 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
     newMessageAlignment.className = "flex py-2 justify-start";
 
     const newMessageBubble = document.createElement('div');
-    newMessageBubble.className = "max-w-2xl bg-gray-100 text-gray-900 rounded-lg p-2";
+    newMessageBubble.className = "max-w-3xl bg-gray-100 text-gray-900 rounded-lg p-2";
 
     const newMessageFrom = document.createElement('div');
     newMessageFrom.className = "text-sm font-medium";

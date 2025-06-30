@@ -277,7 +277,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                             // }
                             $displayedCourses[] = $courseName; // Add to displayed courses to avoid duplicates
                     ?>
-                    <div class="relative group bg-gray-100 p-3 rounded <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> w-full overflow-hidden hover:bg-gray-250">
+                    <div class="relative group bg-gray-100 p-3 rounded <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> w-full overflow-hidden hover:bg-gray-200">
                         <a href="?sortBy=<?php echo urlencode($_GET['sortBy'] ?? 'sortRecent'); ?>&chatId=<?php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8'); ?>"
                             class="block w-full">
                             <div class="font-medium truncate"><?php echo htmlspecialchars($chat['courseName'], ENT_QUOTES, 'UTF-8'); ?></div>
@@ -296,14 +296,14 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     </div>
                     <?php endwhile; ?>
                 </div>
-                <!-- Horizontal Separator -->
-                <hr class="border-t-2 border-gray-300 mx-2 my-2">
+            </div>
+            <!-- Horizontal Separator -->
+            <hr class="border-t-2 border-gray-300 mx-3 mb-2 mt-0 left-sidebar-content-hide">
 
-                <!-- Archive Button -->
-                <div id="archive-button" class="archive-button relative bg-gray-100 p-3 rounded mx-0 mb-4 hover:bg-gray-200 cursor-pointer flex items-center gap-2">
-                    <div class="archive-icon w-6 h-6"></div>
-                    <span class="text-gray-700 font-medium text-lg">Archived</span>
-                </div>
+            <!-- Archive Button -->
+            <div id="archive-button" class="archive-button relative bg-gray-100 p-3 rounded mx-3 mb-4 hover:bg-gray-200 cursor-pointer flex items-center gap-2 left-sidebar-content-hide">
+                <div class="archive-icon w-6 h-6"></div>
+                <span class="text-gray-700 font-medium text-lg">Archived</span>
             </div>
         </div>
 

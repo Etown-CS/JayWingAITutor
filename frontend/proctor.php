@@ -586,13 +586,16 @@ if ($currentUserId) {
                                                     <?php
                                                         $query = "
                                                             SELECT DISTINCT
-                                                                REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
-                                                            FROM courses
-                                                            WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
-                                                            ORDER BY discipline ASC
+                                                                REGEXP_SUBSTR(c.courseCode, '^[A-Z]+') AS discipline
+                                                            FROM courses c
+                                                            JOIN user_courses uc ON uc.courseId = c.id
+                                                            WHERE c.courseCode REGEXP '^[A-Z]+[0-9]+$'
+                                                            AND uc.userId = ?
+                                                            ORDER BY discipline DESC;
                                                         ";
 
                                                         $stmt = $connection->prepare($query);
+                                                        $stmt->bind_param("i", $userId);
                                                         $stmt->execute();
                                                         $disciplines = $stmt->get_result();
 

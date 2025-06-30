@@ -143,7 +143,7 @@ function addTypingIndicator() {
 
     const from = document.createElement('div');
     from.className = "text-sm font-medium";
-    from.textContent = "AI Tutor";
+    from.textContent = "JayBot";
 
     const dotsContainer = document.createElement('div');
     dotsContainer.className = "typing-dots mt-1"; // Class for animation
@@ -360,7 +360,7 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
 
     const newMessageFrom = document.createElement('div');
     newMessageFrom.className = "text-sm font-medium";
-    newMessageFrom.textContent = "AI Tutor";
+    newMessageFrom.textContent = "JayBot";
 
     const newMessageText = document.createElement('div');
     newMessageText.innerHTML = text;

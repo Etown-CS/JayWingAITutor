@@ -633,11 +633,52 @@ function storeFeedback(messageId, feedback=null) {
     }
 }
 
+// Global timeout holders
+let feedbackTimeoutId = null;
+let errorTimeoutId = null;
+
+function hideAllBanners() {
+    const feedbackBanner = document.getElementById('feedback-banner');
+    const errorBanner = document.getElementById('error-banner');
+
+    if (feedbackBanner) {
+        feedbackBanner.classList.add('hidden');
+        if (feedbackTimeoutId) {
+            clearTimeout(feedbackTimeoutId);
+            feedbackTimeoutId = null;
+        }
+    }
+
+    if (errorBanner) {
+        errorBanner.classList.add('hidden');
+        if (errorTimeoutId) {
+            clearTimeout(errorTimeoutId);
+            errorTimeoutId = null;
+        }
+    }
+}
+
+function showSuccessBanner(message) {
+    hideAllBanners(); // Hide others and clear their timeouts
+
+    const banner = document.getElementById('success-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    feedbackTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        feedbackTimeoutId = null;
+    }, 10000); // 10 seconds
+}
+
 function showFeedbackBanner(messageId) {
     const banner = document.getElementById('feedback-banner');
     const commentBtn = document.getElementById('add-comment-btn');
 
     if (!banner || !commentBtn) return;
+    hideAllBanners(); // Hide others and clear their timeouts
 
     banner.classList.remove('hidden');
 
@@ -1194,9 +1235,9 @@ if (saveBtn) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert("Settings saved successfully!");
+                showSuccessBanner("Settings saved successfully!");
             } else {
-                alert("Error saving settings: " + data.message);
+                showErrorBanner("Error saving settings: " + data.message);
             }
         })
         .catch(error => {
@@ -1205,6 +1246,7 @@ if (saveBtn) {
         });
     });
 }
+
 
 
 // --------------------- Window Screen Size JavaScript ------------------------

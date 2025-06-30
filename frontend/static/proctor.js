@@ -252,12 +252,17 @@ document.addEventListener('DOMContentLoaded', function () {
             // Check that user filled required fields
             const courseId = document.getElementById('class_id').value;
             const userId = document.getElementById('user_id').value;
+            const roleOfClass = document.getElementById('roleOfClass').value;
             if (!(courseId)) {
                 showErrorBanner("Please select a class in the dropdown.");
                 return;
             }
             if (!(userId)) {
                 showErrorBanner("Please select a user in the dropdown.");
+                return;
+            }
+            if (!(roleOfClass)) {
+                showErrorBanner("Please select a role in the dropdown.");
                 return;
             }
 
@@ -1145,6 +1150,7 @@ document.addEventListener('click', function (e) {
         if (btn.dataset.courseCode && btn.dataset.courseCode !== 'null') { mainDisplayText += '(' + (btn.dataset.courseCode) + ') '}
         document.getElementById('selectedEditClassText').textContent = mainDisplayText;
         document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
+        // document.getElementById('selectedEditRoleText').textContent = btn.dataset.usercourseRole;
 
         hideAllBanners();
         enrollmentModal.show();
@@ -1179,9 +1185,10 @@ function clearEnrollmentInputs() {
         document.getElementById('user_id').value = null;
         document.getElementById('selectedUserText').textContent = 'Select User';
     }
-    const roleOfClassDropdown = document.getElementById('roleOfClass');
+    const roleOfClassDropdown = document.querySelector('.role-list');
     if (roleOfClassDropdown) {
-        roleOfClassDropdown.value = roleOfClassDropdown.options[0].value;
+        document.getElementById('roleOfClass').value = "Tutor";
+        document.getElementById('selectedRoleText').textContent = 'Tutor';
     }
 }
 
@@ -1307,14 +1314,17 @@ const userSearchInputDash  = document.getElementById('userSearchInputDash');
 // Containers in Dropdowns
 const classListContainer = document.querySelector('.class-list');
 const userListContainer  = document.querySelector('.user-list');
+const roleListContainer  = document.querySelector('.role-list');
 
 const classEditListContainer = document.querySelector('.class-edit-list');
 const userEditListContainer  = document.querySelector('.user-edit-list');
+const roleEditListContainer  = document.querySelector('.role-edit-list');
 
 const classNotesListContainer  = document.querySelector('.class-notes-list');
 
 const classMultipleListContainer  = document.querySelector('.class-multiple-list');
 const userMultipleListContainer  = document.querySelector('.user-multiple-list'); // Redefining this here is harmless but redundant with the top-level declaration
+const roleMultipleListContainer  = document.querySelector('.role-multiple-list');
 
 // Dashboard-specific dropdowns
 const classDashListContainer = document.querySelector('.class-dash-list');
@@ -1464,6 +1474,23 @@ function initializeSearchableDropdowns() {
         });
     }
 
+    // Delegate click inside .role-list
+    if (roleListContainer) {
+        roleListContainer.addEventListener('click', function (e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const value = dropdownItem.dataset.value;
+                const text = dropdownItem.textContent.trim();
+                document.getElementById('roleOfClass').value = value;
+                document.getElementById('selectedRoleText').textContent = text;
+
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
+        });
+    }
+
     // Delegate click inside .class-edit-list
     if (classEditListContainer) {
         classEditListContainer.addEventListener('click', function(e) {
@@ -1499,6 +1526,22 @@ function initializeSearchableDropdowns() {
         });
     }
 
+    // Delegate click inside .role-edit-list
+    if (roleEditListContainer) {
+        roleEditListContainer.addEventListener('click', function (e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const value = dropdownItem.dataset.value;
+                const text = dropdownItem.textContent.trim();
+                document.getElementById('edit_roleOfClass').value = value;
+                document.getElementById('selectedEditRoleText').textContent = text;
+
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
+            }
+        });
+    }
 
     // Delegate click inside .class-notes-list
     if (classNotesListContainer) {
@@ -1557,6 +1600,23 @@ function initializeSearchableDropdowns() {
                     dropdownItem.classList.add('active');
                 }
                 updateSelectedUsersDisplay();
+            }
+        });
+    }
+
+    // Delegate click inside .role-multiple-list
+    if (roleMultipleListContainer) {
+        roleMultipleListContainer.addEventListener('click', function (e) {
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const value = dropdownItem.dataset.value;
+                const text = dropdownItem.textContent.trim();
+                document.getElementById('multiple_roleOfClass').value = value;
+                document.getElementById('selectedMultipleRoleText').textContent = text;
+
+                const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
+                if (dropdownInstance) dropdownInstance.hide();
             }
         });
     }

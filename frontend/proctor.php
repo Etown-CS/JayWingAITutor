@@ -515,13 +515,21 @@ if ($currentUserId) {
                                     </div>
                                     <!-- Class Role Dropdown -->
                                     <div class="col-md-4 mb-3">
-                                        <label for="roleOfClass" class="form-label">
+                                        <label for="roleDropdownBtn" class="form-label">
                                             Role (JayWing)
                                         </label>
-                                        <select class="form-select" id="roleOfClass" name="roleOfClass" required>
-                                            <option value="tutor">Tutor</option>
-                                            <option value="tutee">Tutee</option>
-                                        </select>
+                                        <div class="dropdown">
+                                            <button id="roleDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span id="selectedRoleText">Tutor</span>
+                                            </button>
+                                            <div class="dropdown-menu w-100 p-2">
+                                                <div class="role-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                                    <div class="dropdown-item" data-value="Tutor">Tutor</div>
+                                                    <div class="dropdown-item" data-value="Tutee">Tutee</div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="roleOfClass" name="roleOfClass" value="Tutor">
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -749,11 +757,21 @@ if ($currentUserId) {
                         </div>
                         <!-- Edit Class Role Dropdown -->
                         <div class="mb-3">
-                            <label for="edit_roleOfClass" class="form-label">Role (JayWing)</label>
-                            <select class="form-select" id="edit_roleOfClass" required>
-                                <option value="tutor">Tutor</option>
-                                <option value="tutee">Tutee</option>
-                            </select>
+                            <label for="roleEditDropdownBtn" class="form-label">
+                                Role (JayWing)
+                            </label>
+                            <div class="dropdown">
+                                <button id="roleEditDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span id="selectedEditRoleText">Tutor</span>
+                                </button>
+                                <div class="dropdown-menu w-100 p-2">
+                                    <div class="role-edit-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                        <div class="dropdown-item" data-value="Tutor">Tutor</div>
+                                        <div class="dropdown-item" data-value="Tutee">Tutee</div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="edit_roleOfClass" name="edit_roleOfClass" value="Tutor">
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-full mb-0">Save Changes</button>
                     </form>
@@ -820,13 +838,21 @@ if ($currentUserId) {
                         </div>
                         <!-- Class Role Dropdown -->
                         <div class="mb-3">
-                            <label for="multiple_roleOfClass" class="form-label">
+                            <label for="roleMultipleDropdownBtn" class="form-label">
                                 Role (JayWing)
                             </label>
-                            <select class="form-select" id="multiple_roleOfClass" required>
-                                <option value="tutor">Tutor</option>
-                                <option value="tutee">Tutee</option>
-                            </select>
+                            <div class="dropdown">
+                                <button id="roleMultipleDropdownBtn" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span id="selectedMultipleRoleText">Tutor</span>
+                                </button>
+                                <div class="dropdown-menu w-100 p-2">
+                                    <div class="role-multiple-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
+                                        <div class="dropdown-item" data-value="Tutor">Tutor</div>
+                                        <div class="dropdown-item" data-value="Tutee">Tutee</div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="multiple_roleOfClass" name="multiple_roleOfClass" value="Tutor">
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-full">Add Enrollments</button>
                     </form>

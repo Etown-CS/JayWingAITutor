@@ -174,6 +174,7 @@ def load_docs():
 # Delete file endpoint
 @app.route('/delete', methods=['DELETE'])
 def delete_file():
+    print("Delete file endpoint hit")
     # Get user info from headers
     user_id, username, user_role, folder_prefix = get_user_info_from_headers()
     if not user_id or user_role != 1:
@@ -215,21 +216,35 @@ def delete_file():
     pinecone_deleted = False
 
     # Attempt to delete from GCS
-    if blob.exists():
-        blob.delete()
-        gcs_deleted = True
+    try:
+        blob = bucket.blob(filepath)
+        if blob.exists():
+            blob.delete()
+            gcs_deleted = True
+        else:
+            return jsonify(success=False, message="File not found in GCS"), 404
+    except Exception as e:
+        return jsonify(success=False, message=f"Error deleting from GCS: {str(e)}")
 
     # Attempt to delete from Pinecone
     try:
         index_name = "ai-tutor-index"
         index = pc.Index(index_name)
-
         
         # Check if the index exists first
-        existing_indexes = pc.list_indexes()
+        existing_indexes = list(pc.list_indexes())
 
-        if index_name in existing_indexes:
+        print(f"Existing Pinecone indexes: {existing_indexes}")
+        print(f"Checking for index: {index_name}")
+        print(type(existing_indexes))
+
+        exists = any(index["name"] == index_name for index in existing_indexes)
+        print(f"Index exists: {exists}")
+
+        if exists:
             index = pc.Index(index_name)
+        else:
+            return jsonify(success=False, message="Pinecone index does not exist"), 404
         
         # Create namespace
         namespace = f"{course}_{courseId}"
@@ -239,6 +254,7 @@ def delete_file():
             filter={"filename": file_name, "course_name": course},
             namespace=namespace
         )
+
         pinecone_deleted = True
     except Exception as e:
         return jsonify(success=False, message=f"GCS deleted: {gcs_deleted}, but error deleting from Pinecone: {str(e)}")

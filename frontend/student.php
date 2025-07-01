@@ -481,10 +481,10 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         </div>
                     </form>
             <?php else: ?>
-                <div class="h-20 flex items-center justify-center text-gray-500">
+                <div class="pt-4 flex items-center justify-center text-gray-500">
                     Select a chat to start messaging
                 </div>
-                <img src="static/img/etownEngineeringCSSticker.png" alt="ETown CS Sticker" class="h-full object-contain m-36">
+                <img src="static/img/etownEngineeringCSSticker.png" alt="ETown CS Sticker" class="h-full object-contain">
             <?php endif; ?>
         </div>
 

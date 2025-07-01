@@ -974,9 +974,14 @@ function filterCourses(discipline) {
     if (discipline === 'allCourses') {
         renderClassTable(allClasses);
     } else {
-        const filtered = allClasses.filter(cls => 
-            cls.courseCode && cls.courseCode.startsWith(discipline)
-        );
+        const filtered = allClasses.filter(cls => {
+            if (!cls.courseCode) return false;
+            const match = cls.courseCode.match(/^([A-Z]{2,3}(?:\/[A-Z]{2,3})?)/);
+            if (!match) return false;
+
+            const disciplines = match[1].split('/');
+            return disciplines.includes(discipline);
+        });
         renderClassTable(filtered);
     }
 }
@@ -1084,9 +1089,15 @@ function filterEnrollments(discipline) {
     if (discipline === 'allCourses') {
         renderEnrollmentTable(allEnrollments);
     } else {
-        const filtered = allEnrollments.filter(cls => 
-            cls.courseCode && cls.courseCode.startsWith(discipline)
-        );
+        const filtered = allEnrollments.filter(enrollment => {
+            if (!enrollment.courseCode) return false;
+            const match = enrollment.courseCode.match(/^([A-Z]{2,3}(?:\/[A-Z]{2,3})?)/);
+            if (!match) return false;
+
+            const disciplines = match[1].split('/');
+            return disciplines.includes(discipline);
+        });
+
         renderEnrollmentTable(filtered);
     }
 }

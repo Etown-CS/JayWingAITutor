@@ -429,28 +429,42 @@ if ($currentUserId) {
                                             </th>
                                             <th>
                                                 Actions
+                                                <?php
+                                                    $query = "
+                                                        SELECT DISTINCT c.courseCode
+                                                        FROM courses c
+                                                        JOIN user_courses uc ON uc.courseId = c.id
+                                                        WHERE uc.userId = ?
+                                                    ";
+
+                                                    $stmt = $connection->prepare($query);
+                                                    $stmt->bind_param("i", $userId);
+                                                    $stmt->execute();
+                                                    $results = $stmt->get_result();
+
+                                                    $disciplinesSet = [];
+
+                                                    while ($row = $results->fetch_assoc()) {
+                                                        $code = $row['courseCode'];
+                                                        // Updated regex to capture both parts
+                                                        if (preg_match('/^([A-Z]{2,3})(?:\/([A-Z]{2,3}))?/', $code, $matches)) {
+                                                            if (!empty($matches[1])) {
+                                                                $disciplinesSet[$matches[1]] = true;
+                                                            }
+                                                            if (!empty($matches[2])) {
+                                                                $disciplinesSet[$matches[2]] = true;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    ksort($disciplinesSet); // Sort alphabetically
+                                                ?>
+
                                                 <select class="form-select bg-primary text-white" id="filter-by-btn" name="filterBy" onchange="filterCourses(this.value)">
                                                     <option value="allCourses">Filter: All</option>
-                                                    <?php
-                                                        $query = "
-                                                            SELECT DISTINCT
-                                                                REGEXP_SUBSTR(c.courseCode, '^[A-Z]+') AS discipline
-                                                            FROM courses c
-                                                            JOIN user_courses uc ON uc.courseId = c.id
-                                                            WHERE c.courseCode REGEXP '^[A-Z]+[0-9]+$'
-                                                            AND uc.userId = ?
-                                                            ORDER BY discipline DESC;
-                                                        ";
-
-                                                        $stmt = $connection->prepare($query);
-                                                        $stmt->bind_param("i", $userId);
-                                                        $stmt->execute();
-                                                        $disciplines = $stmt->get_result();
-
-                                                        while ($discipline = $disciplines->fetch_assoc()):
-                                                    ?>
-                                                        <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
-                                                    <?php endwhile; ?>
+                                                    <?php foreach ($disciplinesSet as $discipline => $_): ?>
+                                                        <option value="<?= $discipline ?>"><?= $discipline ?></option>
+                                                    <?php endforeach; ?>
                                                 </select>
                                             </th>
                                         </tr>
@@ -583,25 +597,41 @@ if ($currentUserId) {
                                             </th>
                                             <th>
                                                 Actions
+                                                <?php
+                                                    $query = "
+                                                        SELECT DISTINCT c.courseCode
+                                                        FROM courses c
+                                                        JOIN user_courses uc ON uc.courseId = c.id
+                                                        WHERE uc.userId = ?
+                                                    ";
+
+                                                    $stmt = $connection->prepare($query);
+                                                    $stmt->bind_param("i", $userId);
+                                                    $stmt->execute();
+                                                    $results = $stmt->get_result();
+
+                                                    $disciplinesSet = [];
+
+                                                    while ($row = $results->fetch_assoc()) {
+                                                        $code = $row['courseCode'];
+                                                        // Updated regex to capture both parts
+                                                        if (preg_match('/^([A-Z]{2,3})(?:\/([A-Z]{2,3}))?/', $code, $matches)) {
+                                                            if (!empty($matches[1])) {
+                                                                $disciplinesSet[$matches[1]] = true;
+                                                            }
+                                                            if (!empty($matches[2])) {
+                                                                $disciplinesSet[$matches[2]] = true;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    ksort($disciplinesSet); // Sort alphabetically
+                                                ?>
                                                 <select class="form-select bg-primary text-white" id="filter-by-btn-2" name="filterBy" onchange="filterEnrollments(this.value)">
                                                     <option value="allCourses">Filter: All</option>
-                                                    <?php
-                                                        $query = "
-                                                            SELECT DISTINCT
-                                                                REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
-                                                            FROM courses
-                                                            WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
-                                                            ORDER BY discipline ASC
-                                                        ";
-
-                                                        $stmt = $connection->prepare($query);
-                                                        $stmt->execute();
-                                                        $disciplines = $stmt->get_result();
-
-                                                        while ($discipline = $disciplines->fetch_assoc()):
-                                                    ?>
-                                                        <option value="<?= $discipline['discipline'] ?>"><?= $discipline['discipline'] ?></option>
-                                                    <?php endwhile; ?>
+                                                    <?php foreach ($disciplinesSet as $discipline => $_): ?>
+                                                        <option value="<?= $discipline ?>"><?= $discipline ?></option>
+                                                    <?php endforeach; ?>
                                                 </select>
                                             </th>
                                         </tr>

@@ -1398,7 +1398,6 @@ if (filterByButton) {
             localStorage.setItem('sidebarShouldReopen', 'true');
         }
 
-
         window.location.href = newUrl; // Reload page with new filter
     });
 } else {
@@ -1413,8 +1412,21 @@ window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const selectedSort = urlParams.get('sortBy') || 'sortRecent';
     const selectedFilter = urlParams.get('filterBy') || 'allCourses';
-    document.getElementById('sort-by-btn').value = selectedSort;
-    document.getElementById('filter-by-button').value = selectedFilter;
+
+    // Set the dropdown values
+    const sortByBtn = document.getElementById('sort-by-btn');
+    if (sortByBtn) {
+        sortByBtn.value = selectedSort;
+    }
+
+    const filterByBtn = document.getElementById('filter-by-button');
+    if (filterByBtn) {
+        filterByBtn.value = selectedFilter;
+    }
+
+    // IMPORTANT: No client-side filtering logic here, as your PHP is doing the filtering
+    // based on the URL parameter and will only show courses starting with the selected discipline.
+
 
     const chatId = new URLSearchParams(window.location.search).get('chatId');
     if (!chatId) return;

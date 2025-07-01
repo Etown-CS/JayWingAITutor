@@ -175,42 +175,41 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                     <option value="sortRecent">Sort by: Recent</option>
                     <option value="sortAlphabetical">Sort by: Alphabetical</option>
                 </select>
+                <?php
+                    $query = "
+                        SELECT DISTINCT c.courseCode
+                        FROM courses c
+                        JOIN user_courses uc ON uc.courseId = c.id
+                        WHERE uc.userId = ?
+                    ";
+
+                    $stmt = $connection->prepare($query);
+                    $stmt->bind_param("i", $userId);
+                    $stmt->execute();
+                    $results = $stmt->get_result();
+
+                    $disciplinesSet = [];
+
+                    while ($row = $results->fetch_assoc()) {
+                        $code = $row['courseCode'];
+                        // Updated regex to capture both parts
+                        if (preg_match('/^([A-Z]{2,3})(?:\/([A-Z]{2,3}))?/', $code, $matches)) {
+                            if (!empty($matches[1])) {
+                                $disciplinesSet[$matches[1]] = true;
+                            }
+                            if (!empty($matches[2])) {
+                                $disciplinesSet[$matches[2]] = true;
+                            }
+                        }
+                    }
+
+                    ksort($disciplinesSet); // Sort alphabetically
+                ?>
                 <select class="form-select bg-primary text-white w-25" id="filter-by-button" name="filterBy">
                     <option value="allCourses">All</option>
-                    <!-- List disciplines -->
-                    <?php
-                        $stmt = $connection->prepare("SELECT c.courseCode FROM courses c JOIN user_courses uc ON uc.courseId = c.id WHERE uc.userId = ? ORDER BY c.courseCode DESC");
-                        $stmt->bind_param("i", $userId);
-                        $stmt->execute();
-                        $result = $stmt->get_result();
-                        $uniqueDisciplines = [];
-                        $discipline = '';
-                        while ($row = $result->fetch_assoc()):
-                            // Exclude empty course codes
-                            if (empty($row['courseCode'])) {
-                                continue;
-                            }
-                            // Escape course code for HTML output
-                            $courseCode = htmlspecialchars($row['courseCode'], ENT_QUOTES, 'UTF-8');
-                            
-                            // Extract discipline from course code
-                            if (preg_match('/^([A-Z]{2,3})(\d{3})$/i', $courseCode, $matches)) {
-                                $discipline = $matches[1]; // "CSC"
-                                $courseNumber = $matches[2]; // "101"
-                            } else {
-                                echo "Invalid course code format.";
-                            }
-                            
-                            if ($discipline && in_array($discipline, $uniqueDisciplines)) {
-                                continue; // Skip if discipline already added
-                            }
-                            $uniqueDisciplines[] = $discipline;
-                            if (empty($discipline)) {
-                                continue; // Skip empty disciplines
-                            }
-                    ?>
-                    <option value="<?php echo $discipline; ?>"><?php echo $discipline; ?></option>
-                    <?php endwhile; ?>
+                    <?php foreach ($disciplinesSet as $discipline => $_): ?>
+                        <option value="<?= $discipline ?>"><?= $discipline ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -223,7 +222,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                         if ($filterBy !== 'allCourses') {
                             // Escape filter value for SQL query
                             $filterBy = $connection->real_escape_string($filterBy);
-                            $filterClause = "AND c.courseCode LIKE '$filterBy%'";
+                            $filterClause = "AND (c.courseCode LIKE '$filterBy%' OR c.courseCode REGEXP '^[^/]+/{$filterBy}.*')";
                         } else {
                             $filterClause = '';
                         }

@@ -2032,7 +2032,7 @@ function reloadFilterDropdowns() {
                 // Add "All" option
                 const allOption = document.createElement('option');
                 allOption.value = 'allCourses';
-                allOption.textContent = 'All';
+                allOption.textContent = 'Filter: All';
                 dropdown.appendChild(allOption);
 
                 // Add discipline options
@@ -2126,36 +2126,45 @@ if (fileUploadDiv) {
 }
 
 // Function to handle files and display thumbnails
-function handleFiles(event) {
-    console.log(event)
+async function handleFiles(event) {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
-    const files = event.target.files;
-    const selectedCourse = coursesDropdownUpload.value; // This is the course ID
+    const files = Array.from(event.target.files);
+    const selectedCourse = coursesDropdownUpload.value;
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
-    // if the above name call doesnt work, consider .text instead (data seemed to contain the text but maybe it doesnt always?)
+
     if (!selectedCourseName || selectedCourseName === "Select Class") {
-        // Changed from alert to showErrorBanner for better UI
-        showErrorBanner("Please select a course before uploading files."); 
+        showErrorBanner("Please select a course before uploading files.");
         return;
     }
 
-    for (const file of files) {
-        saveFileToDocsFolder(file, selectedCourse); // Pass selected course
-        displayFilePreview(file.name, file.type, selectedCourse);
-        
-    }
+    document.getElementById('loading-spinner').classList.remove('hidden');
+
+    const uploadPromises = files.map(async (file) => {
+        try {
+            const success = await saveFileToDocsFolder(file, selectedCourse);
+            if (success) {
+                displayFilePreview(file.name, file.type, selectedCourse);
+            }
+        } catch (err) {
+            console.error(`Failed to upload ${file.name}:`, err);
+        }
+    });
+
+    await Promise.all(uploadPromises);
+    loadExistingFiles(); // call after all uploads
+
+    showSuccessBanner(`Successfully uploaded ${files.length} file(s) to ${selectedCourseName}.`);
+    document.getElementById('loading-spinner').classList.add('hidden');
 }
+
 
 // Save file to the appropriate course's folder
 function saveFileToDocsFolder(file, courseId) {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("courseId", courseId); // course name
+    formData.append("courseId", courseId);
 
-    document.getElementById('loading-spinner').classList.remove('hidden');
-
-
-    fetch(`${FLASK_API}/upload`, {
+    return fetch(`${FLASK_API}/upload`, {
         method: "POST",
         body: formData,
         credentials: 'include',
@@ -2168,16 +2177,18 @@ function saveFileToDocsFolder(file, courseId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`${file.name} saved to course id ${courseId} folder.`);
-            console.log("Suspected over triggering of loading existing files here but it works so leaving it for now");
-            loadExistingFiles();
+            console.log(`${file.name} saved to course id ${courseId}.`);
+            return true;
         } else {
             console.error(`Error saving ${file.name}: ${data.message}`);
+            showErrorBanner(`Upload failed: ${file.name}`);
+            return false;
         }
     })
-    .catch(err => console.error('Error saving file:', err))
-    .finally(() => {
-        document.getElementById('loading-spinner').classList.add('hidden');
+    .catch(err => {
+        console.error('Error saving file:', err);
+        showErrorBanner(`Upload error: ${file.name}`);
+        return false;
     });
 }
 
@@ -2218,9 +2229,9 @@ function displayFilePreview(fileName, fileType, courseId) {
     deleteButton.className = 'delete-icon absolute top-1 right-1 text-white bg-red-600 px-2 rounded';
     deleteButton.innerText = 'X';
     deleteButton.title = "Remove file";
-    deleteButton.addEventListener('click', () => {
-        preview.remove();
-        removeFileFromDocsFolder(fileName);
+    deleteButton.addEventListener('click', (event) => {
+        event.preventDefault(); // Prevents form submission or navigation
+        removeFileFromDocsFolder(fileName, preview);
     });
 
     // Wrapper to position delete icon
@@ -2236,7 +2247,7 @@ function displayFilePreview(fileName, fileType, courseId) {
 }
 
 
-function removeFileFromDocsFolder(fileName) {
+function removeFileFromDocsFolder(fileName, preview) {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
     const selectedCourse = coursesDropdownUpload.value;
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
@@ -2261,6 +2272,8 @@ function removeFileFromDocsFolder(fileName) {
     .then(data => {
         if (data.success) {
             console.log(`${fileName} removed from ${selectedCourseName} folder.`);
+            showSuccessBanner(`Successfully removed ${fileName} from ${selectedCourseName}.`);
+            preview.remove();
         } else {
             console.error(`Error removing ${fileName}: ${data.message}`);
         }
@@ -2304,7 +2317,11 @@ function loadExistingFiles() {
                 displayFilePreview(file.name, file.type, selectedCourse);
             });
         })
+        .finally(() => {
+            console.log("File loading complete.");
+        })
         .catch(err => console.error("Error loading files:", err));
+        
 }
 
 

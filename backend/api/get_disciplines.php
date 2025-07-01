@@ -10,16 +10,21 @@ if (!isAdmin()) {
     exit();
 }
 
+$loggedInUserId = $_SESSION['user_id'];
+
 try {
     $query = "
         SELECT DISTINCT
-            REGEXP_SUBSTR(courseCode, '^[A-Z]+') AS discipline
-        FROM courses
+            REGEXP_SUBSTR(c.courseCode, '^[A-Z]+') AS discipline
+        FROM courses c
+        JOIN user_courses uc ON uc.courseId = c.id
         WHERE courseCode REGEXP '^[A-Z]+[0-9]+$'
-        ORDER BY discipline ASC
+        AND uc.userId = ?
+        ORDER BY discipline DESC
     ";
 
     $stmt = $connection->prepare($query);
+    $stmt->bind_param("i", $loggedInUserId);
     $stmt->execute();
     $result = $stmt->get_result();
 

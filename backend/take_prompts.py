@@ -35,7 +35,7 @@ def get_db_connection():
 # Constants for AI tutor
 ai_memory = 4 # Number of messages provided to the AI for context
 chunk_count = 10 # Number of chunks to retrieve from Pinecone
-similarity_threshold = 0.375 # Minimum similarity score for document relevance -- play around with this
+similarity_threshold = 0.325 # Minimum similarity score for document relevance -- play around with this
 
 def chat_info(chatId):
     '''

@@ -208,7 +208,7 @@ def extract_text_from_pptx(pptx_bytes):
     return text
 
 # Function to chunk text
-def chunk_text(text, chunk_size=750):
+def chunk_text(text, chunk_size=500, chunk_overlap=100):
     """
     Splits text into smaller chunks for embedding.
 
@@ -222,7 +222,7 @@ def chunk_text(text, chunk_size=750):
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size = chunk_size,
-        chunk_overlap = 100,
+        chunk_overlap = chunk_overlap,
         separators=["\n\n", "\n", ".", "!", "?", " "]
     )
 
@@ -279,7 +279,7 @@ def to_pinecone(text_dict, courseId):
             )
 
 
-    print("All chunks upserted to Pinecone.")
+    print(f"All chunks upserted to Pinecone for file {metadata['filename']}.")
 
 # Main function
 def main():

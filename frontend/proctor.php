@@ -508,7 +508,7 @@ if ($currentUserId) {
                                                 <div class="user-list -p-2" style="max-height: 200px; overflow-y: auto; margin: 0 -0.5rem;">
                                                     <!-- JavaScript -->
                                                 </div>
-                                                <button id="add-multiple-enrollments" type="button" class="btn btn-outline-primary w-full mt-2">Add Mutiple Enrollments</button>
+                                                <button id="add-multiple-enrollments" type="button" class="btn btn-outline-primary w-full mt-2">Add Multiple Enrollments</button>
                                             </div>
                                             <input type="hidden" id="user_id" name="user_id" required>
                                         </div>

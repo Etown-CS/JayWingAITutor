@@ -217,15 +217,7 @@ tr.hidden {
         width: 100% !important; /* Each header cell takes full width */
         padding: 0.5rem !important; /* Adjust padding as needed */
         text-align: left !important; /* Align content to the left */
-        vertical-align: top !important; /* Align content to top */
         position: relative !important;
-        
-        /* TRUNCATION PROPERTIES REMOVED HERE, NOW HANDLED BY JAVASCRIPT */
-        /* white-space: nowrap !important; */
-        /* overflow: hidden !important; */
-        /* text-overflow: ellipsis !important; */
-        /* word-wrap: normal !important; */
-
         border-bottom: none !important;
         font-size: 0.875rem !important;
         color: #4a5568 !important;
@@ -420,7 +412,7 @@ tr.hidden {
   position: relative;
   width: 100%;
   max-width: 800px;
-  aspect-ratio: 2 / 1;
+  /* aspect-ratio: 2 / 1; */
   margin: 0 auto;
   overflow: hidden;
 }

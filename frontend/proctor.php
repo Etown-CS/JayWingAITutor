@@ -265,20 +265,26 @@ if ($currentUserId) {
                                             </div>
                                             <input type="hidden" id="qa_filter" name="qa_filter" value="Both">
                                         </div>
-                                        <div class="flex items-end">
-                                            <button type="button" class="btn btn-danger w-full" onclick="clearDashboardFilters()">Clear Filters</button>
+                                        <div class="items-end">
+                                            <label for="customStopWords" class="form-label">Word Filter</label>
+                                            <input 
+                                                type="text" 
+                                                id="customStopWords" 
+                                                name="customStopWords" 
+                                                placeholder="e.g. word1, word2, word3..." 
+                                                class="form-control bg-gray-300" 
+                                            />
                                         </div>
-                                    </div>
-                                    
-                                    <div class="flex items-end mt-4">
+                                        <!-- Clear/Submit Buttons -->
+                                        <button type="button" class="btn btn-danger w-full" onclick="clearDashboardFilters()">Clear Filters</button>
                                         <button type="submit" class="btn btn-primary w-full">Generate Report</button>
                                     </div>
                                     
-
+                                    
                                 </form>
                             </div>
 
-                            <!-- Right: Word Cloud -->
+                            <!-- Right: Word Cloud -->                                    
                             <div class="wordcloud-container">
                                 <img id='word_cloud_img' src="static/img/word_cloud_placeholder.png" alt="Word Cloud" class="w-full h-auto rounded border border-gray-300" />
                             </div>

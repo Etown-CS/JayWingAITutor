@@ -13,6 +13,8 @@ import datetime
 from bs4 import BeautifulSoup
 import re
 from nltk.corpus import stopwords
+from nltk import pos_tag
+from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
@@ -22,7 +24,7 @@ import random
 
 
 stop_words = set(stopwords.words('english'))
-custom_stop_words = {'like', 'lets', 'one', 'something', 'start', 'begin', 'try', 'trying', 'go', 'back', 'step', 'thing', 'another', 'keep', 'much', 'done', 'dont', 'doesnt', 'didnt', 'isnt', 'possible', 'different', 'suppose', 'used'}
+custom_stop_words = {'like', 'lets', 'one', 'something', 'start', 'begin', 'try', 'trying', 'go', 'back', 'step', 'thing', 'another', 'keep', 'much', 'done', 'dont', 'doesnt', 'didnt', 'isnt', 'possible', 'different', 'suppose', 'used', 'might', 'think', 'youre', 'often', 'make', 'need', 'use', 'consider', 'ensure', 'involes', 'include', 'understand'}
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost"])
@@ -654,7 +656,9 @@ def generate_report():
     Fstart_date = request.args.get('start_date')
     Fend_date = request.args.get('end_date')
     Fqa_filter = request.args.get('qa_filter')
+    Fstop_words = request.args.get('stop_words')
 
+    # Check required parameters - these should never be None because their defaults are set in the frontend
     print(f"Class ID: {FcourseId}, User ID: {FuserId}, Start: {Fstart_date}, End: {Fend_date}, QA Filter: {Fqa_filter}")
     if not FcourseId or not FuserId or not Fqa_filter:
         return jsonify(success=False, message="Missing course, user ID, or qa filter"), 400
@@ -733,8 +737,6 @@ def generate_report():
     print(f"Executing query: {query}")
     print(f"With parameters: {params}")
 
-
-
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -749,13 +751,14 @@ def generate_report():
         combined_text = ""
         for row in results:
             if 'question' in row:
-                cleaned_question = clean_text(row['question'])
+                cleaned_question = lemmatize_text(row['question'])
+                cleaned_question = clean_text(cleaned_question, Fstop_words)
                 combined_text += cleaned_question + " "
             if 'answer' in row:
                 cleaned_answer = remove_answer_stop_words(row['answer'])
-                cleaned_answer = clean_text(cleaned_answer)
+                cleaned_answer = lemmatize_text(cleaned_answer)
+                cleaned_answer = clean_text(cleaned_answer, Fstop_words)
                 combined_text += cleaned_answer + " "
-        combined_text = lemmatize_text(combined_text)  # Lemmatize the combined text
         combined_text = combined_text.strip()  # Remove any leading/trailing whitespace
         # print(f"Formatted results: {combined_text}")  # Debugging line to check formatted results
 
@@ -784,7 +787,7 @@ def remove_answer_stop_words(answer):
 
     return answer
 
-def clean_text(text):
+def clean_text(text, added_stop_words=''):
     """
     Clean the text by removing non-alphanumeric characters, extra whitespace, and stop words.
     """
@@ -801,17 +804,39 @@ def clean_text(text):
     cleaned_text = ' '.join(filtered_words)
 
     # 4. Remove custom stop words
-    cleaned_text = ' '.join(word for word in cleaned_text.split() if word.lower() not in custom_stop_words)
+    all_custom_stop_words = custom_stop_words.union(set([word.strip() for word in added_stop_words.split(",")]))
+    cleaned_text = ' '.join(word for word in cleaned_text.split() if word.lower() not in all_custom_stop_words)
     
     return cleaned_text
 
+def get_wordnet_pos(treebank_tag):
+    """
+    Convert NLTK POS tags to WordNet POS tags.
+    """
+    if treebank_tag.startswith('J'):
+        return wordnet.ADJ
+    elif treebank_tag.startswith('V'):
+        return wordnet.VERB
+    elif treebank_tag.startswith('N'):
+        return wordnet.NOUN
+    elif treebank_tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return wordnet.NOUN  # fallback to noun
+
 def lemmatize_text(text):
     """
-    Lemmatize the text using NLTK's WordNetLemmatizer.
+    Lemmatize text using NLTK's WordNetLemmatizer with proper POS tagging.
     """
     lemmatizer = WordNetLemmatizer()
     words = text.split()
-    lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
+    pos_tags = pos_tag(words)
+
+    # print(f"POS tags: {pos_tags}")  # Debugging line to check POS tags
+    lemmatized_words = [
+        lemmatizer.lemmatize(word, get_wordnet_pos(tag))
+        for word, tag in pos_tags
+    ]
     return ' '.join(lemmatized_words)
 
 def generate_wordcloud(text):
@@ -819,7 +844,7 @@ def generate_wordcloud(text):
     Generate a word cloud from the given text.
     """
     # Uncertain on whether to include collocations or not, but set to False for now
-    wordcloud = WordCloud(width=800, height=400, background_color='white', color_func=etown_color_func, collocations=False).generate(text)
+    wordcloud = WordCloud(width=800, height=510, background_color='white', color_func=etown_color_func, collocations=False).generate(text)
 
     # Save image to memory buffer
     img_io = BytesIO()
@@ -841,6 +866,7 @@ def etown_color_func(word, font_size, position, orientation, random_state=None, 
     """
     colors = [
         "#00529B",  # Royal Blue
+        "#5FADF1",  # Light Blue
         "#A7A8AA",  # Gray
         "#003865"   # Darker Blue Accent
     ]

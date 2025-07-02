@@ -44,6 +44,7 @@ const endDateInput = document.getElementById('selectedEndDate');
 dateValidation = true; // Global variable to track date validation state
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Page setup
     loadClasses();
     loadEnrollments(); // Ensure enrollments are loaded to populate tables
     reloadClassDropdowns();
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loop: true,
             margin: 20,
             autoplay: true,
-            autoplayTimeout: 5000, // 5 seconds
+            autoplayTimeout: 10000, // 10 seconds
             autoplayHoverPause: true,
             smartSpeed: 700,
             responsive: {
@@ -145,9 +146,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const startDate = formData.get('selectedStartDate');
             const endDate   = formData.get('selectedEndDate');
             const qaFilter  = formData.get('qa_filter');
+            const stopWords = formData.get('customStopWords');
 
-            console.log({ classId, userId, startDate, endDate, qaFilter });
-            generateReport(classId, userId, startDate, endDate, qaFilter);
+            console.log({ classId, userId, startDate, endDate, qaFilter, stopWords });
+            generateReport(classId, userId, startDate, endDate, qaFilter, stopWords);
         });
     }
 
@@ -627,7 +629,7 @@ function validateDates() {
     endDateInput.reportValidity();
 }
 
-function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both') {
+function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both', stopWords='') {
     if (startDate === '') startDate = null;
     if (endDate === '') endDate = null;
 
@@ -668,6 +670,7 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
             return;
         }
 
+        // Modifying the word cloud to show generating state
         // Reset the word cloud image
         const cloud = document.getElementById('word_cloud_img');
         const container = document.querySelector('.wordcloud-container');
@@ -686,12 +689,14 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
 
         cloud.src = 'static/img/word_cloud_placeholder.png?ts=' + Date.now();
 
+        // Gathering set filters to send to backend
         const params = new URLSearchParams({
             class_id: classFilter,
             user_id: userFilter,
             start_date: startDate,
             end_date: endDate,
-            qa_filter: qaFilter
+            qa_filter: qaFilter,
+            stop_words: stopWords
         });
 
         // Call flask API to generate report
@@ -824,7 +829,7 @@ function clearDashboardFilters() {
     document.getElementById('selectedQAFilterText').innerText = 'Both';
 
     // Regenerate report with default parameters
-    generateReport('All', 'All', null, null, 'Both');
+    generateReport();
 }
 
 

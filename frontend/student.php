@@ -413,7 +413,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                     }
                                                 ?>"
                                                 title="This response was helpful"
-                                                data-message-id="<?php echo $message['messageId']; ?>">👍</button>
+                                                data-message-id="<?php echo $message['messageId']; ?>"><i class="fas fa-thumbs-up"></i></button>
 
                                                 <button class="thumbs-down px-2 py-1 text-xs rounded transition-colors duration-150 <?php 
                                                     if ($message['feedbackRating'] === 'down') {
@@ -423,7 +423,7 @@ if (isset($_GET['chatId']) && filter_var($_GET['chatId'], FILTER_VALIDATE_INT)) 
                                                     }
                                                 ?>"
                                                 title="This response was not helpful"
-                                                data-message-id="<?php echo $message['messageId']; ?>">👎</button>
+                                                data-message-id="<?php echo $message['messageId']; ?>"><i class="fas fa-thumbs-down"></i></button>
 
                                                 <div class="flex gap-2 w-full md:w-auto">
                                                     <button class="simplify px-2 py-1 text-xs text-gray-600 rounded hover:text-blue-600 hover:bg-blue-100 transition-colors duration-150"

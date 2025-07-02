@@ -201,8 +201,8 @@ if ($currentUserId) {
                                     <div class="grid grid-cols-2 gap-4">
                                         <!-- Course Selection -->
                                         <div class="dropdown">
-                                            <label for="class_id" class="form-label">Select Class</label>
-                                            <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <label for="courseSelection" class="form-label">Select Class</label>
+                                            <button id="courseSelection" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 <span id="selectedDashboardClassText">All</span>
                                             </button>
                                             <div class="dropdown-menu w-100 p-2" id="classDropdown">
@@ -222,8 +222,8 @@ if ($currentUserId) {
                                         
                                         <!-- User Selection -->
                                         <div class="dropdown">
-                                            <label for="user_id" class="form-label">Select User</label>
-                                            <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <label for="userSelection" class="form-label">Select User</label>
+                                            <button id="userSelection" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 <span id="selectedDashboardUserText">All</span>
                                             </button>
                                             <div class="dropdown-menu w-100 p-2" id="userDropdown">
@@ -252,8 +252,8 @@ if ($currentUserId) {
                                         </div>
                                         <!-- Q/A/QA -->
                                         <div class="dropdown">
-                                            <label for="qa_filter" class="form-label">Contents</label>
-                                            <button class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <label for="qaSelection" class="form-label">Contents</label>
+                                            <button id="qaSelection" class="btn dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 <span id="selectedQAFilterText">Both</span>
                                             </button>
                                             <div class="dropdown-menu w-100 p-2" id="qaFilterDropdown">

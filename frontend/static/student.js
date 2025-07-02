@@ -41,6 +41,7 @@ function archiveCourse(userCoursesId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            showErrorBanner('Class archived.');
             // Remove the archived course from UI
             const chatItem = document.querySelector(`[onclick="archiveCourse(${userCoursesId})"]`).closest('.relative');
             if (chatItem) chatItem.remove();
@@ -1097,11 +1098,13 @@ archiveButton.addEventListener('click', () => {
                         .then(res => res.json())
                         .then(data => {
                             if (data.success) {
+                                showSuccessBanner('Class restored!');
                                 div.remove();
 
                                 const sidebar = document.getElementById('chat-div');
                                 const newCourse = document.createElement('div');
-                                newCourse.className = 'relative group bg-gray-100 p-3 rounded w-full overflow-hidden hover:bg-gray-250';
+                                newCourse.className = "relative group bg-gray-100 p-3 rounded <?php echo $currentChat == $chat['userCoursesId'] ? 'bg-gray-200' : ''; ?> w-full overflow-hidden hover:bg-gray-200";
+                                newCourse.setAttribute('data-chat-id', "php echo htmlspecialchars($chat['userCoursesId'], ENT_QUOTES, 'UTF-8');");
 
                                 // Get the current sortBy value from the URL, fallback to 'sortRecent'
                                 const urlParams = new URLSearchParams(window.location.search);
@@ -1129,6 +1132,8 @@ archiveButton.addEventListener('click', () => {
                                 newCourse.appendChild(link);
                                 newCourse.appendChild(archiveBtn);
                                 sidebar.prepend(newCourse);
+
+                                location.reload();
                             } else {
                                 alert('Failed to restore course.');
                             }
@@ -1142,7 +1147,6 @@ archiveButton.addEventListener('click', () => {
                     div.appendChild(courseName);
                     div.appendChild(restoreButton);
                     list.appendChild(div);
-
                 });
             }
 
@@ -1516,5 +1520,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Clear the flag
         localStorage.removeItem('sidebarShouldReopen');
+    }
+});
+
+// Save scroll of sidebar
+window.addEventListener("beforeunload", function () {
+    const sidebar = document.getElementById("sidebar-courses");
+    if (sidebar) {
+        sessionStorage.setItem("sidebarScrollTop", sidebar.scrollTop);
+    }
+});
+
+// Restore sidebar scroll
+window.addEventListener("DOMContentLoaded", function () {
+    const sidebar = document.getElementById("sidebar-courses");
+    const saved = sessionStorage.getItem("sidebarScrollTop");
+
+    if (sidebar && saved !== null) {
+        sidebar.scrollTop = parseInt(saved, 10);
+        sessionStorage.removeItem("sidebarScrollTop");
+
+        // Scroll the selected chat into view AFTER restoring scroll
+        const params = new URLSearchParams(window.location.search);
+        const chatId = params.get("chatId");
+        if (chatId) {
+            const chatElement = sidebar.querySelector(`[data-chat-id="${chatId}"]`);
+            if (chatElement) {
+                // Slight delay ensures scrollTop applies first
+                setTimeout(() => {
+                    chatElement.scrollIntoView({
+                        behavior: "auto",
+                        block: "nearest" // try "center" or "start" if needed
+                    });
+                }, 10);
+            }
+        }
     }
 });

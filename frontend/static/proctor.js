@@ -638,29 +638,9 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
             document.getElementById('carousel-description').textContent = `*Showing stats for all ${username}'s courses`;
         }
     } else {
-        description = "*Showing stats for ";
-        
-        if (classFilter !== 'All') {
-            className = document.getElementById('selectedDashboardClassText').textContent;
-            // Strip course code if present
-            if (className.includes('(')) {
-                className = className.split('(')[0].trim();
-            }
-            description += `class ${className} `;
+        if (document.getElementById('carousel-description')) {
+            document.getElementById('carousel-description').textContent = `*Showing stats for the applied filters`;
         }
-        if (userFilter !== 'All') {
-            selectedUser = document.getElementById('selectedDashboardUserText').textContent;
-            description += `for user ${selectedUser} `;
-        }
-        if (startDate && endDate) {
-            description += `from ${startDate} to ${endDate} `;
-        } else if (startDate) {
-            description += `from ${startDate} onward`;
-        } else if (endDate) {
-            description += `until ${endDate}`;
-        }
-        
-        document.getElementById('carousel-description').textContent = description;
     }
     // Only generate on dashboard (no parameters set)
     const urlParams = new URLSearchParams(window.location.search);
@@ -822,6 +802,8 @@ function clearDashboardFilters() {
     document.getElementById('class_id').value = 'All';
     document.getElementById('user_id').value = 'All';
     document.getElementById('qa_filter').value = 'Both';
+    document.getElementById('selectedStartDate').value = '';
+    document.getElementById('selectedEndDate').value = '';
 
     // Reset visible labels
     document.getElementById('selectedDashboardClassText').innerText = 'All';

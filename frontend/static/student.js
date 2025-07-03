@@ -994,7 +994,7 @@ function showFeedbackBanner(messageId) {
         banner.classList.add('hidden');
 
         if (explanation) {
-            fetch('../backend/api/feedback.php', {
+            fetch('../backend/api/feedback/list.php', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1207,7 +1207,7 @@ archiveButton.addEventListener('click', () => {
  * @param {number} userCoursesId - The ID of the course to archive.
  */
 function archiveCourse(userCoursesId) {
-    fetch('../backend/api/archive_courses.php', {
+    fetch('../backend/api/classes/archive.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'archive', userCoursesId: userCoursesId })

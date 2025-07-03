@@ -20,7 +20,10 @@ const multipleEnrollmentsModal = new bootstrap.Modal(document.getElementById('mu
 // --------------------- General JavaScript ------------------------
 
 
-// Home button
+/**
+ * Handles clicks on "Home" button.
+ * Returns user to login page.
+ */
 document.getElementById('home').addEventListener('click', function () {
     const currentPath = window.location.pathname;
     const query = window.location.search;
@@ -49,7 +52,7 @@ dateValidation = true; // Global variable to track date validation state
 document.addEventListener('DOMContentLoaded', function () {
     // Page setup
     loadClasses();
-    loadEnrollments(); // Ensure enrollments are loaded to populate tables
+    loadEnrollments();
     reloadClassDropdowns();
     reloadUserDropdowns();
     initializeSearchableClassTable();
@@ -57,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeSearchableDropdowns(); // This now includes loading all users for regular dropdowns
     handleDateSelection(); // Initialize date selection for dashboard
     generateReport(); // Initial report generation with default filters
+
     $(document).ready(function(){
         $(".owl-carousel").owlCarousel({
             items: 3,
@@ -132,7 +136,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const editEnrollmentForm = document.getElementById('editEnrollmentForm');
     const addMultipleEnrollmentsForm = document.getElementById('addMultipleEnrollmentsForm'); // Ensure this is defined
 
-    // Add Dashboard Filter Form Handler
+    /**
+     * Adds a submit event listener to the dashboard filter form.
+     * 
+     * When the form is submitted, prevents the default submission,
+     * extracts relevant form values, logs them to the console,
+     * and calls generateReport with those values.
+     */
     if (dashFilterForm) {
         dashFilterForm.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -156,7 +166,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Add Class Form Handler (Create Class)
+    /**
+     * Adds a submit event listener to the class creation form.
+     * 
+     * On form submission:
+     * - Prevents the default form submission.
+     * - Validates that the class name is provided.
+     * - Converts the course code to uppercase and validates its format.
+     * - Fetches existing classes for the user to check for duplicates
+     *   (matching class name and/or course code).
+     * - If duplicates exist, shows error banners and aborts submission.
+     * - If validation passes, sends a POST request to create the new class.
+     * - On success, shows a success banner, reloads class lists and dropdowns,
+     *   and resets the form.
+     * - On failure, shows an error banner with the returned message.
+     */
     if (classForm) {
         classForm.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -256,7 +280,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Add Enrollment Form Handler (Create Enrollment)
+    /**
+     * Adds a submit event listener to the enrollment form.
+     * 
+     * On form submission:
+     * - Prevents the default form submission behavior.
+     * - Validates that the course, user, and role selections are made.
+     * - Fetches all existing enrollments to check for duplicates.
+     * - If the user is already enrolled in the selected course, shows an error banner.
+     * - Otherwise, sends a POST request to create the enrollment.
+     * - On success, shows a success banner, reloads enrollment data and tables, and resets the form.
+     * - Handles and logs errors appropriately.
+     */
     if (enrollmentForm) {
         enrollmentForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -334,6 +369,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    /**
+     * Adds a submit event listener to the "Add Multiple Enrollments" form.
+     * 
+     * On submission:
+     * - Prevents default form behavior.
+     * - Validates that a class and at least one user are selected.
+     * - Constructs an array of enrollment objects to be sent to the server.
+     * - Sends POST requests to create each enrollment in parallel using `Promise.all`.
+     * - Displays error banners for individual failures and logs detailed messages to the console.
+     * - If all enrollments succeed:
+     *   - Displays a success banner.
+     *   - Reloads enrollment data, tables, and dropdowns.
+     *   - Resets the form and UI state.
+     * - If some enrollments fail:
+     *   - Displays an error banner and performs the same reset and reload actions.
+     * 
+     * Dependencies:
+     * - Uses global `selectedUsers`, `updateSelectedUsersDisplay`, and `multipleEnrollmentsModal`.
+     */
     if (addMultipleEnrollmentsForm) {
         addMultipleEnrollmentsForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -421,7 +475,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Edit Class Form Handler
+    /**
+     * Adds a submit event listener to the class editing form.
+     * 
+     * On submission:
+     * - Prevents the default form behavior.
+     * - Validates and transforms the course code input.
+     * - Checks for duplicate class names or course codes (excluding the class being edited).
+     * - If duplicates are found, displays appropriate error banners and aborts the update.
+     * - If validation passes:
+     *   - Sends a POST request to update the class details.
+     *   - On success, reloads class data, refreshes UI elements, and closes the modal.
+     *   - On failure, hides banners and closes the modal (silent fail).
+     * - If the course code format is invalid, shows a specific formatting error.
+     *
+     * Dependencies:
+     * - Uses global `classModal` to hide the modal dialog.
+     * - Uses `isValidCourseCode`, `showSuccessBanner`, `showErrorBanner`, `hideAllBanners`,
+     *   `loadClasses`, `reloadFilterDropdowns`, `initializeSearchableClassTable`.
+     */
     if (editClassForm) {
         editClassForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -523,7 +595,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Edit Enrollment Form Handler
+    /**
+     * Adds a submit event listener to the enrollment editing form.
+     * 
+     * On submission:
+     * - Prevents default form behavior.
+     * - Retrieves input values including enrollment ID, course ID, user ID, and role.
+     * - Fetches all existing enrollments to check for duplicates (excluding the one being edited).
+     * - If the same user is already enrolled in the selected course, shows an error banner and aborts.
+     * - If validation passes:
+     *   - Sends a POST request to update the enrollment record.
+     *   - On success, shows a success banner, refreshes enrollments and UI elements, and closes the modal.
+     *   - On error, displays an appropriate error banner.
+     * 
+     * Dependencies:
+     * - Uses global `enrollmentModal`, `showErrorBanner`, `showSuccessBanner`, 
+     *   `loadEnrollments`, `reloadFilterDropdowns`, `initializeSearchableEnrollmentTable`.
+     */
     if (editEnrollmentForm) {
         editEnrollmentForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -591,10 +679,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+
 // --------------------- Dashboard JavaScript ------------------------
 
 
-// Handle date selection for dashboard
+/**
+ * Initializes the dashboard date pickers by constraining their selectable range to today
+ * and wiring up change listeners for validation.
+ *
+ * @global {HTMLInputElement|null} startDateInput – the input element for the start date (may be null if not found)
+ * @global {HTMLInputElement|null} endDateInput – the input element for the end date (may be null if not found)
+ * @global {boolean} dateValidation – flag indicating whether the current date inputs are valid
+ *
+ * @see validateDates
+ */
 function handleDateSelection() {
     const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
@@ -609,6 +707,13 @@ function handleDateSelection() {
     }
 }
 
+/**
+ * Makes sure the start date is before the end date.
+ *
+ * @global {HTMLInputElement|null} startDateInput – the input element for the start date (may be null if not found)
+ * @global {HTMLInputElement|null} endDateInput – the input element for the end date (may be null if not found)
+ * @global {boolean} dateValidation – flag indicating whether the current date inputs are valid
+ */
 function validateDates() {
     dataValidation = false; // Reset validation state
 
@@ -632,6 +737,22 @@ function validateDates() {
     endDateInput.reportValidity();
 }
 
+/**
+ * Generates and displays the dashboard report based on the given filters.
+ * 
+ * - Updates the “carousel-description” text to reflect whether filters are applied.
+ * - Validates that start/end dates are set when required.
+ * - Shows a loading shimmer and placeholder word‑cloud image.
+ * - Sends a POST to the backend to generate the report and, on success, updates the word‑cloud
+ *   image and dashboard statistics; shows error banners on failure.
+ *
+ * @param {string} [classFilter='All']          - The course ID to filter by, or 'All' for no filter.
+ * @param {string} [userFilter='All']           - The user ID to filter by, or 'All' for no filter.
+ * @param {?string} [startDate=null]            - The start date in 'YYYY-MM-DD' format; empty string is treated as null.
+ * @param {?string} [endDate=null]              - The end date in 'YYYY-MM-DD' format; empty string is treated as null.
+ * @param {('Both'|'Q'|'A')} [qaFilter='Both']  - Whether to include questions ('Q'), answers ('A'), or both.
+ * @param {string} [stopWords='']               - Comma‑separated words to exclude from the word cloud.
+ */
 function generateReport(classFilter='All', userFilter='All', startDate=null, endDate=null, qaFilter='Both', stopWords='') {
     if (startDate === '') startDate = null;
     if (endDate === '') endDate = null;
@@ -800,6 +921,11 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
     }
 }
 
+/**
+ * Clears all of the filters in the dashboard and then regernates the report.
+ * 
+ * @see generateReport
+ */
 function clearDashboardFilters() {
     // Reset hidden values
     document.getElementById('class_id').value = 'All';
@@ -818,7 +944,18 @@ function clearDashboardFilters() {
     generateReport();
 }
 
-
+/**
+ * Displays and populates the feedback modal.
+ * 
+ * - Fetches feedback entries from the backend using current dashboard filters.
+ * - Renders each entry (question, AI answer, user explanation, timestamp) into the modal.
+ * - Attaches toggle handlers for “Show More/Less” on answer snippets.
+ * - Finally, displays the Bootstrap modal.
+ * 
+ * @param {'up'|'down'} feedbackRating - Whether the student liked ('up') or disliked ('down') the message
+ * 
+ * @see ../backend/api/get_feedback.php
+ */
 function openFeedbackModal(feedbackRating) {
     const classId = document.getElementById('class_id').value || 'All';
     const userId = document.getElementById('user_id').value || 'All';
@@ -898,7 +1035,17 @@ function openFeedbackModal(feedbackRating) {
 // --------------------- Class and Enrollment Management JavaScript ------------------------
 
 
-// Validates a course code against specific formats.
+/**
+ * Validates a course code matches required format.
+ * 
+ *  * Accepted formats:
+ *   - Two or three uppercase letters followed by three digits, e.g. "EN100" or "CS/EGR222"
+ *   - An empty string (no code)
+ * 
+ * @param {string} code - the course code to validate
+ * 
+ * @returns {boolean} `true` if the code matches one of the accepted formats; otherwise `false`
+ */
 function isValidCourseCode(code) {
     const courseCodePattern = /^$|^[A-Z]{2,3}(\/[A-Z]{2,3})?\d{3}$/;
     return courseCodePattern.test(code);
@@ -907,6 +1054,17 @@ function isValidCourseCode(code) {
 // Load Classes
 let allClasses = []; // Store full class list globally
 
+/**
+ * Loads all classes a professor is enrolled in.
+ * 
+ * - Sends a GET request to retrieve the professor’s courses from the backend.
+ * - On success, stores the full list in the global `allClasses` variable.
+ * 
+ * @global {Array<Object>} allClasses - holds the fetched list of course objects
+ * 
+ * @see '../backend/api/get_professor_classes.php'
+ * @see renderClassTable
+ */
 function loadClasses() {
     fetch('../backend/api/get_professor_classes.php')
         .then(response => response.json())
@@ -917,11 +1075,30 @@ function loadClasses() {
             }
 
             allClasses = result.data; // Save full list globally
-            renderClassTable(allClasses); // Render all initially
+            renderClassTable(allClasses);
         })
         .catch(error => console.error('Error:', error));
 }
 
+/**
+ * Populates the classes table with the provided list of classes.
+ *
+ * - Clears any existing rows in the <tbody id="classesTable"> element.
+ * - Creates a table row for each class item, including name, creator, course code,
+ *   description, and action buttons.
+ * - Appends each row to the table body and then refreshes any class dropdowns.
+ *
+ * @param {{ 
+ *   id: number, 
+ *   name: string, 
+ *   courseCode?: string, 
+ *   description?: string, 
+ *   createdByUsername: string 
+ * }[]} classList – an array of class objects to render
+ *
+ * @see deleteClass
+ * @see reloadClassDropdowns
+ */
 function renderClassTable(classList) {
     const tbodyclasses = document.getElementById('classesTable');
     if (tbodyclasses) {
@@ -957,10 +1134,19 @@ function renderClassTable(classList) {
             tbodyclasses.appendChild(tr);
         });
 
-        reloadClassDropdowns(); // Assuming this is needed
+        reloadClassDropdowns();
     }
 }
 
+/**
+ * Filters courses based on their discipline and re-renders the class table.
+ * 
+ * @param {string} discipline - The discipline of a given course, e.g. "CS" for Computer Science.
+ * 
+ * @global {Array<Object>} allClasses - holds the fetched list of course objects
+ * 
+ * @see renderClassTable
+ */
 function filterCourses(discipline) {
     if (discipline === 'allCourses') {
         renderClassTable(allClasses);
@@ -977,6 +1163,17 @@ function filterCourses(discipline) {
     }
 }
 
+/**
+ *  Initializes live search filtering on the classes table.
+ *
+ * - Binds `input` events on the class name, course code, and description search fields.
+ * - On each input (or window resize), filters table rows by matching class name,
+ *   course code, or description.
+ * - Toggles the `hidden` class on rows that don’t match.
+ * 
+ * @see filterTable
+ * @see fuzzyIncludes
+ */
 function initializeSearchableClassTable() {
     const classNameTableInput = document.getElementById('classNameTableInput');
     const courseCodeTableInput = document.getElementById('courseCodeTableInput');
@@ -987,8 +1184,6 @@ function initializeSearchableClassTable() {
         const codeFilter = courseCodeTableInput?.value.toLowerCase() || '';
         const descFilter = classDescriptionTableInput?.value.toLowerCase() || '';
 
-        // *** FIX IS HERE: Target the table by its ID 'classesTableConfig' ***
-        // Then select the tbody and its rows within that table.
         const rows = document.querySelectorAll('#classesTableConfig tbody tr');
 
         const isMobileView = () => window.innerWidth < 1024;
@@ -1019,6 +1214,17 @@ function initializeSearchableClassTable() {
 // Load Enrollments
 let allEnrollments = []; // Store full enrollment list globally
 
+/**
+ * Loads all enrollments for classes a professor is enrolled in.
+ * 
+ * - Sends a GET request to retrieve the professor’s enrollments from the backend.
+ * - On success, stores the full list in the global `allEnrollments` variable.
+ * 
+ * @global {Array<Object>} allEnrollments - holds the fetched list of enrollment objects
+ * 
+ * @see '../backend/api/get_professor_enrollments.php'
+ * @see renderEnrollmentTable
+ */
 function loadEnrollments() {
     fetch('../backend/api/get_professor_enrollments.php')
         .then(response => response.json())
@@ -1034,6 +1240,27 @@ function loadEnrollments() {
         .catch(error => console.error('Error:', error));
 }
 
+/**
+ * Populates the enrollments table with the provided list of enrollments.
+ *
+ * - Clears any existing rows in the <tbody id="enrollmentsTable"> element.
+ * - Creates a table row for each enrollment, including class name, course code, user,
+ *   role, and action buttons.
+ * - Appends each row to the table body and then refreshes any class dropdowns.
+ *
+ * @param {{ 
+ *   id: number, 
+ *   name: string,
+ *   username: string,
+ *   courseId: number,
+ *   userId: number,
+ *   createdByUsername: string,
+ *   courseCode?: string 
+ * }[]} userCourses – an array of enrollment objects to render
+ *
+ * @see deleteEnrollment
+ * @see reloadClassDropdowns
+ */
 function renderEnrollmentTable(userCourses) {
     const tbodyenrollments = document.getElementById('enrollmentsTable');
     if (tbodyenrollments) {
@@ -1076,6 +1303,15 @@ function renderEnrollmentTable(userCourses) {
         }
 }
 
+/**
+ * Filters enrollments based on their class discipline and re-renders the enrollments table.
+ * 
+ * @param {string} discipline - The discipline of a given course, e.g. "CS" for Computer Science.
+ * 
+ * @global {Array<Object>} allEnrollments - holds the fetched list of enrollment objects
+ * 
+ * @see renderEnrollmentTable
+ */
 function filterEnrollments(discipline) {
     if (discipline === 'allCourses') {
         renderEnrollmentTable(allEnrollments);
@@ -1093,6 +1329,18 @@ function filterEnrollments(discipline) {
     }
 }
 
+/**
+ *  Initializes live search filtering on the enrollments table.
+ *
+ * - Binds `input` events on the class name and course code, user, and role search fields.
+ * - On each input (or window resize), filters table rows by matching class name and
+ *   course code, user, or role.
+ * - Toggles the `hidden` class on rows that don’t match.
+ * 
+ * @see filterTable
+ * @see fuzzyIncludes
+ */
+
 function initializeSearchableEnrollmentTable() {
     const classNamesTableInput = document.getElementById('classNamesTableInput');
     const userTableInput = document.getElementById('userTableInput');
@@ -1103,9 +1351,6 @@ function initializeSearchableEnrollmentTable() {
         const userFilter = userTableInput?.value.toLowerCase() || '';
         const roleFilter = roleTableInput?.value.toLowerCase() || '';
 
-        // *** IMPORTANT: Make sure your <table> for enrollments has the ID 'enrollmentsTableConfig' ***
-        // If your <table> has a different ID, replace 'enrollmentsTableConfig' with that ID.
-        // If your <table> does not have an ID, give it one.
         const rows = document.querySelectorAll('#enrollmentsTableConfig tbody tr');
 
         const isMobileView = () => window.innerWidth < 1024;
@@ -1119,24 +1364,26 @@ function initializeSearchableEnrollmentTable() {
             const matches =
                 fuzzyIncludes(name, namesFilter) &&
                 fuzzyIncludes(user, userFilter) &&
-                role.includes(roleFilter); // No point to fuzzy match roles - allowing for a one character typo prevents any filtering at all
+                role.includes(roleFilter);
 
             row.classList.toggle('hidden', !matches);
         });
     };
 
-    // Attach event listeners to the input fields
     [classNamesTableInput, userTableInput, roleTableInput].forEach(input => {
         if (input) input.addEventListener('input', filterTable);
     });
 
-    // Run filter on initial page load
     filterTable();
-    // Re-run filter on window resize to adjust visibility based on mobile/desktop layout
     window.addEventListener('resize', filterTable);
 }
 
-// Edit Class/Edit Enrollment
+/**
+ * Handles clicks on “Edit” buttons in the classes and enrollments tables.
+ * Populates and shows the appropriate Bootstrap modal.
+ *
+ * @param {MouseEvent} e – The click event
+ */
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('edit-class-btn')) {
         const btn = e.target;
@@ -1167,7 +1414,9 @@ document.addEventListener('click', function (e) {
     }
 });
 
-// Clear Class Form
+/**
+ * Clears the input fields for class name, course code, and class description.
+ */
 function clearClassInputs() {
     const className = document.getElementById('class_name');
     if (className) {
@@ -1183,7 +1432,9 @@ function clearClassInputs() {
     }
 }
 
-// Clear Enrollment Form
+/**
+ * Clears the dropdowns for class name, user, and role.
+ */
 function clearEnrollmentInputs() {
     const classListContainer = document.querySelector('.class-list');
     if (classListContainer) {
@@ -1202,7 +1453,19 @@ function clearEnrollmentInputs() {
     }
 }
 
-// Add Multiple Enrollments (Create Multiple Enrollments)
+/**
+ * Handles clicks to the "Add Multiple Enrollments" button.
+ * 
+ * - Hides existing banners and clears any previously selected users.
+ * - Reads the currently selected class text and ID from the main dashboard controls.
+ * - Populates the multiple‑enrollments modal with that class information.
+ * - Refreshes the display of selected users and then shows the modal.
+ * - If the user‑list dropdown is open, closes it.
+ *
+ * @param {MouseEvent} e – The click event
+ * 
+ * @see updateSelectedUsersDisplay
+ */
 const addMultipleEnrollments = document.getElementById('add-multiple-enrollments');
 if (addMultipleEnrollments) {
     addMultipleEnrollments.addEventListener('click', function (e) {
@@ -1218,7 +1481,7 @@ if (addMultipleEnrollments) {
         document.getElementById('selectedMultipleClassText').textContent = selectedClassText;
         document.getElementById('multiple_class_id').value = selectedClassId;
 
-        updateSelectedUsersDisplay(); // Update display to "Select Users"
+        updateSelectedUsersDisplay();
         multipleEnrollmentsModal.show();
 
         // Close the user-list dropdown if it's open
@@ -1230,7 +1493,29 @@ if (addMultipleEnrollments) {
     })
 }
 
-// Delete Class
+/**
+ * Deletes a class and its associated enrollments and files, after user confirmation.
+ *
+ * - Prompts the user to confirm deletion.
+ * - Shows a loading spinner and interim success banner.
+ * - Sends a DELETE request to remove all files for the class via the Flask API.
+ * - Upon success, sends a POST request to delete the class record.
+ * - Finally, hides the spinner, shows a “Class deleted” banner, and refreshes UI:
+ *   reloads classes, dropdowns, searchable table, and enrollments.
+ *
+ * @param {number} classId – The ID of the class to delete.
+ *
+ * @global {string} FLASK_API – Base URL for the Flask backend API.
+ * @global {string} userId – Current user’s ID for request authentication.
+ * @global {string} userRole – Current user’s role for request authentication.
+ * @global {string} username – Current user’s username for request authentication.
+ *
+ * @see loadClasses
+ * @see reloadClassDropdowns
+ * @see reloadFilterDropdowns
+ * @see initializeSearchableClassTable
+ * @see loadEnrollments
+ */
 function deleteClass(classId) {
     if (confirm('Are you sure? This will also delete all enrollments for this class.')) {
         document.getElementById('loading-spinner').classList.remove('hidden');
@@ -1280,7 +1565,19 @@ function deleteClass(classId) {
     }
 }
 
-// Delete Enrollment
+/**
+ * Deletes an enrollment after user confirmation.
+ *
+ * - Shows a confirmation dialog.
+ * - Sends a POST request to remove the enrollment on the server.
+ * - On success, displays a success banner and refreshes the enrollment table and related UI.
+ *
+ * @param {number} enrollmentId – The ID of the enrollment to delete.
+ *
+ * @see initializeSearchableEnrollmentTable
+ * @see reloadFilterDropdowns
+ * @see loadEnrollments
+ */
 function deleteEnrollment(enrollmentId) {
     if (confirm('Are you sure you want to delete this enrollment?')) {
         fetch('../backend/api/delete_enrollment.php', {
@@ -1342,9 +1639,22 @@ const userDashListContainer  = document.querySelector('.user-dash-list');
 const qaListContainer        = document.querySelector('.qa-list');  // static list
 
 
-// Initialize Dropdown Buttons
+/**
+ * Initializes all custom dropdown buttons with live-search filtering and click delegation.
+ *
+ * - Prevents dropdowns from closing when clicking inside their menus.
+ * - Attaches `input` listeners to various search fields (class, user, notes, multiple‑select, etc.)
+ *   to hide/show items via the `fuzzyIncludes` helper.
+ * - Delegates click events on each dropdown container to:
+ *     • Update the corresponding hidden input value.
+ *     • Update the visible label text.
+ *     • Hide the Bootstrap dropdown after selection.
+ * - Implements multi‑select logic for adding multiple users to a class.
+ *
+ * @see fuzzyIncludes
+ * @see updateSelectedUsersDisplay
+ */
 function initializeSearchableDropdowns() {
-    
     // Prevent dropdown from closing when clicking inside the menu
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.addEventListener('click', e => e.stopPropagation());
@@ -1456,7 +1766,6 @@ function initializeSearchableDropdowns() {
                     targetLoc.textContent = text;
                 }
                 
-
                 const dropdownToggle = dropdownItem.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
                 const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownToggle);
                 if (dropdownInstance) dropdownInstance.hide();
@@ -1560,7 +1869,7 @@ function initializeSearchableDropdowns() {
             if (dropdownItem && classNotesListContainer.contains(dropdownItem)) {
                 const value = dropdownItem.dataset.value;
                 text  = dropdownItem.textContent;
-                text = text.replace(/Created by: .*/, '').trim(); // Remove "Created by" part
+                text = text.replace(/Created by: .*/, '').trim();
                 document.getElementById('notes_class_id').value = value;
                 document.getElementById('notes_class_id').dispatchEvent(new Event('change'));
                 document.getElementById('selectedNotesClassText').textContent = text;
@@ -1591,9 +1900,6 @@ function initializeSearchableDropdowns() {
     }
 
     // Delegate click inside .user-multiple-list
-    // This listener needs to be outside initializeSearchableDropdowns if the container is always present,
-    // or ensure it's called after the container is available.
-    // For now, it's called when the modal is shown.
     const userMultipleListContainerForListener = document.querySelector('.user-multiple-list');
     if (userMultipleListContainerForListener) {
         userMultipleListContainerForListener.addEventListener('click', function(e) {
@@ -1631,7 +1937,7 @@ function initializeSearchableDropdowns() {
         });
     }
 
-    // Dashboard Class Dropdown
+    // Delegate click inside dashboard class dropdown
     if (classDashListContainer) {
         classDashListContainer.addEventListener('click', function (e) {
             const dropdownItem = e.target.closest('.dropdown-item');
@@ -1650,7 +1956,7 @@ function initializeSearchableDropdowns() {
         });
     }
 
-    // Dashboard User Dropdown
+    // Delegate click inside dashboard user dropdown
     if (userDashListContainer) {
         userDashListContainer.addEventListener('click', function (e) {
             const dropdownItem = e.target.closest('.dropdown-item');
@@ -1667,7 +1973,7 @@ function initializeSearchableDropdowns() {
         });
     }
 
-    // Dashboard Q/A Filter
+    // Delegate click inside dashboard QA dropdown
     if (qaListContainer) {
         qaListContainer.addEventListener('click', function (e) {
             const dropdownItem = e.target.closest('.dropdown-item');
@@ -1683,8 +1989,24 @@ function initializeSearchableDropdowns() {
             }
         });
     }
-
 }
+
+/**
+ * Updates the displayed list of selected users in the “Add Multiple Enrollments” modal.
+ *
+ * - Re‑queries the `.user-multiple-list` container (in case it wasn’t in the DOM at load time).
+ * - Collects the names of users whose IDs are in the global `selectedUsers` set.
+ * - If any users are selected:
+ *     • Sets `selectedMultipleUserText.textContent` to the comma‑separated names.
+ *     • Sets `multipleUserIdInput.value` to the comma‑separated IDs.
+ * - If no users are selected:
+ *     • Resets the display text to `"Select Users"`.
+ *     • Clears the hidden input’s value.
+ *
+ * @global {Set<string>} selectedUsers – Set of user IDs currently selected.
+ * @global {HTMLElement} selectedMultipleUserText – Element showing the selected user names.
+ * @global {HTMLInputElement} multipleUserIdInput – Hidden input holding the selected user IDs.
+ */
 
 function updateSelectedUsersDisplay() {
     const userNames = [];
@@ -1711,11 +2033,19 @@ function updateSelectedUsersDisplay() {
     }
 }
 
-// Global variable for all users, will be populated via API call
-// let allUsers = []; // Already declared at the top
-
+/**
+ * Fetches all users for the “Add Multiple Enrollments” modal and renders the list.
+ *
+ * - Re‑queries the `.user-multiple-list` container (in case it wasn’t in the DOM at load time).
+ * - Sends a GET request to retrieve all users from the backend.
+ * - On success, populates the global `allUsers` array and calls `renderUserMultipleList()`.
+ * - Logs an error if the request fails or the container is missing.
+ *
+ * @global {Array<Object>} allUsers – Array holding all user objects fetched from the server.
+ * 
+ * @see renderUserMultipleList
+ */
 function loadAllUsersForMultipleSelect() {
-    // Ensure userMultipleListContainer is available before attempting to load/render
     const currentListContainer = document.querySelector('.user-multiple-list');
     if (!currentListContainer) {
         console.error('userMultipleListContainer not found in loadAllUsersForMultipleSelect');
@@ -1735,10 +2065,22 @@ function loadAllUsersForMultipleSelect() {
         .catch(error => console.error("Error loading users for multiple select:", error));
 }
 
+/**
+ * Renders the list of users in the “Add Multiple Enrollments” dropdown.
+ *
+ * - Clears any existing content inside the `.user-multiple-list` container.
+ * - If `allUsers` is empty, shows a “No users found” message.
+ * - Otherwise, creates a `.dropdown-item` element for each user:
+ *     • Applies the `active` class if the user is already in the `selectedUsers` set.
+ *     • Sets `data-value` to the user’s ID and the text content to the username.
+ *
+ * @global {Array<Object>} allUsers – Array of user objects to render (must include `id` and `username`).
+ * @global {Set<string>} selectedUsers – Set of currently selected user IDs (as strings).
+ */
 function renderUserMultipleList() {
     const currentListContainer = document.querySelector('.user-multiple-list');
     if (currentListContainer) {
-        currentListContainer.innerHTML = ''; // Clear existing items
+        currentListContainer.innerHTML = '';
 
         if (allUsers.length === 0) {
             const noUsersMessage = document.createElement('div');
@@ -1751,7 +2093,7 @@ function renderUserMultipleList() {
         allUsers.forEach(user => {
             const div = document.createElement('div');
             div.classList.add('dropdown-item');
-            if (selectedUsers.has(String(user.id))) { // Ensure ID is string for comparison
+            if (selectedUsers.has(String(user.id))) {
                 div.classList.add('active');
             }
             div.dataset.value = user.id;
@@ -1761,7 +2103,23 @@ function renderUserMultipleList() {
     }
 }
 
-// Reload Class Dropdowns
+/**
+ * Fetches all classes associated with the professor and updates all relevant dropdown menus.
+ *
+ * - Sends a GET request to `get_professor_classes.php` to retrieve the professor’s classes.
+ * - On success, updates each of the following dropdowns:
+ *   • `.class-list` – for general class selection
+ *   • `.class-dash-list` – for dashboard filtering (includes an "All" option)
+ *   • `classEditDropdown` – for editing a class
+ *   • `.class-notes-list` – for selecting a class for notes
+ *   • `.class-multiple-list` – for multi-enrollment class selection
+ * - Each dropdown item includes a main line (class name + optional course code)
+ *   and a subheader line ("Created by: ...").
+ *
+ * @global {HTMLElement} classEditDropdown – Container for class edit dropdown.
+ * 
+ * @see ../backend/api/get_professor_classes.php
+ */
 function reloadClassDropdowns() {
     fetch('../backend/api/get_professor_classes.php')
         .then(response => response.json())
@@ -1773,7 +2131,7 @@ function reloadClassDropdowns() {
 
             const courses = result.data;
 
-            // Update dropdown menus
+            // Update class list dropdown menu
             const classDropdown = document.querySelector('.class-list');
             if (classDropdown) {
                 classDropdown.innerHTML = '';
@@ -1804,7 +2162,7 @@ function reloadClassDropdowns() {
                 }
             }
 
-            // Update dropdown menus
+            // Update dashboard class list dropdown menu
             const classDashListContainer = document.querySelector('.class-dash-list');
             if (classDashListContainer) {
                 classDashListContainer.innerHTML = '';
@@ -1852,9 +2210,7 @@ function reloadClassDropdowns() {
                 }
             }
 
-
-
-            const classEditDropdown = document.querySelector('.class-edit-list');
+            // Update class edit list dropdown menu
             if (classEditDropdown) {
                 classEditDropdown.innerHTML = '';
                 if (Array.isArray(courses)) {
@@ -1884,7 +2240,7 @@ function reloadClassDropdowns() {
                 }
             }
 
-            // Update dropdown menus
+            // Update class notes list dropdown menu
             const classNotesDropdown = document.querySelector('.class-notes-list');
             if (classNotesDropdown) {
                 classNotesDropdown.innerHTML = '';
@@ -1915,7 +2271,7 @@ function reloadClassDropdowns() {
                 }
             }
 
-            // Update dropdown menus
+            // Update class multiple list dropdown menu
             const classMultipleDropdown = document.querySelector('.class-multiple-list');
             if (classMultipleDropdown) {
                 classMultipleDropdown.innerHTML = '';
@@ -1948,7 +2304,18 @@ function reloadClassDropdowns() {
         });
 }
 
-// Reload User Dropdowns
+/**
+ * Fetches all users and updates the relevant dropdown menus across the dashboard.
+ *
+ * - Sends a GET request to `get_all_users.php` to retrieve user data.
+ * - On success, updates the following dropdowns:
+ *   • `.user-list` – standard user selection menu
+ *   • `.user-edit-list` – user selection in the edit modal
+ *   • `.user-dash-list` – dashboard filter menu, including an "All" option
+ * - Each dropdown item is assigned the user’s ID as `data-value` and displays the username.
+ *
+ * @see ../backend/api/get_all_users.php
+ */
 function reloadUserDropdowns() {
     fetch('../backend/api/get_all_users.php')
         .then(response => response.json())
@@ -1960,7 +2327,7 @@ function reloadUserDropdowns() {
 
             const users = result.data;
 
-            // Update dropdown menus
+            // Update user list dropdown menu
             const userDropdown = document.querySelector('.user-list');
             if (userDropdown) {
                 userDropdown.innerHTML = '';
@@ -1976,7 +2343,7 @@ function reloadUserDropdowns() {
                 }
             }
 
-            // Update dropdown menus
+            // Update user edit list dropdown menu
             const userEditDropdown = document.querySelector('.user-edit-list');
             if (userEditDropdown) {
                 userEditDropdown.innerHTML = '';
@@ -1992,6 +2359,7 @@ function reloadUserDropdowns() {
                 }
             }
 
+            // Update dashboard user list dropdown menu
             const userDashListContainer = document.querySelector('.user-dash-list');
             if (userDashListContainer) {
                 userDashListContainer.innerHTML = '';
@@ -2017,7 +2385,19 @@ function reloadUserDropdowns() {
         });
 }
 
-// Reload Filter Dropdowns
+/**
+ * Reloads and repopulates the discipline filter dropdowns used in the dashboard and enrollment views.
+ *
+ * - Fetches a list of available disciplines from `get_disciplines.php`.
+ * - Updates:
+ *   • `#filter-by-btn` – used for filtering class-related dashboard content.
+ *   • `#filter-by-btn-2` – used for filtering enrollment data.
+ * - Each dropdown receives:
+ *   • A default "All" option.
+ *   • An `<option>` for each discipline received from the backend.
+ *
+ * @see ../backend/api/get_disciplines.php
+ */
 function reloadFilterDropdowns() {
     fetch('../backend/api/get_disciplines.php')
         .then(response => response.json())
@@ -2073,6 +2453,20 @@ function reloadFilterDropdowns() {
 // --------------------- Filter Management JavaScript ------------------------
 
 
+/**
+ * Performs a fuzzy substring match between a full string and a user input string.
+ * This allows minor typos (e.g., 1-character difference) to still register as a match.
+ *
+ * - Returns `true` if the `input` is found exactly within `full`.
+ * - Otherwise, slides a window the length of `input` across `full` and compares each chunk.
+ * - If any chunk has a Levenshtein distance ≤ 1 from `input`, it’s considered a fuzzy match.
+ *
+ * @param {string} full – The full string to search within.
+ * @param {string} input – The user-provided input string to match (with potential typos).
+ * @returns {boolean} `true` if a fuzzy match is found; otherwise `false`.
+ *
+ * @see levenshtein
+ */
 function fuzzyIncludes(full, input) {
     full = full.toLowerCase();
     input = input.toLowerCase();
@@ -2090,6 +2484,22 @@ function fuzzyIncludes(full, input) {
     return false;
 }
 
+/**
+ * Calculates the Levenshtein distance between two strings.
+ *
+ * The Levenshtein distance is the minimum number of single-character
+ * edits (insertions, deletions, or substitutions) required to change one string into the other.
+ *
+ * Commonly used for fuzzy string matching and typo tolerance.
+ *
+ * @param {string} a – The first string to compare.
+ * @param {string} b – The second string to compare.
+ * @returns {number} The Levenshtein distance between `a` and `b`.
+ *
+ * @example
+ * levenshtein('kitten', 'sitting'); // returns 3
+ * levenshtein('flaw', 'lawn');      // returns 2
+ */
 function levenshtein(a, b) {
     const matrix = Array.from({ length: a.length + 1 }, () =>
         Array(b.length + 1).fill(0)
@@ -2127,7 +2537,25 @@ if (fileUploadDiv) {
     });
 }
 
-// Function to handle files and display thumbnails
+/**
+ * Handles file selection and uploads files to the selected course’s documents folder.
+ *
+ * - Validates that a course is selected before proceeding.
+ * - Displays a loading spinner during upload.
+ * - Iterates through each selected file:
+ *   • Uploads it using `saveFileToDocsFolder(file, courseId)`.
+ *   • If successful, displays a file preview with `displayFilePreview()`.
+ * - Once all uploads are complete:
+ *   • Reloads the list of existing files using `loadExistingFiles()`.
+ *   • Shows a success banner and hides the loading spinner.
+ *
+ * @async
+ * @param {Event} event – The file input change event containing `event.target.files`.
+ *
+ * @see saveFileToDocsFolder
+ * @see displayFilePreview
+ * @see loadExistingFiles
+ */
 async function handleFiles(event) {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
     const files = Array.from(event.target.files);
@@ -2159,8 +2587,23 @@ async function handleFiles(event) {
     document.getElementById('loading-spinner').classList.add('hidden');
 }
 
-
-// Save file to the appropriate course's folder
+/**
+ * Uploads a single file to the documents folder for a given course via the Flask backend.
+ *
+ * - Constructs a `FormData` payload with the file and course ID.
+ * - Sends a POST request to the Flask `/upload` endpoint with authentication headers.
+ * - On success, logs a confirmation and returns `true`.
+ * - On failure, logs the error, displays an error banner, and returns `false`.
+ *
+ * @param {File} file – The file object to upload.
+ * @param {number} courseId – The ID of the course the file should be associated with.
+ * @returns {Promise<boolean>} Resolves to `true` if upload succeeds; otherwise `false`.
+ *
+ * @global {string} FLASK_API – Base URL for the Flask backend API.
+ * @global {string} userId – Current user's ID.
+ * @global {string} userRole – Current user's role.
+ * @global {string} username – Current user's username.
+ */
 function saveFileToDocsFolder(file, courseId) {
     const formData = new FormData();
     formData.append("file", file);
@@ -2194,7 +2637,26 @@ function saveFileToDocsFolder(file, courseId) {
     });
 }
 
-// Display file preview based on file type
+/**
+ * Creates and displays a file preview element in the appropriate section based on file type.
+ *
+ * - Displays a preview card with:
+ *   • A file-type-specific icon (PDF, PPTX, or default)
+ *   • A shortened, readable file name
+ *   • A download link with proper attributes
+ *   • A delete button that removes the file from the backend and UI
+ * - Appends the preview to one of: `pdfDiv`, `pptxDiv`, or `pngDiv` based on file type.
+ *
+ * @param {string} fileName – The full file name or path (used to generate name and download URL).
+ * @param {string} fileType – The MIME type or extension (e.g., `"application/pdf"`, `"application/vnd.openxmlformats-officedocument.presentationml.presentation"`).
+ * @param {string|number} courseId – The ID of the course this file is associated with.
+ *
+ * @see removeFileFromDocsFolder
+ * @global {HTMLElement} pdfDiv – Container for PDF file previews.
+ * @global {HTMLElement} pptxDiv – Container for PPTX file previews.
+ * @global {HTMLElement} pngDiv – Container for all other file previews.
+ * @global {string} FLASK_API – Base URL for the Flask backend API.
+ */
 function displayFilePreview(fileName, fileType, courseId) {
     const preview = document.createElement('div');
     preview.className = 'file-preview flex flex-col items-center gap-1 p-0 rounded bg-gray-200 text-white w-40';
@@ -2255,19 +2717,27 @@ function displayFilePreview(fileName, fileType, courseId) {
     }
 }
 
-
+/**
+ * Removes a file from the documents folder of the selected course.
+ *
+ * Sends a DELETE request to the server to remove the specified file
+ * from the course folder identified by the selected course ID.
+ * On success, removes the file preview element from the DOM and shows a success banner.
+ * On failure, logs an error to the console.
+ *
+ * @param {string} fileName - The name of the file to be removed.
+ * @param {HTMLElement} preview - The DOM element representing the file preview to remove upon success.
+ * 
+ */
 function removeFileFromDocsFolder(fileName, preview) {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
     const selectedCourse = coursesDropdownUpload.value;
     const selectedCourseName = document.getElementById('selectedNotesClassText').innerText;
 
     if (!selectedCourseName) {
-        // Changed from alert to showErrorBanner for better UI
         showErrorBanner("Please select a course."); 
         return;
     }
-    // console.log(fileName)
-    // console.log(selectedCourseName)
     fetch(`${FLASK_API}/delete?file=${fileName}&courseId=${selectedCourse}`, {
         method: "DELETE",
         credentials: 'include',
@@ -2290,7 +2760,9 @@ function removeFileFromDocsFolder(fileName, preview) {
     .catch(err => console.error('Error removing file:', err));
 }
 
-// Update preview after training to mark files as trained
+/**
+ * Update preview after training to mark files as trained.
+ */
 function updateTrainedFiles() {
     const previews = document.querySelectorAll('.file-preview');
     previews.forEach(preview => {
@@ -2298,8 +2770,14 @@ function updateTrainedFiles() {
     });
 }
 
-// Function to load existing files from currently selected course
-// and display them in the preview area
+/**
+ * Loads and displays existing files for the selected course.
+ * 
+ * Fetches files from the server based on the selected course ID,
+ * clears any existing file previews, and displays the files grouped
+ * by type (PDF, PPTX, and others) in their respective containers.
+ * Adds headings above each file group if files of that type exist.
+ */
 function loadExistingFiles() {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
     const selectedCourse = coursesDropdownUpload.value; // This is the course ID
@@ -2321,7 +2799,8 @@ function loadExistingFiles() {
     })
         .then(response => response.json())
         .then(files => {
-            previewDiv.innerHTML = ''; // Clear existing previews
+            // Clear existing previews
+            previewDiv.innerHTML = '';
             pdfDiv.innerHTML = '';
             pptxDiv.innerHTML = '';
             pngDiv.innerHTML = '';
@@ -2330,6 +2809,7 @@ function loadExistingFiles() {
             });
         })
         .finally(() => {
+            // Add in headers for file types if they exist
             if (pdfDiv.querySelector('.file-preview')) {
                 const heading = document.createElement('h6');
                 heading.className = 'text-sm font-semibold mb-0';
@@ -2355,7 +2835,6 @@ function loadExistingFiles() {
             console.log("File loading complete.");
         })
         .catch(err => console.error("Error loading files:", err));
-        
 }
 
 
@@ -2366,6 +2845,12 @@ function loadExistingFiles() {
 let successTimeoutId = null;
 let errorTimeoutId = null;
 
+/**
+ * Hides both success and error banners if they exist,
+ * and clears any existing timeout that would auto-hide them.
+ *
+ * @modifies {successTimeoutId, errorTimeoutId}
+ */
 function hideAllBanners() {
     const successBanner = document.getElementById('success-banner');
     const errorBanner = document.getElementById('error-banner');
@@ -2387,6 +2872,13 @@ function hideAllBanners() {
     }
 }
 
+/**
+ * Displays the green success banner with the provided message,
+ * hides any other visible banners, and sets a timeout to hide the success banner after 10 seconds.
+ *
+ * @param {string} message - The message to display in the success banner.
+ * @modifies {successTimeoutId}
+ */
 function showSuccessBanner(message) {
     hideAllBanners(); // Hide others and clear their timeouts
 
@@ -2402,6 +2894,13 @@ function showSuccessBanner(message) {
     }, 10000); // 10 seconds
 }
 
+/**
+ * Displays the red error banner with the provided message,
+ * hides any other visible banners, and sets a timeout to hide the success banner after 10 seconds.
+ *
+ * @param {string} message - The message to display in the error banner.
+ * @modifies {successTimeoutId}
+ */
 function showErrorBanner(message) {
     hideAllBanners(); // Hide others and clear their timeouts
 
@@ -2427,7 +2926,10 @@ const toggleIconMobile = document.getElementById('toggle-dropdown-mobile-icon');
 const content = document.getElementById('my-content');
 const chatContainer = document.getElementById('chat-container');
 
-// Left Sidebar Button Show Mobile
+/**
+ * Handles clicks on "toggle-dropdown-mobile" button.
+ * Toggles sidebar when viewing on smaller screens and changes button icons.
+ */
 if (toggleBtnMobile) {
     toggleBtnMobile.addEventListener('click', () => {
         console.log("Toggle button clicked!");
@@ -2444,40 +2946,37 @@ if (toggleBtnMobile) {
     });
 }
 
+/**
+ * Handles UI adjustments based on the current window width.
+ * 
+ * For screens wider than or equal to 1024px:
+ * - Shows the sidebar.
+ * - Sets header and header text styles for large screens.
+ * - Removes mobile-specific layout class from the content area.
+ * 
+ * For smaller screens:
+ * - Hides the sidebar.
+ * - Sets header and header text styles for small screens.
+ * - Applies mobile-specific layout class to the content area.
+ */
 function handleResize() {
     const sidebar = document.getElementById('sidebar');
     const header = document.getElementById('chat-header');
     const headerText = document.getElementById('chat-header-text');
     const content = document.getElementById('my-content');
 
-    if (normalSize()) {
-        // Large screen or larger
-        // Left and Right sidebars are visible
+    if (window.innerWidth >= 1024) {
         sidebar.classList.remove('hidden');
-        // Changes the header styling
         if (header) header.className = "flex items-center justify-start p-3 w-full gap-2 border-b-4 border-gray-50";
         if (headerText) headerText.className = "text-xl font-bold text-left m-0";
-        // Removes one column layout
         content.classList.remove('mobile');
-    }
-    else {
-        // Small screen
-        // Left and Right sidebars are not visible, seperate buttons for these sidebars are visible
+    } else {
         sidebar.classList.add('hidden');
-        // Changes the header styling
         if (header) header.className = "flex items-center p-3 w-full bg-gray-100 border-b-4 border-gray-200";
         if (headerText) headerText.className = "text-xl font-bold text-center m-0 flex-grow-1 pr-8";
-        // Sets to one column layout
         content.classList.add('mobile');
     }
 }
 
-function normalSize() {
-    return window.innerWidth >= 1024;
-}
-
-// Run on resize
 window.addEventListener('resize', handleResize);
-
-// Run once on initial load
 handleResize();

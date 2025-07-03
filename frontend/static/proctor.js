@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (classDescription === '') { classDescription = null; }
 
                 // Fetch all classes to check for duplicates
-                fetch('../backend/api/get_professor_classes.php')
+                fetch('../backend/api/classes/list_by_professor.php')
                     .then(response => response.json())
                     .then(result => {
                         if (!result.success) {
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             description: classDescription
                         };
 
-                        fetch('../backend/api/create_class.php', {
+                        fetch('../backend/api/classes/create.php', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            fetch('../backend/api/get_professor_enrollments.php')
+            fetch('../backend/api/enrollments/list_by_professor.php')
                 .then(response => response.json())
                 .then(result => {
                     if (!result.success) {
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     // Proceed with enrollment
-                    fetch('../backend/api/create_enrollment.php', {
+                    fetch('../backend/api/enrollments/create.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (classDescription === '') { classDescription = null; }
 
                 // Fetch all classes to check for duplicates (excluding the current one)
-                fetch('../backend/api/get_professor_classes.php')
+                fetch('../backend/api/classes/list_by_professor.php')
                     .then(response => response.json())
                     .then(result => {
                         if (!result.success) {
@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             description: classDescription
                         };
                         
-                        fetch('../backend/api/update_class.php', {
+                        fetch('../backend/api/classes/update.php', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const userId = document.getElementById('edit_user_id').value;
             const roleOfClass = document.getElementById('edit_roleOfClass').value;
 
-            fetch('../backend/api/get_professor_enrollments.php')
+            fetch('../backend/api/enrollments/list_by_professor.php')
                 .then(response => response.json())
                 .then(result => {
                     if (!result.success) {
@@ -651,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         roleOfClass
                     };
 
-                    fetch('../backend/api/update_enrollment.php', {
+                    fetch('../backend/api/enrollments/update.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -822,7 +822,7 @@ function generateReport(classFilter='All', userFilter='All', startDate=null, end
                 container.classList.remove('shimmer');
 
                 // Load carousel data
-                fetch(`../backend/api/get_carousel.php?${params}`)
+                fetch(`../backend/api/carousel/list.php?${params}`)
                     .then(response => response.json())
                     .then(stats => {
                         if (!stats.success) {
@@ -954,7 +954,7 @@ function clearDashboardFilters() {
  * 
  * @param {'up'|'down'} feedbackRating - Whether the student liked ('up') or disliked ('down') the message
  * 
- * @see ../backend/api/get_feedback.php
+ * @see ../backend/api/feedback/list.php
  */
 function openFeedbackModal(feedbackRating) {
     const classId = document.getElementById('class_id').value || 'All';
@@ -970,7 +970,7 @@ function openFeedbackModal(feedbackRating) {
         rating: feedbackRating
     });
 
-    fetch(`../backend/api/get_feedback.php?${params.toString()}`, {
+    fetch(`../backend/api/feedback/list.php?${params.toString()}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -1062,11 +1062,11 @@ let allClasses = []; // Store full class list globally
  * 
  * @global {Array<Object>} allClasses - holds the fetched list of course objects
  * 
- * @see '../backend/api/get_professor_classes.php'
+ * @see '../backend/api/classes/list_by_professor.php'
  * @see renderClassTable
  */
 function loadClasses() {
-    fetch('../backend/api/get_professor_classes.php')
+    fetch('../backend/api/classes/list_by_professor.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {
@@ -1222,11 +1222,11 @@ let allEnrollments = []; // Store full enrollment list globally
  * 
  * @global {Array<Object>} allEnrollments - holds the fetched list of enrollment objects
  * 
- * @see '../backend/api/get_professor_enrollments.php'
+ * @see '../backend/api/enrollments/list_by_professor.php'
  * @see renderEnrollmentTable
  */
 function loadEnrollments() {
-    fetch('../backend/api/get_professor_enrollments.php')
+    fetch('../backend/api/enrollments/list_by_professor.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {
@@ -1540,7 +1540,7 @@ function deleteClass(classId) {
             }
             console.log(`Files for class ${classId} deleted successfully.`);
             // Now delete the class itself
-            fetch('../backend/api/delete_class.php', {
+            fetch('../backend/api/classes/delete.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1580,7 +1580,7 @@ function deleteClass(classId) {
  */
 function deleteEnrollment(enrollmentId) {
     if (confirm('Are you sure you want to delete this enrollment?')) {
-        fetch('../backend/api/delete_enrollment.php', {
+        fetch('../backend/api/enrollments/delete.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2052,7 +2052,7 @@ function loadAllUsersForMultipleSelect() {
         return;
     }
 
-    fetch('../backend/api/get_all_users.php')
+    fetch('../backend/api/users/list.php')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -2106,7 +2106,7 @@ function renderUserMultipleList() {
 /**
  * Fetches all classes associated with the professor and updates all relevant dropdown menus.
  *
- * - Sends a GET request to `get_professor_classes.php` to retrieve the professor’s classes.
+ * - Sends a GET request to `list_by_professor.php` to retrieve the professor’s classes.
  * - On success, updates each of the following dropdowns:
  *   • `.class-list` – for general class selection
  *   • `.class-dash-list` – for dashboard filtering (includes an "All" option)
@@ -2118,10 +2118,10 @@ function renderUserMultipleList() {
  *
  * @global {HTMLElement} classEditDropdown – Container for class edit dropdown.
  * 
- * @see ../backend/api/get_professor_classes.php
+ * @see ../backend/api/classes/list_by_professor.php
  */
 function reloadClassDropdowns() {
-    fetch('../backend/api/get_professor_classes.php')
+    fetch('../backend/api/classes/list_by_professor.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {
@@ -2307,17 +2307,17 @@ function reloadClassDropdowns() {
 /**
  * Fetches all users and updates the relevant dropdown menus across the dashboard.
  *
- * - Sends a GET request to `get_all_users.php` to retrieve user data.
+ * - Sends a GET request to `users/list.php` to retrieve user data.
  * - On success, updates the following dropdowns:
  *   • `.user-list` – standard user selection menu
  *   • `.user-edit-list` – user selection in the edit modal
  *   • `.user-dash-list` – dashboard filter menu, including an "All" option
  * - Each dropdown item is assigned the user’s ID as `data-value` and displays the username.
  *
- * @see ../backend/api/get_all_users.php
+ * @see ../backend/api/users/list.php
  */
 function reloadUserDropdowns() {
-    fetch('../backend/api/get_all_users.php')
+    fetch('../backend/api/users/list.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {
@@ -2388,7 +2388,7 @@ function reloadUserDropdowns() {
 /**
  * Reloads and repopulates the discipline filter dropdowns used in the dashboard and enrollment views.
  *
- * - Fetches a list of available disciplines from `get_disciplines.php`.
+ * - Fetches a list of available disciplines from `list_disciplines.php`.
  * - Updates:
  *   • `#filter-by-btn` – used for filtering class-related dashboard content.
  *   • `#filter-by-btn-2` – used for filtering enrollment data.
@@ -2396,10 +2396,10 @@ function reloadUserDropdowns() {
  *   • A default "All" option.
  *   • An `<option>` for each discipline received from the backend.
  *
- * @see ../backend/api/get_disciplines.php
+ * @see ../backend/api/classes/list_disciplines.php
  */
 function reloadFilterDropdowns() {
-    fetch('../backend/api/get_disciplines.php')
+    fetch('../backend/api/classes/list_disciplines.php')
         .then(response => response.json())
         .then(result => {
             if (!result.success) {

@@ -76,7 +76,7 @@
             const password = document.getElementById("password").value;
 
             try {
-                const response = await fetch("../backend/api/login.php", {
+                const response = await fetch("../backend/api/auth/login.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "same-origin",
@@ -99,7 +99,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("../backend/api/signup.php", {
+            const response = await fetch("../backend/api/auth/signup.php", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "same-origin",

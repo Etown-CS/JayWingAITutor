@@ -33,7 +33,7 @@ document.getElementById('home').addEventListener('click', function () {
 function archiveCourse(userCoursesId) {
     // if (!confirm("Are you sure you want to archive this course?")) return; // Removed confirmation dialog for simplicity
 
-    fetch('../backend/api/archive_courses.php', {
+    fetch('../backend/api/classes/archive.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'archive', userCoursesId: userCoursesId })
@@ -590,7 +590,7 @@ function storeFeedback(messageId, feedback=null) {
     // Ask the user if they'd like to add a comment
     if (feedback) {
         showFeedbackBanner(messageId);
-        fetch('../backend/api/feedback.php', {
+        fetch('../backend/api/feedback/update.php', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
@@ -615,7 +615,7 @@ function storeFeedback(messageId, feedback=null) {
     } else {
         // Delete feedback
         console.log("Removing feedback for messageId:", messageId);
-        fetch('../backend/api/feedback.php', {
+        fetch('../backend/api/feedback/update.php', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -697,7 +697,7 @@ function showFeedbackBanner(messageId) {
         banner.classList.add('hidden');
 
         if (explanation) {
-            fetch('../backend/api/feedback.php', {
+            fetch('../backend/api/feedback/update.php', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -994,7 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function getMessageContent(messageId) {
     try {
-        const response = await fetch(`../backend/api/messages.php?messageId=${encodeURIComponent(messageId)}`, {
+        const response = await fetch(`../backend/api/messages/messages.php?messageId=${encodeURIComponent(messageId)}`, {
             method: 'getMessages',
             headers: {
                 'Content-Type': 'application/json',
@@ -1074,7 +1074,7 @@ const closeModalBtn = document.getElementById('close-archive-modal');
 const coursesList = document.getElementById('archived-courses-list');
 
 archiveButton.addEventListener('click', () => {
-    fetch('../backend/api/archive_courses.php?action=get')
+    fetch('../backend/api/classes/archive.php?action=get')
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById('archived-courses-list');
@@ -1094,7 +1094,7 @@ archiveButton.addEventListener('click', () => {
                     restoreButton.textContent = 'Restore';
                     restoreButton.className = 'bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded';
                     restoreButton.onclick = () => {
-                        fetch('../backend/api/archive_courses.php', {
+                        fetch('../backend/api/classes/archive.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ action: 'restore', courseName: course.name})
@@ -1230,7 +1230,7 @@ if (saveBtn) {
         console.log("Response Length:", responseLength.value);
         console.log("Interest Input:", interestInput.value);
         urlParams = new URLSearchParams(window.location.search);
-        fetch('../backend/api/settings.php', {
+        fetch('../backend/api/settings/settings.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1439,7 +1439,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const chatId = new URLSearchParams(window.location.search).get('chatId');
     if (!chatId) return;
 
-    fetch('../backend/api/settings.php?action=getSettings&chatId=' + encodeURIComponent(chatId), {
+    fetch('../backend/api/settings/settings.php?action=getSettings&chatId=' + encodeURIComponent(chatId), {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
     })

@@ -35,6 +35,7 @@ def get_db_connection():
 # Constants for AI tutor
 ai_memory = 4 # Number of messages provided to the AI for context
 chunk_count = 10 # Number of chunks to retrieve from Pinecone
+# TODO: Raise this back to 0.375
 similarity_threshold = 0.325 # Minimum similarity score for document relevance -- play around with this
 
 def chat_info(chatId):
@@ -316,13 +317,38 @@ def printTokens(response):
         response (dict): The OpenAI API response.
     '''
     usage = response.usage
-    # Extract token usage information
+    # Different model costs
+    # GPT-4o       - Input: $2.50 per million tokens | Output: $10.00 per million tokens
+    # GPT-4.1      - Input: $2.00 per million tokens | Output: $8.00 per million tokens
+    # GPT-4.1-mini - Input: $0.40 per million tokens | Output: $1.60 per million tokens
+    # GPT-4.1-nano - Input: $0.10 per million tokens | Output: $0.40 per million tokens
+
+    # Calculate costs
+    input_cost = .4 / 1000000 # $0.4 per million tokens for input
+    output_cost = 1.6 / 1000000 # $1.60 per million tokens for output
+
+    cur_in_cost = usage.prompt_tokens * input_cost
+    cur_out_cost = usage.completion_tokens * output_cost
+    total_cost = cur_in_cost + cur_out_cost
+
+    # Display information
+    # Token usage summary
     print("\n🔢 Token Usage Summary")
     print("-" * 30)
     print(f"Prompt Tokens:     {usage.prompt_tokens}")
     print(f"Completion Tokens: {usage.completion_tokens}")
     print(f"Total Tokens:      {usage.total_tokens}")
     print("-" * 30)
+
+    # Cost summary
+    print("\n🔢 Cost Summary")
+    print("-" * 30)
+    print(f"Prompt Cost:     ${cur_in_cost}")
+    print(f"Completion Cost: ${cur_out_cost}")
+    print(f"Total Cost:      ${total_cost}")
+    print("-" * 30)
+
+
 
 
 def update_chat_logs(student_id, chatId, user_question, tutor_response, source_names):  
@@ -436,7 +462,7 @@ def generate_gpt_response(user_id, chatId, user_question, originalAnswer=None):
         
         # Call the OpenAI API using the prompt
         response = openai.chat.completions.create(
-            model="gpt-4o", 
+            model="gpt-4.1-mini",
             messages=messages,
             # Lower temperature is used to prevent model from giving the answers directly
             temperature=0.5 # How creative the response is

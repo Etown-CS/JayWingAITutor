@@ -2,6 +2,9 @@ const FLASK_API = "http://localhost:5000";
 const fileUploadDiv = document.getElementById('file-upload-div');
 const fileInput = document.getElementById('file-input');
 const previewDiv = document.getElementById('preview-div');
+const pdfDiv = document.getElementById('pdf-div');
+const pptxDiv = document.getElementById('pptx-div');
+const pngDiv = document.getElementById('png-div');
 const docsFolder = "docs"; // Folder to store files
 
 const tbodyclasses = document.getElementById('classesTable');
@@ -2242,7 +2245,14 @@ function displayFilePreview(fileName, fileType, courseId) {
     // Combine
     preview.appendChild(wrapper);
     preview.appendChild(fileNameElement);
-    previewDiv.appendChild(preview);
+
+    if (fileType.includes("pdf")) {
+        pdfDiv.appendChild(preview);
+    } else if (fileType.includes("pptx")) {
+        pptxDiv.appendChild(preview);
+    } else {
+        pngDiv.appendChild(preview);
+    }
 }
 
 
@@ -2312,11 +2322,36 @@ function loadExistingFiles() {
         .then(response => response.json())
         .then(files => {
             previewDiv.innerHTML = ''; // Clear existing previews
+            pdfDiv.innerHTML = '';
+            pptxDiv.innerHTML = '';
+            pngDiv.innerHTML = '';
             files.forEach(file => {
                 displayFilePreview(file.name, file.type, selectedCourse);
             });
         })
         .finally(() => {
+            if (pdfDiv.querySelector('.file-preview')) {
+                const heading = document.createElement('h6');
+                heading.className = 'text-sm font-semibold mb-0';
+                heading.textContent = 'PDF Files';
+                previewDiv.appendChild(heading);
+            }
+            previewDiv.appendChild(pdfDiv);
+            if (pptxDiv.querySelector('.file-preview')) {
+                const heading = document.createElement('h6');
+                heading.className = 'text-sm font-semibold mb-0';
+                heading.textContent = 'PPTX Files';
+                previewDiv.appendChild(heading);
+            }
+            previewDiv.appendChild(pptxDiv);
+            if (pngDiv.querySelector('.file-preview')) {
+                const heading = document.createElement('h6');
+                heading.className = 'text-sm font-semibold mb-0';
+                heading.textContent = 'Other Files';
+                previewDiv.appendChild(heading);
+            }
+            previewDiv.appendChild(pngDiv);
+
             console.log("File loading complete.");
         })
         .catch(err => console.error("Error loading files:", err));

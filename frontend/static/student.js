@@ -8,16 +8,10 @@ const simplifyPrompt = "Explain this in simpler terms so a beginner can understa
 const explainPrompt = "Explain this in more depth, going beyond the surface level details. Explore the reasoning behind this: ";
 const examplesPrompt = "Give two or three clear, concise examples to illustrate this concept. Use simple language and varied scenarios if possible. Make the examples real-world relevant and related to my interests (if available): ";
 
-window.onload = scrollToBottom();
-
-function scrollToBottom() {
-    const scrollable = document.getElementById('conversation');
-    if (scrollable) {
-        scrollable.scrollTop = scrollable.scrollHeight;
-    }
-}
-
-// Home Button
+/**
+ * Handles clicks on "Home" button.
+ * Returns user to login page.
+ */
 document.getElementById('home').addEventListener('click', function () {
     const currentPath = window.location.pathname;
     const query = window.location.search;
@@ -30,109 +24,21 @@ document.getElementById('home').addEventListener('click', function () {
     }
 });
 
-function archiveCourse(userCoursesId) {
-    // if (!confirm("Are you sure you want to archive this course?")) return; // Removed confirmation dialog for simplicity
 
-    fetch('../backend/api/archive_courses.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'archive', userCoursesId: userCoursesId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showErrorBanner('Class archived.');
-            // Remove the archived course from UI
-            const chatItem = document.querySelector(`[onclick="archiveCourse(${userCoursesId})"]`).closest('.relative');
-            if (chatItem) chatItem.remove();
-
-            // If this was the currently selected chat, redirect to blank view
-            if (typeof currentChatId !== 'undefined' && userCoursesId == currentChatId) {
-                // Redirect to the same page without the chatId
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has('chatId')) {
-                    // Remove chatId from URL
-                    urlParams.delete('chatId');
-                    window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
-                }
-            }
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("An unexpected error occurred.");
-    });
-}
-
-function levenshtein(a, b) {
-    const matrix = Array.from({ length: a.length + 1 }, () =>
-        Array(b.length + 1).fill(0)
-    );
-
-    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
-    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
-
-    for (let i = 1; i <= a.length; i++) {
-        for (let j = 1; j <= b.length; j++) {
-            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-            matrix[i][j] = Math.min(
-                matrix[i - 1][j] + 1,      // deletion
-                matrix[i][j - 1] + 1,      // insertion
-                matrix[i - 1][j - 1] + cost // substitution
-            );
-        }
-    }
-
-    return matrix[a.length][b.length];
-}
-
-function fuzzyIncludes(full, input) {
-    full = full.toLowerCase();
-    input = input.toLowerCase();
-
-    // If exact substring match, return true immediately
-    if (full.includes(input)) return true;
-
-    // Slide input window across full text
-    for (let i = 0; i <= full.length - input.length; i++) {
-        const chunk = full.slice(i, i + input.length);
-        const dist = levenshtein(chunk, input);
-        if (dist <= 1) return true; // Controls amount of typos allowed
-    }
-
-    return false;
-}
+// --------------------- JayBot Chat Management JavaScript ------------------------
 
 
-function filterChats() {
-    const query = document.getElementById('searchBar').value.toLowerCase();
-    const chatCards = document.querySelectorAll('#chat-div .group');
-    let anyVisible = false;
-
-    chatCards.forEach(card => {
-        const text = card.querySelector('.font-medium')?.innerText.toLowerCase() || "";
-        if (fuzzyIncludes(text, query)) {
-            card.style.display = 'block';
-            anyVisible = true;
-        } else {
-            card.style.display = 'none';
-        }
-    });
-
-    const noResultsMsg = document.getElementById('noResultsMsg');
-    if (!noResultsMsg && !anyVisible) {
-        const msg = document.createElement('div');
-        msg.id = 'noResultsMsg';
-        msg.className = 'text-center text-muted mt-3';
-        msg.innerText = 'No chats found.';
-        document.getElementById('chat-div').appendChild(msg);
-    } else if (noResultsMsg && anyVisible) {
-        noResultsMsg.remove();
-    }
-}
-
+/**
+ * Adds a "typing" indicator to the chat UI,
+ * displaying animated dots under the "JayBot" name.
+ * Appends the indicator to the element with ID 'chat-location'.
+ * Automatically scrolls the chat to the bottom.
+ *
+ * @returns {HTMLElement} The DOM element of the typing indicator,
+ *                       so it can be removed later.
+ * 
+ * @see scrollToBottom
+ */
 function addTypingIndicator() {
     const chatLocationDiv = document.getElementById('chat-location');
 
@@ -162,10 +68,24 @@ function addTypingIndicator() {
     chatLocationDiv.appendChild(typingDiv);
 
     scrollToBottom();
-    return typingDiv; // Return the reference for removal
+    return typingDiv;
 }
 
 let typingIndicatorElement = null;
+
+/**
+ * Sends the user's question to the backend API, updates the chat UI,
+ * and manages UI state such as disabling the send button and showing
+ * a typing indicator while waiting for the response.
+ *
+ * @param {string} chatId - The ID of the chat conversation to send the question to.
+ *
+ * @throws Alerts the user if a response is already being generated.
+ * 
+ * @see updateConversationUser
+ * @see addTypingIndicator
+ * @see updateConversationAI
+ */
 function askQuestion(chatId) {
     if (generating) {
         alert("Please wait for the current response to finish.");
@@ -245,7 +165,17 @@ function askQuestion(chatId) {
         });
 };
 
-// Ask a preset question
+/**
+ * Sends a preset question and optional answer to the backend API, and updates the chat UI.
+ * It displays a typing indicator during the request and handles UI state accordingly.
+ *
+ * @param {string} chatId - The ID of the chat conversation.
+ * @param {string} question - The question to send to the backend.
+ * @param {string} answer - The predefined answer to send along with the question.
+ * 
+ * @see updateConversationUser
+ * @see updateConversationAI
+ */
 function askPresetQuestion(chatId, question, answer) {
     if (generating) {
         alert("Please wait for the current response to finish.");
@@ -321,7 +251,15 @@ function askPresetQuestion(chatId, question, answer) {
         });
 };
 
-
+/**
+ * Appends a new user message to the chat interface.
+ * Creates and styles a message bubble aligned to the right, labeled "You",
+ * and scrolls the chat container to the bottom.
+ *
+ * @param {string} text - The message content entered by the user.
+ * 
+ * @see scrollToBottom
+ */
 function updateConversationUser(text) {
     // Check for preset question
 
@@ -350,6 +288,21 @@ function updateConversationUser(text) {
     scrollToBottom();
 }
 
+/**
+ * Appends an AI-generated message to the chat interface and attaches interactive feedback buttons.
+ * Displays optional source file links, and buttons for user feedback (thumbs up/down),
+ * as well as additional prompts (Simplify, Examples, Explain).
+ * 
+ * @param {string} text - The AI-generated message HTML content.
+ * @param {string} sourceName - Comma-separated list of source file names.
+ * @param {string} currentCourseName - The name of the course currently in context.
+ * @param {number} messageId - The ID of the message for tracking feedback and follow-ups.
+ * 
+ * @see askPresetQuestion
+ * @see getMessageContent
+ * @see storeFeedback
+ * @see scrollToBottom
+ */
 function updateConversationAI(text, sourceName, currentCourseName, messageId) {
     const chatlocationDiv = document.getElementById('chat-location');
 
@@ -569,7 +522,6 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
         }
     };
 
-
     // Append buttons
     buttonRow.appendChild(thumbsUpBtn);
     buttonRow.appendChild(thumbsDownBtn);
@@ -586,6 +538,17 @@ function updateConversationAI(text, sourceName, currentCourseName, messageId) {
     scrollToBottom();
 }
 
+/**
+ * Sends user feedback (thumbs up/down) to the backend, or deletes feedback if no rating is provided.
+ * 
+ * - If a feedback rating is passed, it stores the rating and shows a banner inviting the user to comment.
+ * - If `feedback` is `null`, it deletes any previously submitted feedback for the message.
+ * 
+ * @param {number} messageId - The ID of the message the feedback relates to.
+ * @param {'up' | 'down' | null} [feedback=null] - The feedback rating to store. If null, deletes feedback.
+ * 
+ * @see showFeedbackBanner
+ */
 function storeFeedback(messageId, feedback=null) {
     // Ask the user if they'd like to add a comment
     if (feedback) {
@@ -638,102 +601,17 @@ function storeFeedback(messageId, feedback=null) {
     }
 }
 
-// Global timeout holders
-let feedbackTimeoutId = null;
-let errorTimeoutId = null;
-
-function hideAllBanners() {
-    const feedbackBanner = document.getElementById('feedback-banner');
-    const errorBanner = document.getElementById('error-banner');
-
-    if (feedbackBanner) {
-        feedbackBanner.classList.add('hidden');
-        if (feedbackTimeoutId) {
-            clearTimeout(feedbackTimeoutId);
-            feedbackTimeoutId = null;
-        }
-    }
-
-    if (errorBanner) {
-        errorBanner.classList.add('hidden');
-        if (errorTimeoutId) {
-            clearTimeout(errorTimeoutId);
-            errorTimeoutId = null;
-        }
-    }
-}
-
-function showSuccessBanner(message) {
-    hideAllBanners(); // Hide others and clear their timeouts
-
-    const banner = document.getElementById('success-banner');
-    if (!banner) return;
-
-    banner.textContent = message;
-    banner.classList.remove('hidden');
-
-    feedbackTimeoutId = setTimeout(() => {
-        banner.classList.add('hidden');
-        feedbackTimeoutId = null;
-    }, 10000); // 10 seconds
-}
-
-function showFeedbackBanner(messageId) {
-    const banner = document.getElementById('feedback-banner');
-    const commentBtn = document.getElementById('add-comment-btn');
-
-    if (!banner || !commentBtn) return;
-    hideAllBanners(); // Hide others and clear their timeouts
-
-    banner.classList.remove('hidden');
-
-    const timeout = setTimeout(() => {
-        banner.classList.add('hidden');
-    }, 10000); // 10 seconds
-
-    commentBtn.onclick = () => {
-        clearTimeout(timeout); // prevent auto-hide if clicked
-        const explanation = prompt("Enter your comment (optional):");
-        banner.classList.add('hidden');
-
-        if (explanation) {
-            fetch('../backend/api/feedback.php', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    messageId: messageId,
-                    feedbackRating: null, // Do not change rating
-                    feedbackExplanation: explanation
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    console.log("Comment saved!");
-                }
-            })
-            .catch(err => console.error("Error saving comment:", err));
-        }
-    };
-}
-
-function showErrorBanner(message) {
-    const banner = document.getElementById('error-banner');
-    if (!banner) return;
-
-    banner.textContent = message;
-    banner.classList.remove('hidden');
-
-    errorTimeoutId = setTimeout(() => {
-        banner.classList.add('hidden');
-        errorTimeoutId = null;
-    }, 10000); // 10 seconds
-}
-
-
-
+/**
+ * Initializes chatbot UI logic when the DOM content is fully loaded.
+ *
+ * Features:
+ * - Expands the textarea height dynamically based on content.
+ * - Submits question on Enter (Shift+Enter for newline).
+ * - Prevents form submission default behavior to avoid page refresh.
+ * - Handles send button click with input validation and call to `askQuestion`.
+ * - Attaches logic to thumbs up/down buttons for feedback, calling `storeFeedback`.
+ * - Handles "Simplify", "Examples", and "Explain" follow-up question logic using `askPresetQuestion`.
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('student-question');
     const form = document.forms.messageForm; // Or document.querySelector('form[name="messageForm"]');
@@ -992,6 +870,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+/**
+ * Fetches the content of a specific message by its ID.
+ *
+ * @param {string} messageId - The ID of the message to fetch.
+ * @returns {Promise<Array>} Resolves to an array containing:
+ *  [messageId, userCoursesId, question, answer, timestamp, sourceName, feedbackRating, feedbackExplanation, feedbackTimestamp]
+ * 
+ * @throws Will throw an error if the fetch fails or response is not successful.
+ */
 async function getMessageContent(messageId) {
     try {
         const response = await fetch(`../backend/api/messages.php?messageId=${encodeURIComponent(messageId)}`, {
@@ -1016,6 +903,138 @@ async function getMessageContent(messageId) {
 }
 
 
+// --------------------- Banner Management JavaScript ------------------------
+
+
+// Global timeout holders
+let feedbackTimeoutId = null;
+let errorTimeoutId = null;
+
+/**
+ * Hides both success, feedback, and error banners if they exist,
+ * and clears any existing timeout that would auto-hide them.
+ *
+ * @modifies {successTimeoutId, errorTimeoutId}
+ */
+function hideAllBanners() {
+    const feedbackBanner = document.getElementById('feedback-banner');
+    const errorBanner = document.getElementById('error-banner');
+
+    if (feedbackBanner) {
+        feedbackBanner.classList.add('hidden');
+        if (feedbackTimeoutId) {
+            clearTimeout(feedbackTimeoutId);
+            feedbackTimeoutId = null;
+        }
+    }
+
+    if (errorBanner) {
+        errorBanner.classList.add('hidden');
+        if (errorTimeoutId) {
+            clearTimeout(errorTimeoutId);
+            errorTimeoutId = null;
+        }
+    }
+}
+
+/**
+ * Displays the green success banner with the provided message,
+ * hides any other visible banners, and sets a timeout to hide the success banner after 10 seconds.
+ *
+ * @param {string} message - The message to display in the success banner.
+ * @modifies {successTimeoutId}
+ */
+function showSuccessBanner(message) {
+    hideAllBanners(); // Hide others and clear their timeouts
+
+    const banner = document.getElementById('success-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    feedbackTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        feedbackTimeoutId = null;
+    }, 10000); // 10 seconds
+}
+
+/**
+ * Displays the feedback banner with the provided message,
+ * hides any other visible banners, and sets a timeout to hide the success banner after 10 seconds.
+ * 
+ * - Shows the feedback banner and sets a timeout to auto-hide it after 10 seconds.
+ * - If the "Add Comment" button is clicked before the timeout:
+ *   • Cancels the auto-hide.
+ *   • Prompts the user to enter a comment.
+ *   • Sends the comment (if provided) to the server via a PATCH request to `feedback.php`.
+ *   • Hides the banner immediately after input.
+ * - Uses `hideAllBanners()` to ensure no other banners are visible when this one appears.
+ *
+ * @param {number} messageId - The ID of the message to attach feedback to.
+ * 
+ * @modifies {successTimeoutId}
+ */
+function showFeedbackBanner(messageId) {
+    const banner = document.getElementById('feedback-banner');
+    const commentBtn = document.getElementById('add-comment-btn');
+
+    if (!banner || !commentBtn) return;
+    hideAllBanners(); // Hide others and clear their timeouts
+
+    banner.classList.remove('hidden');
+
+    const timeout = setTimeout(() => {
+        banner.classList.add('hidden');
+    }, 10000); // 10 seconds
+
+    commentBtn.onclick = () => {
+        clearTimeout(timeout); // prevent auto-hide if clicked
+        const explanation = prompt("Enter your comment (optional):");
+        banner.classList.add('hidden');
+
+        if (explanation) {
+            fetch('../backend/api/feedback.php', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messageId: messageId,
+                    feedbackRating: null, // Do not change rating
+                    feedbackExplanation: explanation
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log("Comment saved!");
+                }
+            })
+            .catch(err => console.error("Error saving comment:", err));
+        }
+    };
+}
+
+/**
+ * Displays the red error banner with the provided message,
+ * hides any other visible banners, and sets a timeout to hide the success banner after 10 seconds.
+ *
+ * @param {string} message - The message to display in the error banner.
+ * @modifies {successTimeoutId}
+ */
+function showErrorBanner(message) {
+    const banner = document.getElementById('error-banner');
+    if (!banner) return;
+
+    banner.textContent = message;
+    banner.classList.remove('hidden');
+
+    errorTimeoutId = setTimeout(() => {
+        banner.classList.add('hidden');
+        errorTimeoutId = null;
+    }, 10000); // 10 seconds
+}
 
 
 // --------------------- Left Sidebar JavaScript ------------------------
@@ -1029,7 +1048,10 @@ const content = document.getElementById('my-content');
 const chatContainer = document.getElementById('chat-container');
 const archiveButton = document.getElementById('archive-button');
 
-// Left Sidebar Button Toggle
+/**
+ * Handles clicks on "toggle-left-sidebar" button.
+ * Toggles left sidebar when viewing on screens 1024 pixels and larger.
+ */
 if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
         console.log("Toggle button clicked!");
@@ -1041,7 +1063,10 @@ if (toggleBtn) {
     });
 }
 
-// Left Sidebar Button Show Mobile
+/**
+ * Handles clicks on "show-left-sidebar-mobile" button.
+ * Shows left sidebar when viewing on screens less than 1024 pixels.
+ */
 if (showBtnMobile) {
     showBtnMobile.addEventListener('click', () => {
         console.log("Toggle button clicked!");
@@ -1055,7 +1080,10 @@ if (showBtnMobile) {
     });
 }
 
-// Left Sidebar Button Hide Mobile
+/**
+ * Handles clicks on "hide-left-sidebar-mobile" button.
+ * Hides left sidebar when viewing on screens less than 1024 pixels.
+ */
 if (hideBtnMobile) {
     hideBtnMobile.addEventListener('click', () => {
         console.log("Toggle button clicked!");
@@ -1073,6 +1101,12 @@ const archiveModal = document.getElementById('archive-modal');
 const closeModalBtn = document.getElementById('close-archive-modal');
 const coursesList = document.getElementById('archived-courses-list');
 
+/**
+ * Handles click on the archive button:
+ * - Fetches archived courses from the backend.
+ * - Displays the list of archived courses with Restore buttons.
+ * - Allows restoring a course which updates the backend and UI.
+ */
 archiveButton.addEventListener('click', () => {
     fetch('../backend/api/archive_courses.php?action=get')
         .then(res => res.json())
@@ -1163,12 +1197,59 @@ archiveButton.addEventListener('click', () => {
             document.getElementById('archive-modal').classList.remove('hidden');
         });
 });
-// Click 'X' to close
+
+/**
+ * Archives a course by its userCoursesId.
+ * Sends a POST request to the backend API to archive the course.
+ * On success, removes the course from the UI and redirects
+ * if the archived course is currently selected.
+ *
+ * @param {number} userCoursesId - The ID of the course to archive.
+ */
+function archiveCourse(userCoursesId) {
+    fetch('../backend/api/archive_courses.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'archive', userCoursesId: userCoursesId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showErrorBanner('Class archived.');
+            // Remove the archived course from UI
+            const chatItem = document.querySelector(`[onclick="archiveCourse(${userCoursesId})"]`).closest('.relative');
+            if (chatItem) chatItem.remove();
+
+            // If this was the currently selected chat, redirect to blank view
+            if (typeof currentChatId !== 'undefined' && userCoursesId == currentChatId) {
+                // Redirect to the same page without the chatId
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('chatId')) {
+                    // Remove chatId from URL
+                    urlParams.delete('chatId');
+                    window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+                }
+            }
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An unexpected error occurred.");
+    });
+}
+
+/**
+ * Adds a click event listener to the close modal button that hides the archive modal.
+ */
 closeModalBtn.addEventListener('click', () => {
     archiveModal.classList.add('hidden');
 });
 
-// Click outside modal to close
+/**
+ * Closes the archive modal when a click occurs outside the modal content (on the modal backdrop).
+ */
 archiveModal.addEventListener('click', (e) => {
     if (e.target === archiveModal) {
         archiveModal.classList.add('hidden');
@@ -1184,7 +1265,10 @@ const toggleRightBtn = document.getElementById('toggle-right-sidebar');
 const showRightBtnMobile = document.getElementById('show-right-sidebar-mobile');
 const hideRightBtnMobile = document.getElementById('hide-right-sidebar-mobile');
 
-// Right Sidebar Button Toggle
+/**
+ * Handles clicks on "toggle-right-sidebar" button.
+ * Toggles right sidebar when viewing on screens 1024 pixels and larger.
+ */
 if (toggleRightBtn) {
     toggleRightBtn.addEventListener('click', () => {
         console.log("Toggle button clicked!");
@@ -1195,7 +1279,10 @@ if (toggleRightBtn) {
     });
 }
 
-// Right Sidebar Button Show Mobile
+/**
+ * Handles clicks on "show-right-sidebar-mobile" button.
+ * Shows right sidebar when viewing on screens less than 1024 pixels.
+ */
 if (showRightBtnMobile) {
     showRightBtnMobile.addEventListener('click', () => {
         console.log("Toggle button clicked!");
@@ -1207,7 +1294,10 @@ if (showRightBtnMobile) {
     });
 }
 
-// Right Sidebar Button Hide Mobile
+/**
+ * Handles clicks on "hide-right-sidebar-mobile" button.
+ * Hides right sidebar when viewing on screens less than 1024 pixels.
+ */
 if (hideRightBtnMobile) {
     hideRightBtnMobile.addEventListener('click', () => {
         console.log("Toggle button clicked!");
@@ -1224,6 +1314,13 @@ saveBtn = document.getElementById('save-changes-button');
 responseLength = document.getElementById('response-length');
 interestInput = document.getElementById('interest-input');
 
+/**
+ * Adds a click event listener to the save button that sends the current
+ * response length and interest input values to the backend to save user settings.
+ * 
+ * On success, shows a success banner; on failure, shows an error banner.
+ * Also logs relevant input values and errors to the console.
+ */
 if (saveBtn) {
     saveBtn.addEventListener('click', () => {
         console.log("Save button clicked!");
@@ -1256,10 +1353,29 @@ if (saveBtn) {
 }
 
 
+// --------------------- Responsive Design JavaScript ------------------------
 
-// --------------------- Window Screen Size JavaScript ------------------------
 
-
+/**
+ * Handles UI adjustments based on the current window width.
+ * 
+ * For screens wider than or equal to 1024px:
+ * - Shows and expands both left and right sidebars.
+ * - Adjusts header and layout styles for desktop view.
+ * - Displays toggle buttons appropriately.
+ * - Ensures consistent layout padding and collapses are removed.
+ * 
+ * For smaller screens:
+ * - Hides both sidebars and applies mobile-specific classes and collapses.
+ * - Swaps sidebar toggle button visibility to mobile mode.
+ * - Adjusts layout padding for extra-small devices (<576px).
+ * - Ensures the chat container remains visible.
+ * 
+ * - Also includes a fallback behavior for mobile where the header might not be present,
+ *   logging layout state and toggling classes accordingly.
+ * 
+ * @see normalSize
+ */
 function handleResize() {
     const leftSidebar = document.getElementById('left-sidebar');
     const rightSidebar = document.getElementById('right-sidebar');
@@ -1274,53 +1390,48 @@ function handleResize() {
     const hideRightSidebar = document.getElementById('hide-right-sidebar-mobile');
 
     if (normalSize()) {
-        // Large screen or larger
-        // Left and Right sidebars are visible
         leftSidebar.classList.remove('hidden', 'mobile');
         leftSidebar.classList.add('max-w-sm');
         rightSidebar.classList.remove('hidden', 'mobile');
         rightSidebar.classList.add('max-w-sm');
-        // Un-collapse left sidebar and collapse right sidebar
-        if (content.classList.contains('left-collapsed')) { content.classList.remove('left-collapsed'); }
+
+        if (content.classList.contains('left-collapsed')) content.classList.remove('left-collapsed');
         leftSidebar.classList.remove('collapsed');
-        // Sets the correct sidebar button to be visible
-        if (toggleLeftSidebar.classList.contains('hidden')) { toggleLeftSidebar.classList.remove('hidden'); }
-        if (!hideLeftSidebar.classList.contains('hidden')) { hideLeftSidebar.classList.add('hidden'); }
-        if (toggleRightSidebar.classList.contains('hidden')) { toggleRightSidebar.classList.remove('hidden'); }
-        if (!hideRightSidebar.classList.contains('hidden')) { hideRightSidebar.classList.add('hidden'); }
-        // Always Shows chat container
-        if (chatContainer.classList.contains('hidden')) { chatContainer.classList.remove('hidden'); }
-        // Changes the header styling
+
+        if (toggleLeftSidebar.classList.contains('hidden')) toggleLeftSidebar.classList.remove('hidden');
+        if (!hideLeftSidebar.classList.contains('hidden')) hideLeftSidebar.classList.add('hidden');
+        if (toggleRightSidebar.classList.contains('hidden')) toggleRightSidebar.classList.remove('hidden');
+        if (!hideRightSidebar.classList.contains('hidden')) hideRightSidebar.classList.add('hidden');
+
+        if (chatContainer.classList.contains('hidden')) chatContainer.classList.remove('hidden');
+
         if (header) header.className = "flex items-center justify-between p-3 w-full border-b-4 border-gray-50";
-        // Removes one column layout
+
         content.classList.remove('mobile');
-        // Removes mobile padding
+
         if (chatLocation) chatLocation.classList.remove('px-2');
         if (inputContainer) inputContainer.classList.remove('px-2');
-    }
-    else {
-        // Small screen
-        // Left and Right sidebars are not visible, seperate buttons for these sidebars are visible
+    } else {
         leftSidebar.classList.add('hidden', 'mobile');
         leftSidebar.classList.remove('max-w-sm');
         rightSidebar.classList.add('hidden', 'mobile');
         rightSidebar.classList.remove('max-w-sm');
-        // Sets the correct sidebar button to be visible
-        if (!toggleLeftSidebar.classList.contains('hidden')) { toggleLeftSidebar.classList.add('hidden'); }
-        if (hideLeftSidebar.classList.contains('hidden')) { hideLeftSidebar.classList.remove('hidden'); }
-        if (!toggleRightSidebar.classList.contains('hidden')) { toggleRightSidebar.classList.add('hidden'); }
-        if (hideRightSidebar.classList.contains('hidden')) { hideRightSidebar.classList.remove('hidden'); }
-        // Auto collapses sidebars
-        if (!leftSidebar.classList.contains('collapsed')) { leftSidebar.classList.add('collapsed'); }
-        if (!rightSidebar.classList.contains('collapsed')) { rightSidebar.classList.add('collapsed'); }
-        if (!content.classList.contains('right-collapsed')) { content.classList.add('right-collapsed'); }
-        // Always Shows chat container
-        if (chatContainer.classList.contains('hidden')) { chatContainer.classList.remove('hidden'); }
-        // Changes the header styling
+
+        if (!toggleLeftSidebar.classList.contains('hidden')) toggleLeftSidebar.classList.add('hidden');
+        if (hideLeftSidebar.classList.contains('hidden')) hideLeftSidebar.classList.remove('hidden');
+        if (!toggleRightSidebar.classList.contains('hidden')) toggleRightSidebar.classList.add('hidden');
+        if (hideRightSidebar.classList.contains('hidden')) hideRightSidebar.classList.remove('hidden');
+
+        if (!leftSidebar.classList.contains('collapsed')) leftSidebar.classList.add('collapsed');
+        if (!rightSidebar.classList.contains('collapsed')) rightSidebar.classList.add('collapsed');
+        if (!content.classList.contains('right-collapsed')) content.classList.add('right-collapsed');
+
+        if (chatContainer.classList.contains('hidden')) chatContainer.classList.remove('hidden');
+
         if (header) header.className = "flex items-center justify-between p-3 w-full bg-gray-100 border-b-4 border-gray-200";
-        // Sets to one column layout
+
         content.classList.add('mobile');
-        // Adds extra padding for readability
+
         if (window.innerWidth < 576) {
             if (chatLocation) chatLocation.classList.add('px-2');
             if (inputContainer) inputContainer.classList.add('px-2');
@@ -1328,12 +1439,13 @@ function handleResize() {
             if (chatLocation) chatLocation.classList.remove('px-2');
             if (inputContainer) inputContainer.classList.remove('px-2');
         }
+
         if (!header) {
             console.log("Page opened on Mobile");
             leftSidebar.classList.toggle('collapsed');
             chatContainer.classList.toggle('hidden');
             leftSidebar.classList.toggle('hidden');
-            if (!hideLeftSidebar.classList.contains('hidden')) { hideLeftSidebar.classList.add('hidden'); }
+            if (!hideLeftSidebar.classList.contains('hidden')) hideLeftSidebar.classList.add('hidden');
             console.log("Left sidebar classes:", leftSidebar.classList);
             console.log("Content classes:", content.classList);
             console.log("Archive button classes:", archiveButton.classList);
@@ -1341,18 +1453,48 @@ function handleResize() {
     }
 }
 
+/**
+ * Determines whether the current window width qualifies as a "normal" (desktop) size.
+ *
+ * @returns {boolean} `true` if the window width is 1024 pixels or more, otherwise `false`.
+ */
 function normalSize() {
     return window.innerWidth >= 1024;
 }
 
-// Run on resize
 window.addEventListener('resize', handleResize);
-
-// Run once on initial load
 handleResize();
 
+/**
+ * On DOM content loaded, checks if the sidebar should reopen (flagged in localStorage).
+ * 
+ * If `sidebarShouldReopen` is `'true'`, simulates a click on the mobile sidebar open button
+ * to restore the sidebar’s visibility, then clears the flag from localStorage.
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    const shouldReopen = localStorage.getItem('sidebarShouldReopen');
 
-// Change the way different courses are sorted
+    if (shouldReopen === 'true') {
+        const showBtnMobile = document.getElementById('show-left-sidebar-mobile');
+        if (showBtnMobile) showBtnMobile.click();
+        localStorage.removeItem('sidebarShouldReopen');
+    }
+});
+
+
+// --------------------- Sorts and Filters JavaScript ------------------------
+
+
+/**
+ * Handles the change event on the "Sort By" dropdown.
+ *
+ * - Retrieves the selected sort value.
+ * - Preserves `chatId` and `filterBy` URL parameters if present.
+ * - Constructs a new URL query string with the updated `sortBy` value.
+ * - If the screen is small (based on `normalSize()`), and the left sidebar is visible,
+ *   sets a `localStorage` flag to reopen the sidebar after redirect.
+ * - Redirects the browser to the updated URL to re-sort the page content.
+ */
 document.getElementById('sort-by-btn').addEventListener('change', function () {
     const sortBy = this.value;
     const urlParams = new URLSearchParams(window.location.search);
@@ -1370,7 +1512,6 @@ document.getElementById('sort-by-btn').addEventListener('change', function () {
     }
 
     const leftSidebar = document.getElementById('left-sidebar');
-    // Only set the flag if the sidebar is currently NOT hidden on mobile
     if (!normalSize() && !leftSidebar.classList.contains('hidden')) {
         localStorage.setItem('sidebarShouldReopen', 'true');
     }
@@ -1378,8 +1519,16 @@ document.getElementById('sort-by-btn').addEventListener('change', function () {
     window.location.href = newUrl;
 });
 
-
-// Filter by discipline
+/**
+ * Handles the change event on the "Filter By" dropdown.
+ *
+ * - Retrieves the selected filter value (`filterBy`).
+ * - Preserves existing query parameters: `sortBy` and `chatId`, if present.
+ * - Constructs a new URL reflecting the updated filter and any preserved parameters.
+ * - On mobile (based on `normalSize()`), if the left sidebar is currently visible,
+ *   sets a flag (`sidebarShouldReopen`) in `localStorage` to restore sidebar state after page reload.
+ * - Redirects the browser to the newly constructed URL, triggering a page reload with the new filter applied.
+ */
 filterByButton = document.getElementById('filter-by-button');
 if (filterByButton) {
     filterByButton.addEventListener('change', function () {
@@ -1406,22 +1555,26 @@ if (filterByButton) {
             localStorage.setItem('sidebarShouldReopen', 'true');
         }
 
-        window.location.href = newUrl; // Reload page with new filter
+        window.location.href = newUrl;
     });
 } else {
     console.warn("Filter by button not found. Ensure the element with ID 'filter-by-button' exists in your HTML.");
 }
 
-
-
-// Pre-select the sort option based on the URL
+/**
+ * Initializes UI state after the DOM has fully loaded.
+ * Pre-selects the sort option based on the URL.
+ *
+ * - Reads URL parameters to determine selected sorting (`sortBy`) and filtering (`filterBy`) options.
+ * - Applies these values to the respective dropdowns (`#sort-by-btn` and `#filter-by-button`).
+ * - If a `chatId` is present in the URL, fetches the saved settings for that chat from the backend.
+ * - Populates the UI fields (`#response-length` and `#interest-input`) with the saved settings values.
+ */
 window.addEventListener('DOMContentLoaded', () => {
-    // Get the current URL parameters and update the sort and filter buttons accordingly
     const urlParams = new URLSearchParams(window.location.search);
     const selectedSort = urlParams.get('sortBy') || 'sortRecent';
     const selectedFilter = urlParams.get('filterBy') || 'allCourses';
 
-    // Set the dropdown values
     const sortByBtn = document.getElementById('sort-by-btn');
     if (sortByBtn) {
         sortByBtn.value = selectedSort;
@@ -1434,7 +1587,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // IMPORTANT: No client-side filtering logic here, as your PHP is doing the filtering
     // based on the URL parameter and will only show courses starting with the selected discipline.
-
 
     const chatId = new URLSearchParams(window.location.search).get('chatId');
     if (!chatId) return;
@@ -1454,7 +1606,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (responseSelect && responseLength) {
                 responseSelect.value = responseLength;
             } else if (responseSelect) {
-                responseSelect.value = 'Average'; // Default value if not set
+                responseSelect.value = 'Average';
             }
 
             if (interestField && interest !== null) {
@@ -1467,18 +1619,37 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+
+// --------------------- Scrollbar JavaScript ------------------------
+
+
+window.onload = scrollToBottom();
+
+function scrollToBottom() {
+    const scrollable = document.getElementById('conversation');
+    if (scrollable) {
+        scrollable.scrollTop = scrollable.scrollHeight;
+    }
+}
+
+/**
+ * Adjusts padding on the conversation element based on its scrollability.
+ *
+ * - Checks if the `#conversation` element exists and whether it overflows vertically.
+ * - If the element has a vertical scrollbar (`scrollHeight > clientHeight`), adds the
+ *   `p-chat-scroll` class and removes `p-chat-noshow` to provide extra padding.
+ * - If not scrollable, does the reverse to reduce unnecessary spacing.
+ *
+ * Useful for ensuring consistent padding behavior whether or not the chat has a scrollbar.
+ */
 function adjustConversationPadding() {
     const conversation = document.getElementById('conversation');
-    
-    // Check if the element is scrollable (scrollHeight > clientHeight)
     if (!conversation) {
         console.warn("Conversation element not found. No chat selected.");
         return;
     }
-    // Check if the conversation has a scrollbar
-    const hasScrollbar = conversation.scrollHeight > conversation.clientHeight;
 
-    // Toggle a class or set style directly
+    const hasScrollbar = conversation.scrollHeight > conversation.clientHeight;
     if (hasScrollbar) {
         conversation.classList.add('p-chat-scroll');
         conversation.classList.remove('p-chat-noshow');
@@ -1488,11 +1659,19 @@ function adjustConversationPadding() {
     }
 }
 
-// Run on page load
 window.addEventListener('load', adjustConversationPadding);
-// Run on resize
 window.addEventListener('resize', adjustConversationPadding);
 
+/**
+ * Adjusts padding on the sidebar-courses element based on its scrollability.
+ *
+ * - Checks if the `#sidebar-courses` element exists and whether it overflows vertically.
+ * - If the element has a vertical scrollbar (`scrollHeight > clientHeight`), adds the
+ *   `p-sidebar-scroll` class and removes `p-sidebar-noshow` to provide extra padding.
+ * - If not scrollable, does the reverse to reduce unnecessary spacing.
+ *
+ * Useful for ensuring consistent padding behavior whether or not the sidebar has a scrollbar.
+ */
 function adjustSidebarCoursesPadding() {
     const sidebarCourses = document.getElementById('sidebar-courses');
     
@@ -1509,25 +1688,15 @@ function adjustSidebarCoursesPadding() {
     }
 }
 
-// Run on page load
 window.addEventListener('load', adjustSidebarCoursesPadding);
-// Run on resize
 window.addEventListener('resize', adjustSidebarCoursesPadding);
 
-document.addEventListener('DOMContentLoaded', function () {
-    const shouldReopen = localStorage.getItem('sidebarShouldReopen');
-
-    if (shouldReopen === 'true') {
-        // Simulate a click to open sidebar
-        const showBtnMobile = document.getElementById('show-left-sidebar-mobile');
-        if (showBtnMobile) showBtnMobile.click();
-
-        // Clear the flag
-        localStorage.removeItem('sidebarShouldReopen');
-    }
-});
-
-// Save scroll of sidebar
+/**
+ * Saves the current vertical scroll position of the sidebar with ID "sidebar-courses"
+ * into sessionStorage before the page unloads or reloads.
+ * 
+ * This allows restoring the sidebar scroll position on subsequent page loads.
+ */
 window.addEventListener("beforeunload", function () {
     const sidebar = document.getElementById("sidebar-courses");
     if (sidebar) {
@@ -1535,7 +1704,14 @@ window.addEventListener("beforeunload", function () {
     }
 });
 
-// Restore sidebar scroll
+/**
+ * Restores the vertical scroll position of the sidebar with ID "sidebar-courses" from sessionStorage.
+ * 
+ * After restoring scroll, if a `chatId` query parameter exists in the URL, scrolls the corresponding
+ * chat element inside the sidebar into view for user convenience.
+ * 
+ * Removes the stored scroll position from sessionStorage after applying it.
+ */
 window.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.getElementById("sidebar-courses");
     const saved = sessionStorage.getItem("sidebarScrollTop");
@@ -1561,3 +1737,113 @@ window.addEventListener("DOMContentLoaded", function () {
         }
     }
 });
+
+
+// --------------------- Filter Management JavaScript ------------------------
+
+
+/**
+ * Performs a fuzzy substring match between a full string and a user input string.
+ * This allows minor typos (e.g., 1-character difference) to still register as a match.
+ *
+ * - Returns `true` if the `input` is found exactly within `full`.
+ * - Otherwise, slides a window the length of `input` across `full` and compares each chunk.
+ * - If any chunk has a Levenshtein distance ≤ 1 from `input`, it’s considered a fuzzy match.
+ *
+ * @param {string} full – The full string to search within.
+ * @param {string} input – The user-provided input string to match (with potential typos).
+ * @returns {boolean} `true` if a fuzzy match is found; otherwise `false`.
+ *
+ * @see levenshtein
+ */
+function fuzzyIncludes(full, input) {
+    full = full.toLowerCase();
+    input = input.toLowerCase();
+
+    // If exact substring match, return true immediately
+    if (full.includes(input)) return true;
+
+    // Slide input window across full text
+    for (let i = 0; i <= full.length - input.length; i++) {
+        const chunk = full.slice(i, i + input.length);
+        const dist = levenshtein(chunk, input);
+        if (dist <= 1) return true; // Controls amount of typos allowed
+    }
+
+    return false;
+}
+
+/**
+ * Calculates the Levenshtein distance between two strings.
+ *
+ * The Levenshtein distance is the minimum number of single-character
+ * edits (insertions, deletions, or substitutions) required to change one string into the other.
+ *
+ * Commonly used for fuzzy string matching and typo tolerance.
+ *
+ * @param {string} a – The first string to compare.
+ * @param {string} b – The second string to compare.
+ * @returns {number} The Levenshtein distance between `a` and `b`.
+ *
+ * @example
+ * levenshtein('kitten', 'sitting'); // returns 3
+ * levenshtein('flaw', 'lawn');      // returns 2
+ */
+function levenshtein(a, b) {
+    const matrix = Array.from({ length: a.length + 1 }, () =>
+        Array(b.length + 1).fill(0)
+    );
+
+    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,      // deletion
+                matrix[i][j - 1] + 1,      // insertion
+                matrix[i - 1][j - 1] + cost // substitution
+            );
+        }
+    }
+
+    return matrix[a.length][b.length];
+}
+
+/**
+ * Filters chat cards in the sidebar based on the user's search query.
+ * Performs a fuzzy match on the chat card's title text.
+ * 
+ * - Shows chat cards that match the query.
+ * - Hides chat cards that do not match.
+ * - Displays a "No chats found." message if no cards are visible.
+ * 
+ * @see fuzzyIncludes
+ */
+function filterChats() {
+    const query = document.getElementById('searchBar').value.toLowerCase();
+    const chatCards = document.querySelectorAll('#chat-div .group');
+    let anyVisible = false;
+
+    chatCards.forEach(card => {
+        const text = card.querySelector('.font-medium')?.innerText.toLowerCase() || "";
+        if (fuzzyIncludes(text, query)) {
+            card.style.display = 'block';
+            anyVisible = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const noResultsMsg = document.getElementById('noResultsMsg');
+    if (!noResultsMsg && !anyVisible) {
+        const msg = document.createElement('div');
+        msg.id = 'noResultsMsg';
+        msg.className = 'text-center text-muted mt-3';
+        msg.innerText = 'No chats found.';
+        document.getElementById('chat-div').appendChild(msg);
+    } else if (noResultsMsg && anyVisible) {
+        noResultsMsg.remove();
+    }
+}

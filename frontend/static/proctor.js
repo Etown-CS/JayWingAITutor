@@ -198,8 +198,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isValidCourseCode(courseCode)) {
                 console.log("Add Form: Course code is valid.");
 
-                if (courseCode === '') { courseCode = null; }
-                if (classDescription === '') { classDescription = null; }
+                if (courseCode === '') courseCode = null;
+                if (classDescription === '') classDescription = null;
 
                 // Fetch all classes to check for duplicates
                 fetch('../backend/api/get_professor_classes.php')
@@ -379,11 +379,11 @@ document.addEventListener('DOMContentLoaded', function () {
      * - Sends POST requests to create each enrollment in parallel using `Promise.all`.
      * - Displays error banners for individual failures and logs detailed messages to the console.
      * - If all enrollments succeed:
-     *   - Displays a success banner.
-     *   - Reloads enrollment data, tables, and dropdowns.
-     *   - Resets the form and UI state.
+     *   • Displays a success banner.
+     *   • Reloads enrollment data, tables, and dropdowns.
+     *   • Resets the form and UI state.
      * - If some enrollments fail:
-     *   - Displays an error banner and performs the same reset and reload actions.
+     *   • Displays an error banner and performs the same reset and reload actions.
      * 
      * Dependencies:
      * - Uses global `selectedUsers`, `updateSelectedUsersDisplay`, and `multipleEnrollmentsModal`.
@@ -484,9 +484,9 @@ document.addEventListener('DOMContentLoaded', function () {
      * - Checks for duplicate class names or course codes (excluding the class being edited).
      * - If duplicates are found, displays appropriate error banners and aborts the update.
      * - If validation passes:
-     *   - Sends a POST request to update the class details.
-     *   - On success, reloads class data, refreshes UI elements, and closes the modal.
-     *   - On failure, hides banners and closes the modal (silent fail).
+     *   • Sends a POST request to update the class details.
+     *   • On success, reloads class data, refreshes UI elements, and closes the modal.
+     *   • On failure, hides banners and closes the modal (silent fail).
      * - If the course code format is invalid, shows a specific formatting error.
      *
      * Dependencies:
@@ -508,8 +508,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isValidCourseCode(courseCodeGet)) {
                 console.log("Edit Form: Course code is valid.");
 
-                if (courseCodeGet === '') { courseCodeGet = null; }
-                if (classDescription === '') { classDescription = null; }
+                if (courseCodeGet === '') courseCodeGet = null;
+                if (classDescription === '') classDescription = null;
 
                 // Fetch all classes to check for duplicates (excluding the current one)
                 fetch('../backend/api/get_professor_classes.php')
@@ -604,9 +604,9 @@ document.addEventListener('DOMContentLoaded', function () {
      * - Fetches all existing enrollments to check for duplicates (excluding the one being edited).
      * - If the same user is already enrolled in the selected course, shows an error banner and aborts.
      * - If validation passes:
-     *   - Sends a POST request to update the enrollment record.
-     *   - On success, shows a success banner, refreshes enrollments and UI elements, and closes the modal.
-     *   - On error, displays an appropriate error banner.
+     *   • Sends a POST request to update the enrollment record.
+     *   • On success, shows a success banner, refreshes enrollments and UI elements, and closes the modal.
+     *   • On error, displays an appropriate error banner.
      * 
      * Dependencies:
      * - Uses global `enrollmentModal`, `showErrorBanner`, `showSuccessBanner`, 
@@ -1038,7 +1038,7 @@ function openFeedbackModal(feedbackRating) {
 /**
  * Validates a course code matches required format.
  * 
- *  * Accepted formats:
+ * Accepted formats:
  *   - Two or three uppercase letters followed by three digits, e.g. "EN100" or "CS/EGR222"
  *   - An empty string (no code)
  * 
@@ -1381,8 +1381,6 @@ function initializeSearchableEnrollmentTable() {
 /**
  * Handles clicks on “Edit” buttons in the classes and enrollments tables.
  * Populates and shows the appropriate Bootstrap modal.
- *
- * @param {MouseEvent} e – The click event
  */
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('edit-class-btn')) {
@@ -1404,7 +1402,7 @@ document.addEventListener('click', function (e) {
         // document.getElementById('edit_roleOfClass').value = btn.dataset.role;
 
         let mainDisplayText = btn.dataset.usercourseName + ' ';
-        if (btn.dataset.courseCode && btn.dataset.courseCode !== 'null') { mainDisplayText += '(' + (btn.dataset.courseCode) + ') '}
+        if (btn.dataset.courseCode && btn.dataset.courseCode !== 'null') mainDisplayText += '(' + (btn.dataset.courseCode) + ') '
         document.getElementById('selectedEditClassText').textContent = mainDisplayText;
         document.getElementById('selectedEditUserText').textContent = btn.dataset.usercourseUser;
         // document.getElementById('selectedEditRoleText').textContent = btn.dataset.usercourseRole;
@@ -1461,10 +1459,6 @@ function clearEnrollmentInputs() {
  * - Populates the multiple‑enrollments modal with that class information.
  * - Refreshes the display of selected users and then shows the modal.
  * - If the user‑list dropdown is open, closes it.
- *
- * @param {MouseEvent} e – The click event
- * 
- * @see updateSelectedUsersDisplay
  */
 const addMultipleEnrollments = document.getElementById('add-multiple-enrollments');
 if (addMultipleEnrollments) {
@@ -2450,79 +2444,6 @@ function reloadFilterDropdowns() {
 }
 
 
-// --------------------- Filter Management JavaScript ------------------------
-
-
-/**
- * Performs a fuzzy substring match between a full string and a user input string.
- * This allows minor typos (e.g., 1-character difference) to still register as a match.
- *
- * - Returns `true` if the `input` is found exactly within `full`.
- * - Otherwise, slides a window the length of `input` across `full` and compares each chunk.
- * - If any chunk has a Levenshtein distance ≤ 1 from `input`, it’s considered a fuzzy match.
- *
- * @param {string} full – The full string to search within.
- * @param {string} input – The user-provided input string to match (with potential typos).
- * @returns {boolean} `true` if a fuzzy match is found; otherwise `false`.
- *
- * @see levenshtein
- */
-function fuzzyIncludes(full, input) {
-    full = full.toLowerCase();
-    input = input.toLowerCase();
-
-    // If exact substring match, return true immediately
-    if (full.includes(input)) return true;
-
-    // Slide input window across full text
-    for (let i = 0; i <= full.length - input.length; i++) {
-        const chunk = full.slice(i, i + input.length);
-        const dist = levenshtein(chunk, input);
-        if (dist <= 1) return true; // Controls amount of typos allowed
-    }
-
-    return false;
-}
-
-/**
- * Calculates the Levenshtein distance between two strings.
- *
- * The Levenshtein distance is the minimum number of single-character
- * edits (insertions, deletions, or substitutions) required to change one string into the other.
- *
- * Commonly used for fuzzy string matching and typo tolerance.
- *
- * @param {string} a – The first string to compare.
- * @param {string} b – The second string to compare.
- * @returns {number} The Levenshtein distance between `a` and `b`.
- *
- * @example
- * levenshtein('kitten', 'sitting'); // returns 3
- * levenshtein('flaw', 'lawn');      // returns 2
- */
-function levenshtein(a, b) {
-    const matrix = Array.from({ length: a.length + 1 }, () =>
-        Array(b.length + 1).fill(0)
-    );
-
-    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
-    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
-
-    for (let i = 1; i <= a.length; i++) {
-        for (let j = 1; j <= b.length; j++) {
-            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-            matrix[i][j] = Math.min(
-                matrix[i - 1][j] + 1,      // deletion
-                matrix[i][j - 1] + 1,      // insertion
-                matrix[i - 1][j - 1] + cost // substitution
-            );
-        }
-    }
-
-    return matrix[a.length][b.length];
-}
-
-
 // --------------------- File Management JavaScript ------------------------
 
 
@@ -2727,7 +2648,6 @@ function displayFilePreview(fileName, fileType, courseId) {
  *
  * @param {string} fileName - The name of the file to be removed.
  * @param {HTMLElement} preview - The DOM element representing the file preview to remove upon success.
- * 
  */
 function removeFileFromDocsFolder(fileName, preview) {
     const coursesDropdownUpload = document.getElementById('notes_class_id');
@@ -2980,3 +2900,76 @@ function handleResize() {
 
 window.addEventListener('resize', handleResize);
 handleResize();
+
+
+// --------------------- Filter Management JavaScript ------------------------
+
+
+/**
+ * Performs a fuzzy substring match between a full string and a user input string.
+ * This allows minor typos (e.g., 1-character difference) to still register as a match.
+ *
+ * - Returns `true` if the `input` is found exactly within `full`.
+ * - Otherwise, slides a window the length of `input` across `full` and compares each chunk.
+ * - If any chunk has a Levenshtein distance ≤ 1 from `input`, it’s considered a fuzzy match.
+ *
+ * @param {string} full – The full string to search within.
+ * @param {string} input – The user-provided input string to match (with potential typos).
+ * @returns {boolean} `true` if a fuzzy match is found; otherwise `false`.
+ *
+ * @see levenshtein
+ */
+function fuzzyIncludes(full, input) {
+    full = full.toLowerCase();
+    input = input.toLowerCase();
+
+    // If exact substring match, return true immediately
+    if (full.includes(input)) return true;
+
+    // Slide input window across full text
+    for (let i = 0; i <= full.length - input.length; i++) {
+        const chunk = full.slice(i, i + input.length);
+        const dist = levenshtein(chunk, input);
+        if (dist <= 1) return true; // Controls amount of typos allowed
+    }
+
+    return false;
+}
+
+/**
+ * Calculates the Levenshtein distance between two strings.
+ *
+ * The Levenshtein distance is the minimum number of single-character
+ * edits (insertions, deletions, or substitutions) required to change one string into the other.
+ *
+ * Commonly used for fuzzy string matching and typo tolerance.
+ *
+ * @param {string} a – The first string to compare.
+ * @param {string} b – The second string to compare.
+ * @returns {number} The Levenshtein distance between `a` and `b`.
+ *
+ * @example
+ * levenshtein('kitten', 'sitting'); // returns 3
+ * levenshtein('flaw', 'lawn');      // returns 2
+ */
+function levenshtein(a, b) {
+    const matrix = Array.from({ length: a.length + 1 }, () =>
+        Array(b.length + 1).fill(0)
+    );
+
+    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,      // deletion
+                matrix[i][j - 1] + 1,      // insertion
+                matrix[i - 1][j - 1] + cost // substitution
+            );
+        }
+    }
+
+    return matrix[a.length][b.length];
+}

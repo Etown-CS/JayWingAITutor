@@ -1,3 +1,25 @@
+"""
+    take_prompts.py - Helper script to handle AI tutor interactions and database updates
+
+    Sections:
+    1. Imports
+    2. Global Overhead
+        a. API Key and Environment Variables
+        b. Database Connection
+    3. AI Tutor Functions
+        a. chat_info
+        b. construct_initial_prompt
+        c. get_recent_chat_history
+        d. get_docs
+        e. printTokens
+        f. update_chat_logs
+        g. generate_gpt_response
+"""
+
+# --------------------------------------------------- #
+# --------------------- Imports --------------------- #
+# --------------------------------------------------- #
+
 import os
 import openai
 from dotenv import load_dotenv
@@ -5,6 +27,10 @@ import mysql.connector
 from pinecone import Pinecone
 from langchain_openai import OpenAIEmbeddings
 import json
+
+# ----------------------------------------------------------- #
+# --------------------- Global Overhead --------------------- #
+# ----------------------------------------------------------- #
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -35,8 +61,12 @@ def get_db_connection():
 # Constants for AI tutor
 ai_memory = 4 # Number of messages provided to the AI for context
 chunk_count = 10 # Number of chunks to retrieve from Pinecone
-# TODO: Raise this back to 0.375
-similarity_threshold = 0.325 # Minimum similarity score for document relevance -- play around with this
+similarity_threshold = 0.375 # Minimum similarity score for document relevance -- play around with this
+
+# ------------------------------------------------------------ #
+# --------------------- AI Tutor Functions ------------------- #
+# ------------------------------------------------------------ #
+
 
 def chat_info(chatId):
     '''
@@ -348,10 +378,19 @@ def printTokens(response):
     print(f"Total Cost:      ${total_cost}")
     print("-" * 30)
 
-
-
-
-def update_chat_logs(student_id, chatId, user_question, tutor_response, source_names):  
+def update_chat_logs(student_id, chatId, user_question, tutor_response, source_names):
+    """
+    Updates the chat logs in the database.
+    
+    args:
+        student_id (str): The ID of the student.
+        chatId (str): The ID of the chat (from userCoursesId).
+        user_question (str): The user's question.
+        tutor_response (str): The AI's response to the user's question.
+        source_names (list): List of document names used to generate the response.
+    returns:
+        int: The ID of the newly inserted message, or None if no chatId was found
+    """
     message_id = None
 
     # Debugging print statements
@@ -391,8 +430,6 @@ def update_chat_logs(student_id, chatId, user_question, tutor_response, source_n
         conn.close()
     
     return message_id
-
-
 
 # Function to generate GPT-4 response
 def generate_gpt_response(user_id, chatId, user_question, originalAnswer=None):

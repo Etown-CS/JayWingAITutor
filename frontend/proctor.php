@@ -686,8 +686,11 @@ if ($currentUserId) {
                             </div>
 
                             <!-- Preview Section -->
-                            <div id="preview-div" class="flex justify-center lg:justify-start flex-wrap gap-2">
+                            <div id="preview-div" class="flex flex-col">
                                 <!-- Thumbnails of uploaded files will appear here -->
+                                <div id="pdf-div" class="flex justify-center lg:justify-start flex-wrap gap-2 mb-4"></div>
+                                <div id="pptx-div" class="flex justify-center lg:justify-start flex-wrap gap-2 mb-4"></div>
+                                <div id="png-div" class="flex justify-center lg:justify-start flex-wrap gap-2 mb-4"></div>
                             </div>
                         </form>
                     </div>

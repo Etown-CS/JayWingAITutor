@@ -807,6 +807,7 @@ function clearDashboardFilters() {
     document.getElementById('qa_filter').value = 'Both';
     document.getElementById('selectedStartDate').value = '';
     document.getElementById('selectedEndDate').value = '';
+    document.getElementById('customStopWords').value = '';
 
     // Reset visible labels
     document.getElementById('selectedDashboardClassText').innerText = 'All';

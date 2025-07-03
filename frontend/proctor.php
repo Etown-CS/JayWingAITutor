@@ -265,6 +265,7 @@ if ($currentUserId) {
                                             </div>
                                             <input type="hidden" id="qa_filter" name="qa_filter" value="Both">
                                         </div>
+                                        <!-- Custom Stop Words -->
                                         <div class="items-end">
                                             <label for="customStopWords" class="form-label">Word Filter</label>
                                             <input 

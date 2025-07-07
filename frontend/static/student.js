@@ -277,6 +277,7 @@ function updateConversationUser(text) {
 
     const newMessageText = document.createElement('div');
     newMessageText.textContent = text;
+    newMessageText.style = "white-space: pre-line;";
 
     newMessageBubble.appendChild(newMessageFrom);
     newMessageBubble.appendChild(newMessageText);
